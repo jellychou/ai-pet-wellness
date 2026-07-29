@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: Inter, "Noto Sans TC", system-ui, sans-serif; color: #574A45; background: #f7f5f2; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: #f7f5f2; }
+button, input { font: inherit; }
+/* iOS Safari zooms in when a focused input/textarea/select has font-size < 16px.
+   Force 16px on mobile viewports so tapping a field doesn't trigger the zoom,
+   regardless of any smaller text-size utility class applied to it. */
+@media (max-width: 767px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+.card { @apply rounded-2xl border border-[#ece4dc] bg-[#fffdfa] shadow-[0_8px_24px_rgba(120,96,84,.07)]; }
+.soft-card { @apply rounded-xl border border-[#eee6de] bg-white; }
+.muted { @apply text-xs text-ink/55; }
+.pill { @apply rounded-full px-2.5 py-1 text-[10px] font-medium; }
+.section-title { @apply text-[13px] font-semibold text-ink; }
+.scrollbar-none::-webkit-scrollbar { display: none; }

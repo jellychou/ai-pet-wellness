@@ -1,0 +1,109 @@
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+const resources = {
+  "zh-TW": {
+    translation: {
+      nav: {
+        home: "首頁",
+        pets: "我的寵物",
+        food: "飲食紀錄",
+        health: "健康紀錄",
+        ai: "AI 心靈導師",
+        timeline: "歷史日誌",
+        stats: "統計分析",
+        settings: "設定",
+        records: "日誌記錄",
+      },
+      common: {
+        hello: "嗨，Jenny",
+        subtitle: "今天也和 Coco 一起健康生活！",
+        quick: "快速功能",
+        summary: "今日健康摘要",
+        suggestion: "今日建議",
+        addFood: "新增飲食",
+        vaccine: "疫苗紀錄",
+        checkup: "健康檢查",
+        journal: "日誌紀錄",
+        chat: "AI 心靈導師",
+        scan: "AI 拍照診斷",
+        language: "語言",
+      },
+      login: {
+        title: "歡迎回來！",
+        subtitle: "登入你的帳號，繼續陪伴毛孩的每一天",
+        tagline: "用心陪伴，從每一餐開始",
+        email: "電子郵件",
+        password: "密碼",
+        forgot: "忘記密碼？",
+        submit: "登入",
+        or: "或",
+        google: "使用 Google 繼續",
+        noAccount: "還沒有帳號？",
+        signUp: "立即註冊",
+      },
+      ai: {
+        title: "AI 心靈導師",
+        placeholder: "輸入你的訊息…",
+        prompt: "最近照顧毛孩有點累…",
+        reply: "我知道照顧毛孩有時候真的很辛苦。可以告訴我今天發生了什麼嗎？",
+      },
+    },
+  },
+  en: {
+    translation: {
+      nav: {
+        home: "Home",
+        pets: "My Pets",
+        food: "Food Log",
+        health: "Health",
+        ai: "AI Center",
+        timeline: "Timeline",
+        stats: "Analytics",
+        settings: "Settings",
+        notifications: "Notifications",
+      },
+      common: {
+        hello: "Hi, Jenny",
+        subtitle: "Another healthy day with Coco!",
+        quick: "Quick actions",
+        summary: "Today’s health summary",
+        suggestion: "Today’s suggestion",
+        addFood: "Add food",
+        vaccine: "Vaccines",
+        checkup: "Health check",
+        journal: "Journal",
+        chat: "AI Coach",
+        scan: "AI Diagnosis",
+        language: "Language",
+      },
+      login: {
+        title: "Welcome back!",
+        subtitle: "Sign in to keep caring for your pet every day",
+        tagline: "Caring starts with every meal",
+        email: "Email",
+        password: "Password",
+        forgot: "Forgot password?",
+        submit: "Sign in",
+        or: "or",
+        google: "Continue with Google",
+        noAccount: "Don't have an account?",
+        signUp: "Sign up",
+      },
+      ai: {
+        title: "AI Mental Coach",
+        placeholder: "Type a message…",
+        prompt: "Taking care of my pet feels tiring lately…",
+        reply: "Caring for a pet can be exhausting. What happened today?",
+      },
+    },
+  },
+};
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: "zh-TW",
+  fallbackLng: "en",
+  interpolation: { escapeValue: false },
+});
+export default i18n;

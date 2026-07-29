@@ -149,52 +149,6 @@ export function ChangePasswordDrawer() {
           </div>
 
           <div>
-            <div className="mb-1.5 text-sm text-ink/70">
-              密碼強度：
-              <span className="font-semibold" style={{ color: strength.color }}>
-                {strength.label}
-              </span>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {[1, 2, 3, 4].map((seg) => (
-                <span
-                  key={seg}
-                  className="h-1.5 rounded-full"
-                  style={{
-                    backgroundColor:
-                      seg <= strength.level ? strength.color : "#ece4dc",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4">
-            <div className="mb-2 text-sm font-medium text-ink/80">
-              密碼需符合以下條件：
-            </div>
-            <div className="space-y-2">
-              {requirements.map((r) => {
-                const passed = r.test(newPassword);
-                return (
-                  <div key={r.key} className="flex items-center gap-2">
-                    {passed ? (
-                      <CheckCircle2 size={15} className="shrink-0 text-[#3fa876]" />
-                    ) : (
-                      <Circle size={15} className="shrink-0 text-ink/25" />
-                    )}
-                    <span
-                      className={`text-[12px] ${passed ? "text-ink/80" : "text-ink/45"}`}
-                    >
-                      {r.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
               確認新密碼 <span className="text-red-400">*</span>
             </label>
@@ -214,6 +168,27 @@ export function ChangePasswordDrawer() {
               >
                 {showConfirm ? <Eye size={17} /> : <EyeOff size={17} />}
               </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1.5 text-sm text-ink/70">
+              密碼強度：
+              <span className="font-semibold" style={{ color: strength.color }}>
+                {strength.label}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[1, 2, 3, 4].map((seg) => (
+                <span
+                  key={seg}
+                  className="h-1.5 rounded-full"
+                  style={{
+                    backgroundColor:
+                      seg <= strength.level ? strength.color : "#ece4dc",
+                  }}
+                />
+              ))}
             </div>
           </div>
 

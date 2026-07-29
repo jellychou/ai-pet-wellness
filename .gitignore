@@ -3,3 +3,10 @@ dist/
 *.tsbuildinfo
 .DS_Store
 *.local
+
+# Python (apps/api)
+.venv/
+__pycache__/
+*.pyc
+.env
+apps/api/.env

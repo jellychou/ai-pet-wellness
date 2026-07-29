@@ -1,14 +1,18 @@
 # Food・Heart (monorepo)
 
-依照指定設計稿重新切版的寵物飲食與 AI 心靈導師前端專案。使用 npm workspaces 管理，之後會陸續加入後端 API / 其他 app。
+依照指定設計稿重新切版的寵物飲食與 AI 心靈導師前端專案。使用 npm workspaces 管理，之後會陸續加入其他 app。
 
 ## 專案結構
 ```
 .
 ├── apps/
-│   └── web/        # React 前端（原本的專案內容都在這裡）
-└── packages/        # 未來共用套件放這裡（目前是空的）
+│   ├── web/        # React 前端
+│   └── api/        # FastAPI + PostgreSQL 後端
+├── packages/        # 未來共用套件放這裡（目前是空的）
+└── docker-compose.yml  # 本機 PostgreSQL
 ```
+
+前端說明見下方；後端（`apps/api`）的技術棧、設定步驟見 [apps/api/README.md](apps/api/README.md)。
 
 ## 技術
 - React

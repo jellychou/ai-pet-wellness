@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
 import { AppLayout } from "./layouts/AppLayout";
 import { AICenterPage } from "./pages/AICenterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { PetsPage } from "./pages/PetsPage";
 import { FoodPage } from "./pages/FoodPage";
 import { HealthPage } from "./pages/HealthPage";
@@ -10,11 +12,46 @@ import { TimelinePage } from "./pages/TimelinePage";
 import { StatsPage } from "./pages/StatsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { RecordsPage } from "./pages/RecordsPage";
+import { useAuthStore } from "./store/useAuthStore";
+
+function RequireAuth({ children }: { children: ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RedirectIfAuthed({ children }: { children: ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  if (isAuthenticated) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route element={<AppLayout />}>
+      <Route
+        path="/login"
+        element={
+          <RedirectIfAuthed>
+            <LoginPage />
+          </RedirectIfAuthed>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <RedirectIfAuthed>
+            <ResetPasswordPage />
+          </RedirectIfAuthed>
+        }
+      />
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout />
+          </RequireAuth>
+        }
+      >
         <Route index element={<DashboardPage />} />
         <Route path="ai" element={<AICenterPage />} />
         <Route path="pets" element={<PetsPage />} />

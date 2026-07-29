@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   Calendar,
@@ -20,8 +21,9 @@ import {
   Mail,
   MessageCircle,
 } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
 
-const avatarPhoto =
+const fallbackAvatarPhoto =
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&h=160&fit=crop";
 
 const themeColors = ["#caa06f", "#6fa87e", "#b39ddb", "#6fa8dc"];
@@ -65,6 +67,14 @@ function Row({
 export function SettingsPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [themeColor, setThemeColor] = useState(themeColors[0]);
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  function handleLogout() {
+    logout();
+    navigate("/login", { replace: true });
+  }
 
   return (
     <div className="mx-auto max-w-md space-y-5">
@@ -74,7 +84,7 @@ export function SettingsPage() {
       >
         <div className="relative shrink-0">
           <img
-            src={avatarPhoto}
+            src={user?.picture_url || fallbackAvatarPhoto}
             alt="使用者頭像"
             className="h-16 w-16 rounded-full object-cover"
           />
@@ -83,7 +93,9 @@ export function SettingsPage() {
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-base font-semibold text-ink">Jenny 周</div>
+          <div className="text-base font-semibold text-ink">
+            {user?.name ?? "Jenny 周"}
+          </div>
           <div className="mt-0.5 text-xs text-ink/50">
             用愛陪伴毛孩的每一天 🐾
           </div>
@@ -92,10 +104,14 @@ export function SettingsPage() {
       </button>
 
       <Section title="飼主資訊">
-        <Row icon={User} label="姓名" value="Jenny 周" />
+        <Row icon={User} label="姓名" value={user?.name ?? "Jenny 周"} />
         <Row icon={Phone} label="電話" value="0912-345-678" />
         <Row icon={Calendar} label="生日" value="1993 / 02 / 24" />
-        <Row icon={Mail} label="電子郵件" value="jenny@gmail.com" />
+        <Row
+          icon={Mail}
+          label="電子郵件"
+          value={user?.email ?? "jenny@gmail.com"}
+        />
         <Row
           icon={MessageCircle}
           label="標語"
@@ -163,6 +179,7 @@ export function SettingsPage() {
 
       <button
         type="button"
+        onClick={handleLogout}
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-3.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
       >
         <LogOut size={16} />

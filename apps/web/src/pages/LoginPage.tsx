@@ -1,31 +1,13 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import patternBg from "../assets/images/pattern-watermark.svg";
 import logo from "../assets/images/logo.png";
-
-function GoogleIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
-      <path
-        fill="#FFC107"
-        d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34 5.1 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-4z"
-      />
-      <path
-        fill="#FF3D00"
-        d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34 5.1 29.3 3 24 3 16.1 3 9.2 7.4 6.3 14.7z"
-      />
-      <path
-        fill="#4CAF50"
-        d="M24 45c5.2 0 9.9-2 13.4-5.3l-6.2-5.2c-2 1.4-4.6 2.3-7.2 2.3-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.1 40.5 16 45 24 45z"
-      />
-      <path
-        fill="#1976D2"
-        d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.5l6.2 5.2C41 35.7 45 30.4 45 24c0-1.4-.1-2.7-.4-3.5z"
-      />
-    </svg>
-  );
-}
+import { apiFetch, ApiError } from "../lib/api";
+import { useAuthStore, type AuthUser } from "../store/useAuthStore";
+import { RegisterDrawer } from "../components/RegisterDrawer";
+import { ForgotPasswordDrawer } from "../components/ForgotPasswordDrawer";
 
 function BrandMark() {
   return <img src={logo} alt="logo" width={200} />;
@@ -33,12 +15,39 @@ function BrandMark() {
 
 export function LoginPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const data = await apiFetch<{ access_token: string; user: AuthUser }>(
+        "/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        },
+      );
+      login(data.access_token, data.user);
+      navigate("/");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "無法連上伺服器，請確認後端是否已啟動",
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -121,44 +130,43 @@ export function LoginPage() {
             </div>
 
             <div className="flex justify-end mb-[12px] mt-[6px]">
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setForgotOpen(true)}
                 className="text-xs font-medium text-[#4a90d9] hover:underline"
               >
                 {t("login.forgot")}
-              </a>
+              </button>
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
+              disabled={loading}
+              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
             >
-              {t("login.submit")}
+              {loading ? t("login.loggingIn") : t("login.submit")}
             </button>
+
+            {error && (
+              <p className="mt-2 text-center text-xs text-red-500">{error}</p>
+            )}
           </form>
-
-          <div className="my-6 flex items-center gap-3 text-xs text-ink/40">
-            <span className="h-px flex-1 bg-[#e6dccd]" />
-            {t("login.or")}
-            <span className="h-px flex-1 bg-[#e6dccd]" />
-          </div>
-
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ece0d2] bg-white py-3.5 text-sm font-medium text-ink shadow-[0_4px_16px_rgba(120,96,84,.06)] transition hover:bg-[#faf6f0]"
-          >
-            <GoogleIcon />
-            {t("login.google")}
-          </button>
 
           <p className="mt-6 text-center text-xs text-ink/55">
             {t("login.noAccount")}{" "}
-            <a href="#" className="font-medium text-[#4a90d9] hover:underline">
+            <button
+              type="button"
+              onClick={() => setRegisterOpen(true)}
+              className="font-medium text-[#4a90d9] hover:underline"
+            >
               {t("login.signUp")}
-            </a>
+            </button>
           </p>
         </div>
       </div>
+
+      <RegisterDrawer open={registerOpen} onClose={() => setRegisterOpen(false)} />
+      <ForgotPasswordDrawer open={forgotOpen} onClose={() => setForgotOpen(false)} />
     </div>
   );
 }

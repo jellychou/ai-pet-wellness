@@ -35,6 +35,9 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
+      - name: SPA fallback (404.html) for client-side routing
+        run: cp apps/web/dist/index.html apps/web/dist/404.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

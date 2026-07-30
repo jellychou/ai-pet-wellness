@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+type Pet = {
+  id: number;
+  name: string;
+  breed: string;
+  gender: string;
+  birthday: string;
+  weight: number;
+};
+
 export type AuthUser = {
   id: number;
   email: string;
@@ -12,6 +21,11 @@ export type AuthUser = {
   language?: string | null;
   gender?: string | null;
   login_method: string | null;
+  is_set_password?: boolean;
+  reset_token_hash?: string | null;
+  reset_token_expires_at?: string | null;
+  pets: Pet[];
+  active_pet_id?: number | null;
 };
 
 type AuthState = {

@@ -165,6 +165,8 @@ export function SettingsPage() {
     });
   }
 
+  console.log(userInfo);
+
   return (
     <div className="mx-auto max-w-md space-y-5">
       <button
@@ -187,7 +189,6 @@ export function SettingsPage() {
           </div>
         </div>
       </button>
-
       <Section
         title="飼主資訊"
         action={
@@ -237,7 +238,6 @@ export function SettingsPage() {
           showChevron={false}
         />
       </Section>
-
       <Section title="偏好設定">
         <SwitchRow
           icon={Globe}
@@ -285,29 +285,26 @@ export function SettingsPage() {
           <ChevronRight size={16} className="shrink-0 text-ink/25" />
         </div> */}
       </Section>
-
       <Section title="帳號與安全">
-        {userInfo?.login_method === "google" ? (
-          <Row
-            icon={Lock}
-            label="設定密碼"
-            onClick={() => setSetPasswordOpen(true)}
-          />
-        ) : (
+        {userInfo?.is_set_password ? (
           <Row
             icon={Lock}
             label="變更密碼"
             onClick={() => setChangePasswordOpen(true)}
           />
+        ) : (
+          <Row
+            icon={Lock}
+            label="設定密碼"
+            onClick={() => setSetPasswordOpen(true)}
+          />
         )}
       </Section>
-
       <Section title="其他">
         <Row icon={Info} label="關於 Pet Wellness" />
         <Row icon={FileText} label="使用條款" />
         <Row icon={HelpCircle} label="常見問題" />
       </Section>
-
       <Section title="">
         <Row
           icon={FileText}
@@ -316,7 +313,6 @@ export function SettingsPage() {
           showChevron={false}
         />
       </Section>
-
       <button
         type="button"
         onClick={handleLogout}

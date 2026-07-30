@@ -69,6 +69,7 @@ export function LoginPage() {
           },
         );
         login(data.access_token, data.user);
+        localStorage.setItem("token", data.access_token);
         setHasPet(data.user.pets.length > 0);
         navigate(hasPet ? "/" : "/add-pet");
       } catch (err) {
@@ -119,6 +120,7 @@ export function LoginPage() {
         },
       );
       login(data.access_token, data.user);
+      localStorage.setItem("token", data.access_token);
       setHasPet(data.user.pets.length > 0);
       navigate(hasPet ? "/" : "/add-pet");
     } catch (err) {

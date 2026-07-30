@@ -32,7 +32,6 @@ type AuthState = {
   token: string | null;
   user: AuthUser | null;
   userInfo: AuthUser | null;
-  isAuthenticated: boolean;
   // 目前後端還沒有寵物相關的 API，先用這個旗標當作「這個帳號是否已經填過寵物資料」的假資料，
   // 之後接上真的寵物 API 後，應該改成用「有沒有寵物」這種真實資料判斷，這個旗標就可以拿掉
   hasPet: boolean;
@@ -55,26 +54,26 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       userInfo: null,
-      isAuthenticated: false,
       hasPet: false,
       hasHydrated: false,
-      login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () =>
-        set({ token: null, user: null, isAuthenticated: false, hasPet: false }),
+      login: (token, user) => set({ token, user }),
+      logout: () => set({ token: null, user: null, hasPet: false }),
       setUserInfo: (userInfo) => set({ userInfo }),
       setHasPet: (hasPet) => set({ hasPet }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
       name: "auth-storage",
-      // userInfo 刻意不存進 localStorage：頭貼現在是 base64 圖片，資料量大，
-      // 容易把 localStorage 的容量塞爆（QuotaExceededError，setUserInfo 就是這樣壞的）。
-      // App.tsx 只要有 token 進站時就會打 /user/user-info 重新抓一份最新的 userInfo，
-      // 不持久化這欄不會少功能。
+      // userInfo、user 刻意都不存進 localStorage：這兩個都可能帶著 base64 頭貼
+      // （user 是登入當下後端回傳的那份，userInfo 是 /user/user-info 抓回來的那份），
+      // 資料量大，容易把 localStorage 的容量塞爆（QuotaExceededError）。
+      // 而且只要 user 有被存進去，之後任何一次 set()（不管改的是哪個欄位）都會把
+      // 整包 partialize 出來的 state 重新序列化寫入 localStorage，帶著這個大欄位一起寫，
+      // 所以看起來像是「setUserInfo 壞的」，其實是 user 這個大欄位一直躺在裡面。
+      // App.tsx 只要有 token 進站就會打 /user/user-info 重新抓一份最新的 userInfo，
+      // 不持久化 user/userInfo 不會少功能。
       partialize: (state) => ({
         token: state.token,
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
         hasPet: state.hasPet,
       }),
       // 從 localStorage 讀完（不管有沒有存過資料）都會呼叫這裡，

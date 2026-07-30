@@ -225,3 +225,17 @@ def set_password(
     db.commit()
     db.refresh(user)
     return MessageResponse(message="Password set successfully")
+
+
+# 變更密碼
+@router.post("/change-password", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+def change_password(
+    payload: SetPasswordRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> MessageResponse:
+    user.password_hash = hash_password(payload.password)
+    user.is_set_password = True
+    db.commit()
+    db.refresh(user)
+    return MessageResponse(message="Password set successfully")    

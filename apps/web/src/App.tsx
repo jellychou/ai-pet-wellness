@@ -18,7 +18,11 @@ import { useAuthStore, type AuthUser } from "./store/useAuthStore";
 import { apiFetch } from "./lib/api";
 
 function RequireAuth({ children }: { children: ReactNode }) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // 注意：zustand persist 不會另外存一個叫 "token" 的 localStorage key，
+  // 它把整個 store 包成一份 JSON 放在 "auth-storage" 這個 key 裡，
+  // 所以 localStorage.getItem("token") 永遠是 null、永遠判斷成沒登入。
+  // 要拿 token 一定要透過 useAuthStore 這個 hook，不能直接讀 localStorage。
+  const isAuthenticated = useAuthStore((s) => !!s.token);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   // reload 網頁的當下，localStorage 還沒讀完之前先什麼都不畫，
   // 避免用初始值 isAuthenticated=false 誤判成「沒登入」而先跳一次 /login
@@ -28,7 +32,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 }
 
 function RedirectIfAuthed({ children }: { children: ReactNode }) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => !!s.token);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   if (!hasHydrated) return null;
   if (isAuthenticated) return <Navigate to="/" replace />;
@@ -42,7 +46,7 @@ async function getUserInfo() {
 }
 
 export default function App() {
-  const token = useAuthStore((s) => s.token);
+  const token = localStorage.getItem("token");
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
 
   useEffect(() => {

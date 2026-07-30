@@ -145,6 +145,9 @@ export function SettingsPage() {
   const isEnglish = i18n.language === "en";
 
   function handleLogout() {
+    // 這裡不用手動清 localStorage：zustand persist 是把整個 store 存在
+    // "auth-storage" 這一個 key 裡，不是分開存成 "isAuthenticated" 這種 key，
+    // logout() 裡的 set() 本身就會連帶把 "auth-storage" 更新成登出後的狀態
     logout();
     navigate("/login", { replace: true });
   }

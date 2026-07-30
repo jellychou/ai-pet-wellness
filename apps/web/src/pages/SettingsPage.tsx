@@ -69,6 +69,7 @@ export function SettingsPage() {
   const [themeColor, setThemeColor] = useState(themeColors[0]);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const userInfo = useAuthStore((s) => s.userInfo);
   const logout = useAuthStore((s) => s.logout);
 
   function handleLogout() {
@@ -84,7 +85,7 @@ export function SettingsPage() {
       >
         <div className="relative shrink-0">
           <img
-            src={user?.picture_url || fallbackAvatarPhoto}
+            src={userInfo?.picture_url || fallbackAvatarPhoto}
             alt="使用者頭像"
             className="h-16 w-16 rounded-full object-cover"
           />
@@ -94,35 +95,31 @@ export function SettingsPage() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-base font-semibold text-ink">
-            {user?.name ?? "Jenny 周"}
+            {userInfo?.name ?? ""}
           </div>
           <div className="mt-0.5 text-xs text-ink/50">
-            用愛陪伴毛孩的每一天 🐾
+            {userInfo?.slogan ?? ""}
           </div>
         </div>
         <ChevronRight size={18} className="shrink-0 text-ink/30" />
       </button>
 
       <Section title="飼主資訊">
-        <Row icon={User} label="姓名" value={user?.name ?? "Jenny 周"} />
-        <Row icon={Phone} label="電話" value="0912-345-678" />
-        <Row icon={Calendar} label="生日" value="1993 / 02 / 24" />
-        <Row
-          icon={Mail}
-          label="電子郵件"
-          value={user?.email ?? "jenny@gmail.com"}
-        />
-        <Row
-          icon={MessageCircle}
-          label="標語"
-          value="用愛陪伴毛孩的每一天 🐾"
-        />
+        <Row icon={User} label="姓名" value={userInfo?.name ?? ""} />
+        <Row icon={Phone} label="電話" value={userInfo?.phone ?? ""} />
+        <Row icon={Calendar} label="生日" value={userInfo?.birthdate ?? ""} />
+        <Row icon={Mail} label="電子郵件" value={userInfo?.email ?? ""} />
+        <Row icon={MessageCircle} label="標語" value={userInfo?.slogan ?? ""} />
       </Section>
 
       <Section title="偏好設定">
-        <Row icon={Globe} label="語言 / Language" value="繁體中文" />
-        <Row icon={Bell} label="通知設定" value="已開啟" />
-        <div className="flex items-center gap-3 px-4 py-3.5">
+        <Row
+          icon={Globe}
+          label="語言 / Language"
+          value={userInfo?.language ?? ""}
+        />
+        {/* <Row icon={Bell} label="通知設定" value="已開啟" /> */}
+        {/* <div className="flex items-center gap-3 px-4 py-3.5">
           <Moon size={17} className="shrink-0 text-ink/45" />
           <span className="flex-1 text-sm text-ink">深色模式</span>
           <button
@@ -139,8 +136,8 @@ export function SettingsPage() {
               }`}
             />
           </button>
-        </div>
-        <div className="flex items-center gap-3 px-4 py-3.5">
+        </div> */}
+        {/* <div className="flex items-center gap-3 px-4 py-3.5">
           <Palette size={17} className="shrink-0 text-ink/45" />
           <span className="flex-1 text-sm text-ink">主題顏色</span>
           <div className="flex items-center gap-1.5">
@@ -158,13 +155,13 @@ export function SettingsPage() {
             ))}
           </div>
           <ChevronRight size={16} className="shrink-0 text-ink/25" />
-        </div>
+        </div> */}
       </Section>
 
       <Section title="帳號與安全">
         <Row icon={Lock} label="變更密碼" />
-        <Row icon={ShieldCheck} label="隱私設定" />
-        <Row icon={UserRoundCheck} label="兩步驟驗證" value="未開啟" />
+        {/* <Row icon={ShieldCheck} label="隱私設定" /> */}
+        {/* <Row icon={UserRoundCheck} label="兩步驟驗證" value="未開啟" /> */}
       </Section>
 
       <Section title="其他">

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { AppLayout } from "./layouts/AppLayout";
 import { AICenterPage } from "./pages/AICenterPage";
@@ -12,7 +13,8 @@ import { TimelinePage } from "./pages/TimelinePage";
 import { StatsPage } from "./pages/StatsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { RecordsPage } from "./pages/RecordsPage";
-import { useAuthStore } from "./store/useAuthStore";
+import { useAuthStore, type AuthUser } from "./store/useAuthStore";
+import { apiFetch } from "./lib/api";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -26,7 +28,24 @@ function RedirectIfAuthed({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+async function getUserInfo() {
+  return apiFetch<AuthUser>("/auth/user-info", {
+    method: "GET",
+  });
+}
+
 export default function App() {
+  const token = useAuthStore((s) => s.token);
+  const setUserInfo = useAuthStore((s) => s.setUserInfo);
+
+  useEffect(() => {
+    if (token) {
+      getUserInfo().then((user) => {
+        setUserInfo(user);
+      });
+    }
+  }, [token, setUserInfo]);
+
   return (
     <Routes>
       <Route

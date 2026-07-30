@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { theme } from './theme'
 import './index.css'
 import './i18n/config'
@@ -16,7 +18,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter basename={import.meta.env.BASE_URL}><App/></BrowserRouter>
+        {/* MUI X 的 DatePicker 等元件都要靠這層 Provider 才知道怎麼格式化/解析日期，
+            少了它元件不會動、還會噴 context 相關的錯誤 */}
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <BrowserRouter basename={import.meta.env.BASE_URL}><App/></BrowserRouter>
+        </LocalizationProvider>
       </ThemeProvider>
     </StyledEngineProvider>
   </React.StrictMode>

@@ -273,8 +273,14 @@ export function LoginPage() {
         </div>
       </div>
 
-      <RegisterDrawer open={registerOpen} onClose={() => setRegisterOpen(false)} />
-      <ForgotPasswordDrawer open={forgotOpen} onClose={() => setForgotOpen(false)} />
+      <RegisterDrawer
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+      />
+      <ForgotPasswordDrawer
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+      />
     </div>
   );
 }

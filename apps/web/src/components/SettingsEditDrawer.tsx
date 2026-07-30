@@ -12,9 +12,10 @@ import {
   User,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-
-const defaultAvatarPhoto =
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&h=160&fit=crop";
+import { useAuthStore } from "../store/useAuthStore";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { useEffect } from "react";
 
 const themeColors = ["#caa06f", "#6fa87e", "#b39ddb", "#6fa8dc"];
 
@@ -153,8 +154,9 @@ export function SettingsEditDrawer() {
   const [notifyVaccine, setNotifyVaccine] = useState(true);
   const [notifyFood, setNotifyFood] = useState(false);
   const [notifyAi, setNotifyAi] = useState(true);
-  const [avatarPhoto, setAvatarPhoto] = useState(defaultAvatarPhoto);
+  const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const userInfo = useAuthStore((s) => s.userInfo);
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -170,6 +172,10 @@ export function SettingsEditDrawer() {
   function handleSave() {
     handleBack();
   }
+
+  useEffect(() => {
+    setAvatarPhoto(userInfo?.picture_url ?? null);
+  }, []);
 
   const inputClass =
     "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
@@ -214,7 +220,7 @@ export function SettingsEditDrawer() {
             />
             <div className="relative">
               <img
-                src={avatarPhoto}
+                src={avatarPhoto ?? ""}
                 alt="使用者頭像"
                 className="h-28 w-28 rounded-full object-cover"
               />
@@ -234,7 +240,7 @@ export function SettingsEditDrawer() {
 
             <Field label="姓名" required>
               <input
-                value={name}
+                value={userInfo?.name ?? ""}
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
               />
@@ -242,29 +248,30 @@ export function SettingsEditDrawer() {
 
             <Field label="電話" required>
               <input
-                value={phone}
+                value={userInfo?.phone ?? ""}
                 onChange={(e) => setPhone(e.target.value)}
                 className={inputClass}
               />
             </Field>
 
             <Field label="生日" required>
-              <div className="relative">
-                <input
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  className={`${inputClass} pr-9`}
-                />
-                <Calendar
-                  size={13}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
-                />
-              </div>
+              <DatePicker
+                value={userInfo?.birthdate ? dayjs(userInfo.birthdate) : null}
+                onChange={(newValue) =>
+                  setBirthday(newValue ? newValue.format("YYYY-MM-DD") : "")
+                }
+                format="YYYY / MM / DD"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
             </Field>
 
             <Field label="性別">
               <ToggleGroup
-                value={gender}
+                value={userInfo?.gender ?? ""}
                 onChange={setGender}
                 options={[
                   { label: "生理女", icon: "♀" },
@@ -275,7 +282,7 @@ export function SettingsEditDrawer() {
 
             <Field label="Email">
               <input
-                value={email}
+                value={userInfo?.email ?? ""}
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputClass}
               />
@@ -287,14 +294,14 @@ export function SettingsEditDrawer() {
 
             <Field label="語言 / Language">
               <Select
-                value={language}
+                value={userInfo?.language ?? ""}
                 onChange={setLanguage}
-                options={["繁體中文", "English", "日本語"]}
+                options={["繁體中文", "English"]}
               />
             </Field>
           </div>
 
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <SectionHeader icon={Bell} title="通知設定" />
 
             <div className="flex items-center justify-between">
@@ -324,7 +331,7 @@ export function SettingsEditDrawer() {
                 onChange={() => setNotifyAi((v) => !v)}
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="space-y-3">
             <SectionHeader icon={Lock} title="密碼設定" />

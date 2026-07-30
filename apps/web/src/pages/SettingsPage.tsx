@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useState, type ElementType, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -74,7 +74,7 @@ function Row({
   onClick,
   showChevron = true,
 }: {
-  icon: ComponentType<{ size?: number; className?: string }>;
+  icon: ElementType;
   label: string;
   value?: string;
   onClick?: () => void;
@@ -128,7 +128,7 @@ function SwitchRow({
   checked,
   onChange,
 }: {
-  icon: ComponentType<{ size?: number; className?: string }>;
+  icon: ElementType;
   label: string;
   value?: string;
   checked: boolean;

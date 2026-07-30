@@ -8,6 +8,7 @@ import { AiScanDrawer } from "../components/AiScanDrawer";
 import { EditHealthDrawer } from "../components/EditHealthDrawer";
 import { HealthDetailDrawer } from "../components/HealthDetailDrawer";
 import { EditPetDrawer } from "../components/EditPetDrawer";
+import { AddPetDrawer } from "../components/AddPetDrawer";
 import { AddHealthRecordDrawer } from "../components/AddHealthRecordDrawer";
 import { SettingsEditDrawer } from "../components/SettingsEditDrawer";
 import { ChangePasswordDrawer } from "../components/ChangePasswordDrawer";
@@ -50,6 +51,7 @@ export function AppLayout() {
       <EditHealthDrawer />
       <HealthDetailDrawer />
       <EditPetDrawer />
+      <AddPetDrawer />
       <AddHealthRecordDrawer />
       <SettingsEditDrawer />
       <ChangePasswordDrawer />

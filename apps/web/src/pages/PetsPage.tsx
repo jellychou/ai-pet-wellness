@@ -1,10 +1,77 @@
+import { Plus } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 
 const petPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
 
+// 目前後端還沒有寵物 API，先用一筆假資料撐住畫面。
+// 之後接上真的 /pets API 後，這裡要改成從後端抓使用者實際擁有的寵物列表。
+const mockPets = [{ name: "Coco", photo: petPhoto }];
+
+function PetAvatarSwitcher({
+  pets,
+  selected,
+  onSelect,
+  onAdd,
+}: {
+  pets: { name: string; photo: string }[];
+  selected: string;
+  onSelect: (name: string) => void;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="mb-3 flex gap-3 overflow-x-auto px-1 pb-1">
+      {pets.map((pet) => (
+        <button
+          key={pet.name}
+          type="button"
+          onClick={() => onSelect(pet.name)}
+          className="flex shrink-0 flex-col items-center gap-1"
+        >
+          <span
+            className={`grid h-14 w-14 place-items-center rounded-full p-0.5 transition ${
+              selected === pet.name
+                ? "ring-2 ring-[#caa06f]"
+                : "ring-2 ring-transparent"
+            }`}
+          >
+            <img
+              src={pet.photo}
+              alt={pet.name}
+              className="h-full w-full rounded-full object-cover"
+            />
+          </span>
+          <span
+            className={`text-[11px] ${
+              selected === pet.name
+                ? "font-semibold text-[#c9784a]"
+                : "text-ink/50"
+            }`}
+          >
+            {pet.name}
+          </span>
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={onAdd}
+        aria-label="新增寵物"
+        className="flex shrink-0 flex-col items-center gap-1"
+      >
+        <span className="grid h-14 w-14 place-items-center rounded-full bg-[#fbe9d9] text-[#c9784a] transition hover:bg-[#f6ddc2]">
+          <Plus size={22} />
+        </span>
+        <span className="text-[11px] text-ink/50">新增</span>
+      </button>
+    </div>
+  );
+}
+
 export function PetsPage() {
   const setEditPetOpen = useAppStore((s) => s.setEditPetOpen);
+  const setAddPetOpen = useAppStore((s) => s.setAddPetOpen);
+  const selectedPet = useAppStore((s) => s.selectedPet);
+  const setSelectedPet = useAppStore((s) => s.setSelectedPet);
   const rows = [
     ["名字", "Coco"],
     ["品種", "Golden Retriever"],
@@ -19,6 +86,12 @@ export function PetsPage() {
   ];
   return (
     <>
+      <PetAvatarSwitcher
+        pets={mockPets}
+        selected={selectedPet}
+        onSelect={setSelectedPet}
+        onAdd={() => setAddPetOpen(true)}
+      />
       <section className="card p-4 mb-[12px]">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="section-title">寵物資訊 / Pet Profile</h2>

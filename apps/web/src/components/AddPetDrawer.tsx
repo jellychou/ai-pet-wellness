@@ -6,28 +6,20 @@ import {
   ChevronLeft,
   FileText,
   Heart,
-  Image as ImageIcon,
   Lightbulb,
   PawPrint,
   ShieldCheck,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { useAuthStore } from "../store/useAuthStore";
 
-const petPhoto =
+const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
-
-const initialPhotos = [
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=200&fit=crop",
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=220&fit=crop",
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=220&h=200&fit=crop",
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=210&h=210&fit=crop",
-];
 
 const tips = [
   "請確保資訊正確，有助於提供更精準的建議",
   "生日與體重將用於健康與飲食建議",
-  "您可以隨時更新寵物資訊",
+  "您可以隨時到「我的寵物」更新寵物資訊",
 ];
 
 function Field({
@@ -108,32 +100,54 @@ function ToggleGroup({
   );
 }
 
-export function EditPetDrawer() {
-  const open = useAppStore((s) => s.editPetOpen);
-  const setOpen = useAppStore((s) => s.setEditPetOpen);
-  const navigate = useNavigate();
+const initialState = {
+  name: "",
+  breed: "",
+  gender: "Female",
+  birthday: "",
+  weight: "",
+  coatColor: "",
+  neutered: "已絕育",
+  allergy: "無",
+  activity: "中等",
+  chipNumber: "",
+  note: "",
+};
 
-  const [name, setName] = useState("Coco");
-  const [breed, setBreed] = useState("Golden Retriever");
-  const [gender, setGender] = useState("Female");
-  const [birthday, setBirthday] = useState("2020/06/20（4歲）");
-  const [weight, setWeight] = useState("25.4");
-  const [coatColor, setCoatColor] = useState("Golden");
-  const [neutered, setNeutered] = useState("已絕育");
-  const [allergy, setAllergy] = useState("雞肉、牛肉");
-  const [activity, setActivity] = useState("中等");
-  const [chipNumber, setChipNumber] = useState("900215000123456");
-  const [ownerContact, setOwnerContact] = useState("均誼 周");
-  const [phone, setPhone] = useState("0912-345-678");
-  const [email, setEmail] = useState("junyichou@gmail.com");
-  const [note, setNote] = useState("");
-  const [photos, setPhotos] = useState(initialPhotos);
-  const [avatarSrc, setAvatarSrc] = useState(petPhoto);
+export function AddPetDrawer() {
+  const open = useAppStore((s) => s.addPetOpen);
+  const setOpen = useAppStore((s) => s.setAddPetOpen);
+  const setHasPet = useAuthStore((s) => s.setHasPet);
+
+  const [name, setName] = useState(initialState.name);
+  const [breed, setBreed] = useState(initialState.breed);
+  const [gender, setGender] = useState(initialState.gender);
+  const [birthday, setBirthday] = useState(initialState.birthday);
+  const [weight, setWeight] = useState(initialState.weight);
+  const [coatColor, setCoatColor] = useState(initialState.coatColor);
+  const [neutered, setNeutered] = useState(initialState.neutered);
+  const [allergy, setAllergy] = useState(initialState.allergy);
+  const [activity, setActivity] = useState(initialState.activity);
+  const [chipNumber, setChipNumber] = useState(initialState.chipNumber);
+  const [note, setNote] = useState(initialState.note);
+  const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
+  const [error, setError] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const photosInputRef = useRef<HTMLInputElement>(null);
 
-  function removePhoto(index: number) {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  function resetForm() {
+    setName(initialState.name);
+    setBreed(initialState.breed);
+    setGender(initialState.gender);
+    setBirthday(initialState.birthday);
+    setWeight(initialState.weight);
+    setCoatColor(initialState.coatColor);
+    setNeutered(initialState.neutered);
+    setAllergy(initialState.allergy);
+    setActivity(initialState.activity);
+    setChipNumber(initialState.chipNumber);
+    setNote(initialState.note);
+    setAvatarSrc(defaultPetPhoto);
+    setError("");
   }
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
@@ -143,24 +157,22 @@ export function EditPetDrawer() {
     e.target.value = "";
   }
 
-  function handlePhotosPick(e: ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []);
-    if (picked.length) {
-      setPhotos((prev) => [
-        ...prev,
-        ...picked.map((f) => URL.createObjectURL(f)),
-      ]);
-    }
-    e.target.value = "";
-  }
-
   function handleBack() {
+    resetForm();
     setOpen(false);
-    navigate("/pets");
   }
 
   function handleSave() {
-    handleBack();
+    if (!name || !breed || !gender || !birthday || !weight || !coatColor) {
+      setError("請完整填寫所有必填欄位");
+      return;
+    }
+    setError("");
+    // TODO: 目前後端還沒有寵物 API，這裡先只用本地旗標記錄「已新增寵物」，
+    // 之後接上真的 /pets API 後，這裡要改成實際呼叫後端建立寵物資料
+    setHasPet(true);
+    resetForm();
+    setOpen(false);
   }
 
   const inputClass =
@@ -179,18 +191,18 @@ export function EditPetDrawer() {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="返回首頁"
+          aria-label="返回"
           className="grid h-8 w-8 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ChevronLeft size={19} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">編輯寵物資訊</h1>
+        <h1 className="text-sm font-semibold text-ink">新增寵物</h1>
         <button
           type="button"
           onClick={handleSave}
           className="text-xs font-semibold text-[#c9784a] transition hover:text-[#b56a3d]"
         >
-          儲存
+          新增
         </button>
       </div>
 
@@ -225,7 +237,7 @@ export function EditPetDrawer() {
               className="mt-3 flex items-center gap-1 rounded-full bg-[#fbe9d9] px-3 py-1.5 text-[12px] font-medium text-[#c9784a] transition hover:bg-[#f6ddc2]"
             >
               <Camera size={11} />
-              更換頭像
+              上傳照片
             </button>
           </div>
 
@@ -239,6 +251,7 @@ export function EditPetDrawer() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="請輸入寵物名字"
                 className={inputClass}
               />
             </Field>
@@ -247,6 +260,7 @@ export function EditPetDrawer() {
               <input
                 value={breed}
                 onChange={(e) => setBreed(e.target.value)}
+                placeholder="請輸入寵物品種"
                 className={inputClass}
               />
             </Field>
@@ -265,9 +279,10 @@ export function EditPetDrawer() {
             <Field label="生日" required>
               <div className="relative">
                 <input
+                  type="date"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
-                  className={`${inputClass} pr-9`}
+                  className={`${inputClass} pr-9 [color-scheme:light]`}
                 />
                 <Calendar
                   size={13}
@@ -282,6 +297,7 @@ export function EditPetDrawer() {
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   inputMode="decimal"
+                  placeholder="請輸入體重"
                   className={`${inputClass} pr-9`}
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-ink/40">
@@ -315,10 +331,11 @@ export function EditPetDrawer() {
             </Field>
 
             <Field label="過敏">
-              <Select
+              <input
                 value={allergy}
-                onChange={setAllergy}
-                options={["雞肉、牛肉", "無", "海鮮", "穀物"]}
+                onChange={(e) => setAllergy(e.target.value)}
+                placeholder="請輸入寵物過敏"
+                className={inputClass}
               />
             </Field>
 
@@ -326,7 +343,11 @@ export function EditPetDrawer() {
               <Select
                 value={activity}
                 onChange={setActivity}
-                options={["低", "中等", "高"]}
+                options={[
+                  "低(很少，偶而散步)",
+                  "中等(偶爾跑跳)",
+                  "高(經常運動)",
+                ]}
               />
             </Field>
           </div>
@@ -341,30 +362,7 @@ export function EditPetDrawer() {
               <input
                 value={chipNumber}
                 onChange={(e) => setChipNumber(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="飼主聯絡人">
-              <input
-                value={ownerContact}
-                onChange={(e) => setOwnerContact(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="聯絡電話">
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="聯絡 Email">
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="請輸入晶片號碼（選填）"
                 className={inputClass}
               />
             </Field>
@@ -405,6 +403,8 @@ export function EditPetDrawer() {
               ))}
             </div>
           </div>
+
+          {error && <p className="text-center text-xs text-red-500">{error}</p>}
         </div>
       </div>
     </div>

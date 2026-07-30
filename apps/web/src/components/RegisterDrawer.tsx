@@ -161,7 +161,8 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
   function handleFinish() {
     resetAndClose();
-    navigate("/");
+    // 剛註冊的帳號一定還沒有寵物資料，直接導去新增寵物頁面
+    navigate("/add-pet");
   }
 
   return (

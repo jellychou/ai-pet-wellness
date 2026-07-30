@@ -48,7 +48,7 @@ function ToggleGroup({
   value,
   onChange,
 }: {
-  options: { label: string; icon?: string }[];
+  options: { label: string; icon?: string; value: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -58,9 +58,9 @@ function ToggleGroup({
         <button
           key={o.label}
           type="button"
-          onClick={() => onChange(o.label)}
+          onClick={() => onChange(o.value)}
           className={`rounded-xl border py-2 text-[11px] font-medium transition ${
-            value === o.label
+            value === o.value
               ? "border-[#f0c9a0] bg-[#fbe9d9] text-[#c9784a]"
               : "border-[#ece4dc] bg-[#f7f4f0] text-ink/45"
           }`}
@@ -250,8 +250,8 @@ export function SettingsEditDrawer() {
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "生理女", icon: "♀" },
-                  { label: "生理男", icon: "♂" },
+                  { label: "生理女", icon: "♀", value: "female" },
+                  { label: "生理男", icon: "♂", value: "male" },
                 ]}
               />
             </Field>

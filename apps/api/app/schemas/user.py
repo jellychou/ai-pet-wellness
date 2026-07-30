@@ -13,3 +13,5 @@ class UpdateUserInfoRequest(BaseModel):
     slogan: str | None = None
     language: str | None = None
     gender: str | None = None
+
+  

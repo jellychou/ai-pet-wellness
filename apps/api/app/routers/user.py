@@ -47,3 +47,10 @@ def update_user_info(
     current_user.gender = payload.gender
     db.commit()
     return MessageResponse(message="User info updated successfully")
+
+
+# 取得目前登入使用者的所有寵物：一樣靠 token 認出是誰，只回傳自己的寵物，
+# 不吃 client 傳的 id，避免任何人都能查到別人的寵物資料
+@router.get("/get-pets", response_model=list[dict])
+def get_pets(current_user: User = Depends(get_current_user)) -> list[dict]:
+    return current_user.pets

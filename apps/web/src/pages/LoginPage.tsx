@@ -42,6 +42,7 @@ export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const hasPet = useAuthStore((s) => s.hasPet);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -68,7 +69,7 @@ export function LoginPage() {
           },
         );
         login(data.access_token, data.user);
-        navigate("/");
+        navigate(hasPet ? "/" : "/add-pet");
       } catch (err) {
         setGoogleError(
           err instanceof ApiError
@@ -102,7 +103,7 @@ export function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [login, navigate]);
+  }, [login, navigate, hasPet]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -117,7 +118,7 @@ export function LoginPage() {
         },
       );
       login(data.access_token, data.user);
-      navigate("/");
+      navigate(hasPet ? "/" : "/add-pet");
     } catch (err) {
       setError(
         err instanceof ApiError

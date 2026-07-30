@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, String, Text
+from sqlalchemy import Boolean, Date, DateTime, String, Text, Integer
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -50,17 +51,14 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    # 這個使用者底下的所有寵物，先用 JSONB 陣列存（不開獨立的 pets table），
+    # 陣列裡每個物件是一隻寵物的資料（name/breed/gender/birthday/weight...），
+    # 之後如果寵物的資料變複雜、需要單獨查詢/關聯，再考慮拆成獨立的 pets table
+    pets: Mapped[list[dict]] = mapped_column(
+        JSONB, nullable=False, server_default="[]"
+    )
+    # 目前選中的寵物 ID，用於在 UI 上顯示/操作該寵物
+    active_pet_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 
-class  UpdateLanguageRequest(BaseModel):
-    language: str
-
-class UpdateUserInfoRequest(BaseModel):
-    name: str
-    phone: str
-    birthday: date
-    picture_url: str
-    slogan: str
-    language: str
-    gender: str

@@ -221,7 +221,7 @@ export function SettingsPage() {
         <Row
           icon={Transgender}
           label="性別"
-          value={userInfo?.gender ?? ""}
+          value={userInfo?.gender === "female" ? "生理女" : "生理男"}
           showChevron={false}
         />
         <Row

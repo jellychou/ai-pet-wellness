@@ -86,7 +86,7 @@ export function AddVaccineDrawer() {
 
           <div className="space-y-3">
             {filtered.map((v) => (
-              <div key={v.name} className="rounded-2xl bg-[#fbf7f1] p-4">
+              <div key={v.name} className="rounded-2xl bg-[#FDF0D5] p-4">
                 <div className="flex items-start gap-3">
                   <Syringe
                     size={22}

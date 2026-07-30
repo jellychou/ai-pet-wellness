@@ -1,4 +1,58 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
-type AppState={sidebarOpen:boolean; setSidebarOpen:(v:boolean)=>void; selectedPet:string; setSelectedPet:(v:string)=>void; addFoodOpen:boolean; setAddFoodOpen:(v:boolean)=>void; addVaccineOpen:boolean; setAddVaccineOpen:(v:boolean)=>void; aiScanOpen:boolean; setAiScanOpen:(v:boolean)=>void; editHealthOpen:boolean; setEditHealthOpen:(v:boolean)=>void; healthDetailIndex:number|null; setHealthDetailIndex:(v:number|null)=>void; editPetOpen:boolean; setEditPetOpen:(v:boolean)=>void; addHealthRecordOpen:boolean; setAddHealthRecordOpen:(v:boolean)=>void; settingsEditOpen:boolean; setSettingsEditOpen:(v:boolean)=>void; changePasswordOpen:boolean; setChangePasswordOpen:(v:boolean)=>void; setPasswordOpen:boolean; setSetPasswordOpen:(v:boolean)=>void}
-export const useAppStore=create<AppState>((set)=>({sidebarOpen:false,setSidebarOpen:(sidebarOpen)=>set({sidebarOpen}),selectedPet:'Coco',setSelectedPet:(selectedPet)=>set({selectedPet}),addFoodOpen:false,setAddFoodOpen:(addFoodOpen)=>set({addFoodOpen}),addVaccineOpen:false,setAddVaccineOpen:(addVaccineOpen)=>set({addVaccineOpen}),aiScanOpen:false,setAiScanOpen:(aiScanOpen)=>set({aiScanOpen}),editHealthOpen:false,setEditHealthOpen:(editHealthOpen)=>set({editHealthOpen}),healthDetailIndex:null,setHealthDetailIndex:(healthDetailIndex)=>set({healthDetailIndex}),editPetOpen:false,setEditPetOpen:(editPetOpen)=>set({editPetOpen}),addHealthRecordOpen:false,setAddHealthRecordOpen:(addHealthRecordOpen)=>set({addHealthRecordOpen}),settingsEditOpen:false,setSettingsEditOpen:(settingsEditOpen)=>set({settingsEditOpen}),changePasswordOpen:false,setChangePasswordOpen:(changePasswordOpen)=>set({changePasswordOpen}),setPasswordOpen:false,setSetPasswordOpen:(setPasswordOpen)=>set({setPasswordOpen})}))
+type AppState = {
+  sidebarOpen: boolean;
+  setSidebarOpen: (v: boolean) => void;
+  selectedPet: string;
+  setSelectedPet: (v: string) => void;
+  addFoodOpen: boolean;
+  setAddFoodOpen: (v: boolean) => void;
+  addVaccineOpen: boolean;
+  setAddVaccineOpen: (v: boolean) => void;
+  aiScanOpen: boolean;
+  setAiScanOpen: (v: boolean) => void;
+  editHealthOpen: boolean;
+  setEditHealthOpen: (v: boolean) => void;
+  healthDetailIndex: number | null;
+  setHealthDetailIndex: (v: number | null) => void;
+  editPetOpen: boolean;
+  setEditPetOpen: (v: boolean) => void;
+  addHealthRecordOpen: boolean;
+  setAddHealthRecordOpen: (v: boolean) => void;
+  settingsEditOpen: boolean;
+  setSettingsEditOpen: (v: boolean) => void;
+  changePasswordOpen: boolean;
+  setChangePasswordOpen: (v: boolean) => void;
+  setPasswordOpen: boolean;
+  setSetPasswordOpen: (v: boolean) => void;
+  addPetOpen: boolean;
+  setAddPetOpen: (v: boolean) => void;
+};
+export const useAppStore = create<AppState>((set) => ({
+  sidebarOpen: false,
+  setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+  selectedPet: "Coco",
+  setSelectedPet: (selectedPet) => set({ selectedPet }),
+  addFoodOpen: false,
+  setAddFoodOpen: (addFoodOpen) => set({ addFoodOpen }),
+  addVaccineOpen: false,
+  setAddVaccineOpen: (addVaccineOpen) => set({ addVaccineOpen }),
+  aiScanOpen: false,
+  setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
+  editHealthOpen: false,
+  setEditHealthOpen: (editHealthOpen) => set({ editHealthOpen }),
+  healthDetailIndex: null,
+  setHealthDetailIndex: (healthDetailIndex) => set({ healthDetailIndex }),
+  editPetOpen: false,
+  setEditPetOpen: (editPetOpen) => set({ editPetOpen }),
+  addHealthRecordOpen: false,
+  setAddHealthRecordOpen: (addHealthRecordOpen) => set({ addHealthRecordOpen }),
+  settingsEditOpen: false,
+  setSettingsEditOpen: (settingsEditOpen) => set({ settingsEditOpen }),
+  changePasswordOpen: false,
+  setChangePasswordOpen: (changePasswordOpen) => set({ changePasswordOpen }),
+  setPasswordOpen: false,
+  setSetPasswordOpen: (setPasswordOpen) => set({ setPasswordOpen }),
+  addPetOpen: false,
+  setAddPetOpen: (addPetOpen) => set({ addPetOpen }),
+}));

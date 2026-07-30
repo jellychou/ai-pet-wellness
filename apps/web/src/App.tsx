@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { AppLayout } from "./layouts/AppLayout";
 import { AICenterPage } from "./pages/AICenterPage";
+import { AddPetPage } from "./pages/AddPetPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
@@ -62,6 +63,14 @@ export default function App() {
           <RedirectIfAuthed>
             <ResetPasswordPage />
           </RedirectIfAuthed>
+        }
+      />
+      <Route
+        path="/add-pet"
+        element={
+          <RequireAuth>
+            <AddPetPage />
+          </RequireAuth>
         }
       />
       <Route

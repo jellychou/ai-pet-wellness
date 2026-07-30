@@ -11,6 +11,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import patternBg from "../assets/images/pattern-watermark.svg";
 import logo from "../assets/images/logo.png";
 import { apiFetch, ApiError } from "../lib/api";
@@ -72,6 +73,7 @@ type RegisterDrawerProps = {
 export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const { i18n } = useTranslation();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -140,6 +142,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
             name,
             phone,
             birthdate: birthday,
+            language: i18n.language,
           }),
         },
       );

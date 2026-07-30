@@ -40,14 +40,6 @@ class SetPasswordRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
-class MessageResponse(BaseModel):
-    message: str
-
-
-class UpdateLanguageRequest(BaseModel):
-    language: str
-
-
 class UserOut(BaseModel):
     id: int
     email: str

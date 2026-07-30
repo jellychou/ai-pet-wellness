@@ -1,23 +1,11 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import {
-  Bell,
-  Calendar,
-  Camera,
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Lock,
-  SlidersHorizontal,
-  User,
-} from "lucide-react";
+import { Camera, ChevronDown, ChevronLeft, User } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { useEffect } from "react";
-
-const themeColors = ["#caa06f", "#6fa87e", "#b39ddb", "#6fa8dc"];
+import { apiFetch } from "../lib/api";
 
 function SectionHeader({
   icon: Icon,
@@ -112,49 +100,17 @@ function ToggleGroup({
   );
 }
 
-function Switch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onChange}
-      aria-pressed={checked}
-      className={`relative h-6 w-10 shrink-0 rounded-full transition ${
-        checked ? "bg-[#caa06f]" : "bg-[#e5ddd3]"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
-          checked ? "left-[18px]" : "left-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
 export function SettingsEditDrawer() {
   const open = useAppStore((s) => s.settingsEditOpen);
   const setOpen = useAppStore((s) => s.setSettingsEditOpen);
   const setChangePasswordOpen = useAppStore((s) => s.setChangePasswordOpen);
 
-  const [name, setName] = useState("Jenny 周");
-  const [phone, setPhone] = useState("0912-345-678");
-  const [birthday, setBirthday] = useState("1993 / 02 / 24");
-  const [gender, setGender] = useState("女性");
-  const [email, setEmail] = useState("jenny.chou@email.com");
-  const [slogan, setSlogan] = useState("我是一隻可愛的小狗");
-  const [language, setLanguage] = useState("繁體中文");
-  const [themeColor, setThemeColor] = useState(themeColors[0]);
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifyHealth, setNotifyHealth] = useState(true);
-  const [notifyVaccine, setNotifyVaccine] = useState(true);
-  const [notifyFood, setNotifyFood] = useState(false);
-  const [notifyAi, setNotifyAi] = useState(true);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [gender, setGender] = useState("");
+  const [email, setEmail] = useState("");
+  const [slogan, setSlogan] = useState("");
   const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
@@ -170,13 +126,38 @@ export function SettingsEditDrawer() {
     setOpen(false);
   }
 
-  function handleSave() {
-    handleBack();
+  async function handleSave() {
+    try {
+      await apiFetch<{ message: string }>("/user/update-user-info", {
+        method: "PUT",
+        body: JSON.stringify({
+          name,
+          phone,
+          birthday,
+          gender,
+          email,
+          slogan,
+          avatarPhoto,
+        }),
+      });
+      handleBack();
+    } catch (err) {
+      console.error("更新使用者資料失敗", err);
+    }
   }
 
+  // 每次打開這個 drawer 時，把 input 的本地 state 用最新的 userInfo 重新初始化，
+  // 這樣打開時看到的是目前的資料，且 input 是可以正常輸入的「受控元件」
   useEffect(() => {
+    if (!open) return;
     setAvatarPhoto(userInfo?.picture_url ?? null);
-  }, []);
+    setName(userInfo?.name ?? "");
+    setPhone(userInfo?.phone ?? "");
+    setBirthday(userInfo?.birthdate ?? "");
+    setGender(userInfo?.gender ?? "");
+    setEmail(userInfo?.email ?? "");
+    setSlogan(userInfo?.slogan ?? "");
+  }, [open, userInfo]);
 
   const inputClass =
     "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
@@ -199,7 +180,7 @@ export function SettingsEditDrawer() {
         >
           <ChevronLeft size={19} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">編輯個人資料</h1>
+        <h1 className="text-sm font-semibold text-ink">編輯飼主資料</h1>
         <button
           type="button"
           onClick={handleSave}
@@ -241,7 +222,7 @@ export function SettingsEditDrawer() {
 
             <Field label="姓名" required>
               <input
-                value={userInfo?.name ?? ""}
+                value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
               />
@@ -249,7 +230,7 @@ export function SettingsEditDrawer() {
 
             <Field label="電話" required>
               <input
-                value={userInfo?.phone ?? ""}
+                value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className={inputClass}
               />
@@ -257,7 +238,7 @@ export function SettingsEditDrawer() {
 
             <Field label="生日" required>
               <DatePicker
-                value={userInfo?.birthdate ? dayjs(userInfo.birthdate) : null}
+                value={birthday ? dayjs(birthday) : null}
                 onChange={(newValue) =>
                   setBirthday(newValue ? newValue.format("YYYY-MM-DD") : "")
                 }
@@ -272,7 +253,7 @@ export function SettingsEditDrawer() {
 
             <Field label="性別">
               <ToggleGroup
-                value={userInfo?.gender ?? ""}
+                value={gender}
                 onChange={setGender}
                 options={[
                   { label: "生理女", icon: "♀" },
@@ -283,7 +264,7 @@ export function SettingsEditDrawer() {
 
             <Field label="Email">
               <input
-                value={userInfo?.email ?? ""}
+                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputClass}
                 disabled={true}
@@ -292,7 +273,7 @@ export function SettingsEditDrawer() {
 
             <Field label="標語">
               <input
-                value={userInfo?.slogan ?? ""}
+                value={slogan}
                 onChange={(e) => setSlogan(e.target.value)}
                 className={inputClass}
               />

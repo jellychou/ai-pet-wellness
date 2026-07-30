@@ -20,13 +20,17 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     GoogleLoginRequest,
     LoginRequest,
-    MessageResponse,
     RegisterRequest,
     ResetPasswordRequest,
     SetPasswordRequest,
     TokenResponse,
     UserOut,
 )
+from app.schemas.index import (
+    MessageResponse,
+)
+
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 settings = get_settings()

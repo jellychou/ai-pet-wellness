@@ -145,11 +145,8 @@ function SwitchRow({
 }
 
 export function SettingsPage() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [themeColor, setThemeColor] = useState(themeColors[0]);
   const navigate = useNavigate();
   const { i18n } = useTranslation();
-  const user = useAuthStore((s) => s.user);
   const userInfo = useAuthStore((s) => s.userInfo);
   const logout = useAuthStore((s) => s.logout);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);

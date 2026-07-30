@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
-from app.models.user import User, UpdateLanguageRequest, UpdateUserInfoRequest
-from app.schemas.auth import (
+from app.models.user import User
+from app.schemas.user import UpdateLanguageRequest, UpdateUserInfoRequest
+from app.schemas.index import (
     MessageResponse,
 )
 from sqlalchemy.orm import Session

@@ -10,6 +10,7 @@ from app.core.email import send_password_reset_email
 from app.core.security import (
     create_access_token,
     generate_reset_token,
+    get_current_user,
     hash_password,
     hash_reset_token,
     verify_password,
@@ -151,7 +152,6 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
 
     token = create_access_token(user.id)
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
-
 
 
 # 不管這個 email 有沒有註冊過，都回這句一模一樣的訊息，

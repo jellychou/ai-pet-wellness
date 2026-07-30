@@ -29,7 +29,7 @@ function RedirectIfAuthed({ children }: { children: ReactNode }) {
 }
 
 async function getUserInfo() {
-  return apiFetch<AuthUser>("/auth/user-info", {
+  return apiFetch<AuthUser>("/user/user-info", {
     method: "GET",
   });
 }

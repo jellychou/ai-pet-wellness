@@ -13,6 +13,10 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(255))
+    # Google 帳號的唯一識別碼（ID token 的 "sub" claim）。帳密註冊的使用者沒有這欄，所以允許 null
+    google_sub: Mapped[str | None] = mapped_column(
+        String(255), unique=True, index=True, nullable=True
+    )
     picture_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     # 帳密登入用的密碼雜湊（bcrypt）
     password_hash: Mapped[str] = mapped_column(String(255))

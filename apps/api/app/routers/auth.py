@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -17,6 +19,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
     ForgotPasswordRequest,
+    GoogleLoginRequest,
     LoginRequest,
     MessageResponse,
     RegisterRequest,
@@ -27,6 +30,64 @@ from app.schemas.auth import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 settings = get_settings()
+
+
+@router.post("/google", response_model=TokenResponse)
+def login_with_google(
+    payload: GoogleLoginRequest, db: Session = Depends(get_db)
+) -> TokenResponse:
+    if not settings.google_client_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="後端尚未設定 GOOGLE_CLIENT_ID",
+        )
+
+    try:
+        # 向 Google 驗證這個 ID token 的簽章、有效期，
+        # 並確認 audience 等於我們自己的 client id（避免拿別人 app 的 token 冒充）
+        idinfo = google_id_token.verify_oauth2_token(
+            payload.credential,
+            google_requests.Request(),
+            settings.google_client_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google 登入驗證失敗",
+        ) from exc
+
+    google_sub: str = idinfo["sub"]
+    email: str = idinfo["email"]
+    name: str = idinfo.get("name") or email
+    picture: str | None = idinfo.get("picture")
+
+    user = db.query(User).filter(User.google_sub == google_sub).first()
+    if user is None:
+        # 舊帳號可能是用同個 email 帳密註冊過、還沒綁過 google_sub，順便補上，
+        # 這樣同一個 email 之後帳密、Google 兩種方式都能登入
+        user = db.query(User).filter(User.email == email).first()
+
+    if user is None:
+        # 全新帳號：Google 沒有給密碼，這裡先塞一組誰都猜不到、也永遠不會被拿去登入的雜湊值
+        # （帳密登入會走 verify_password 比對，這組值不對應任何使用者會輸入的明文）
+        user = User(
+            google_sub=google_sub,
+            email=email,
+            name=name,
+            picture_url=picture,
+            password_hash=hash_password(generate_reset_token()),
+        )
+        db.add(user)
+    else:
+        user.google_sub = google_sub
+        user.name = name
+        user.picture_url = picture
+
+    db.commit()
+    db.refresh(user)
+
+    token = create_access_token(user.id)
+    return TokenResponse(access_token=token, user=UserOut.model_validate(user))
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)

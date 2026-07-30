@@ -2,6 +2,11 @@ from pydantic import BaseModel, EmailStr, Field
 from datetime import date
 
 
+class GoogleLoginRequest(BaseModel):
+    # 前端 Google Identity Services 回傳的 ID token（一組 JWT）
+    credential: str
+
+
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)

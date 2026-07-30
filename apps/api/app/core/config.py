@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # 前端開發伺服器網址（逗號分隔），用於 CORS 白名單
     cors_origins: str = "http://localhost:5173"
 
+    # Google OAuth Client ID（前端登入用的同一組，後端驗證 ID token 的 audience 要對得上）
+    google_client_id: str = ""
+
     # 簽發我們自己 session JWT 用的密鑰，正式環境務必換成隨機長字串並放在 .env（不要 commit）
     jwt_secret_key: str = "dev-only-change-me"
     jwt_algorithm: str = "HS256"

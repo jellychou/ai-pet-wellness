@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path, HTTPException, Body
 from app.models.user import User
 from app.schemas.user import UpdateLanguageRequest, UpdateUserInfoRequest
 from app.schemas.index import (
@@ -13,19 +13,25 @@ from app.core.security import (
 router = APIRouter(prefix="/user", tags=["user"])
 
 # 更新語言
-@router.put("/update-language", response_model=MessageResponse)
+@router.put(f"/update-language/{id}", response_model=MessageResponse)
 def update_language(
-    payload: UpdateLanguageRequest,
-    current_user: User = Depends(get_current_user),
+    id: int=Path(gt=0),
+    payload: UpdateLanguageRequest = Body(...),
     db: Session = Depends(get_db),
 ) -> MessageResponse:
+    current_user = db.query(User).filter(User.id == id).first()
+    if current_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
     current_user.language = payload.language
     db.commit()
     return MessageResponse(message="Language updated successfully")
 
 # 更新使用者資料
-@router.put("/update-user-info", response_model=MessageResponse)
-def update_user_info(payload: UpdateUserInfoRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> MessageResponse:
+@router.put(f"/update-user-info/{id}", response_model=MessageResponse)
+def update_user_info(id: int=Path(gt=0), payload: UpdateUserInfoRequest = Body(...), db: Session = Depends(get_db)) -> MessageResponse:
+    current_user = db.query(User).filter(User.id == id).first()
+    if current_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
     current_user.name = payload.name
     current_user.phone = payload.phone
     current_user.birthday = payload.birthday

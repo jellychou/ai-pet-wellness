@@ -153,7 +153,7 @@ export function SettingsEditDrawer() {
     setAvatarPhoto(userInfo?.picture_url ?? null);
     setName(userInfo?.name ?? "");
     setPhone(userInfo?.phone ?? "");
-    setBirthday(userInfo?.birthdate ?? "");
+    setBirthday(userInfo?.birthday ?? "");
     setGender(userInfo?.gender ?? "");
     setEmail(userInfo?.email ?? "");
     setSlogan(userInfo?.slogan ?? "");

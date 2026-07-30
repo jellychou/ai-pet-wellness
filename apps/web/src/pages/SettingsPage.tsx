@@ -227,7 +227,7 @@ export function SettingsPage() {
         <Row
           icon={Calendar}
           label="生日"
-          value={userInfo?.birthdate ?? ""}
+          value={userInfo?.birthday ?? ""}
           showChevron={false}
         />
         <Row

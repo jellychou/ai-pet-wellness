@@ -141,7 +141,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
             password,
             name,
             phone,
-            birthdate: birthday,
+            birthday: birthday,
             language: i18n.language,
           }),
         },

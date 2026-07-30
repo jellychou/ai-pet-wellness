@@ -1,4 +1,4 @@
-"""add profile fields (phone, birthdate, slogan)
+"""add profile fields (phone, birthday, slogan)
 
 Revision ID: 20260729_0004
 Revises: 20260729_0003
@@ -19,11 +19,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.add_column("users", sa.Column("phone", sa.String(length=50), nullable=True))
-    op.add_column("users", sa.Column("birthdate", sa.Date(), nullable=True))
+    op.add_column("users", sa.Column("birthday", sa.Date(), nullable=True))
     op.add_column("users", sa.Column("slogan", sa.String(length=255), nullable=True))
 
 
 def downgrade() -> None:
     op.drop_column("users", "slogan")
-    op.drop_column("users", "birthdate")
+    op.drop_column("users", "birthday")
     op.drop_column("users", "phone")

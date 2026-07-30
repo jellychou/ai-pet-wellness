@@ -24,7 +24,7 @@ class User(Base):
     # 基本資料（註冊 step 2），DB 層先開放 null，避免舊資料因為補欄位而炸掉，
     # 實際「註冊時必填」的規則交給 RegisterRequest schema 去把關
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    birthdate: Mapped[date | None] = mapped_column(Date, nullable=True)
+    birthday: Mapped[date | None] = mapped_column(Date, nullable=True)
     slogan: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # UI 語言偏好（例如 "zh-TW"、"en"）
     language: Mapped[str | None] = mapped_column(String(10), nullable=True)
@@ -57,7 +57,7 @@ class  UpdateLanguageRequest(BaseModel):
 class UpdateUserInfoRequest(BaseModel):
     name: str
     phone: str
-    birthdate: date
+    birthday: date
     picture_url: str
     slogan: str
     language: str

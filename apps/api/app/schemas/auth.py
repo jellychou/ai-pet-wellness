@@ -12,7 +12,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8)
     name: str
     phone: str
-    birthdate: date
+    birthday: date
     picture_url: str | None = None
     slogan: str | None = None
     # 前端目前的 UI 語言，給個預設值避免舊版前端沒送這欄就直接 422
@@ -46,7 +46,7 @@ class UserOut(BaseModel):
     name: str
     picture_url: str | None = None
     phone: str | None = None
-    birthdate: date | None = None
+    birthday: date | None = None
     slogan: str | None = None
     language: str | None = None
     gender: str | None = None

@@ -8,7 +8,7 @@ export type AuthUser = {
   picture_url?: string | null;
   slogan?: string | null;
   phone?: string | null;
-  birthdate?: string | null;
+  birthday?: string | null;
   language?: string | null;
   gender?: string | null;
   login_method: string | null;

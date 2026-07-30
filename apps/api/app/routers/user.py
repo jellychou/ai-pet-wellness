@@ -28,7 +28,7 @@ def update_language(
 def update_user_info(payload: UpdateUserInfoRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> MessageResponse:
     current_user.name = payload.name
     current_user.phone = payload.phone
-    current_user.birthdate = payload.birthdate
+    current_user.birthday = payload.birthday
     current_user.picture_url = payload.picture_url
     current_user.slogan = payload.slogan
     current_user.gender = payload.gender

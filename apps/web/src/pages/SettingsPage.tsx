@@ -1,11 +1,8 @@
-import { useState, type ElementType, type ReactNode } from "react";
+import { type ElementType, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Bell,
   Calendar,
-  Camera,
-  Check,
   ChevronRight,
   FileText,
   Globe,
@@ -13,13 +10,8 @@ import {
   Info,
   Lock,
   LogOut,
-  Moon,
-  Palette,
   Phone,
-  Settings as SettingsIcon,
-  ShieldCheck,
   User,
-  UserRoundCheck,
   Mail,
   MessageCircle,
 } from "lucide-react";
@@ -27,6 +19,7 @@ import MuiTransgenderIcon from "@mui/icons-material/Transgender";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
+import defaultAvatarPhoto from "../assets/images/default-avatar.png";
 
 // lucide-react 沒有性別符號類 icon，這裡用 MUI icons 的 Transgender 包一層，
 // 讓它符合 Row 元件期待的 size/className 介面，可以跟其他 lucide icon 一樣使用
@@ -39,11 +32,6 @@ function Transgender({
 }) {
   return <MuiTransgenderIcon sx={{ fontSize: size }} className={className} />;
 }
-
-const fallbackAvatarPhoto =
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&h=160&fit=crop";
-
-const themeColors = ["#caa06f", "#6fa87e", "#b39ddb", "#6fa8dc"];
 
 function Section({
   title,
@@ -185,7 +173,7 @@ export function SettingsPage() {
       >
         <div className="relative shrink-0">
           <img
-            src={userInfo?.picture_url || fallbackAvatarPhoto}
+            src={userInfo?.picture_url || defaultAvatarPhoto}
             alt="使用者頭像"
             className="h-16 w-16 rounded-full object-cover"
           />

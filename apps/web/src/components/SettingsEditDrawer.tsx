@@ -6,6 +6,8 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { useEffect } from "react";
 import { apiFetch } from "../lib/api";
+import type { AuthUser } from "../store/useAuthStore";
+import defaultAvatarPhoto from "../assets/images/default-avatar.png";
 
 function SectionHeader({
   icon: Icon,
@@ -37,36 +39,6 @@ function Field({
         {label} {required && <span className="text-red-400">*</span>}
       </label>
       {children}
-    </div>
-  );
-}
-
-function Select({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none"
-      >
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        size={13}
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
-      />
     </div>
   );
 }
@@ -103,7 +75,6 @@ function ToggleGroup({
 export function SettingsEditDrawer() {
   const open = useAppStore((s) => s.settingsEditOpen);
   const setOpen = useAppStore((s) => s.setSettingsEditOpen);
-  const setChangePasswordOpen = useAppStore((s) => s.setChangePasswordOpen);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -114,16 +85,38 @@ export function SettingsEditDrawer() {
   const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
+  const setUserInfo = useAuthStore((s) => s.setUserInfo);
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatarPhoto(URL.createObjectURL(file));
+    // 不用 URL.createObjectURL：那個 blob: URL 只在當下這個分頁有效，
+    // 重新整理頁面、存到後端再讀回來、或換一台裝置都會失效變成無法顯示的圖片。
+    // 改成讀成 base64 data URL 直接存進 DB，是一個完全獨立、不依賴瀏覽器暫存的字串。
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatarPhoto(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
     e.target.value = "";
   }
 
   function handleBack() {
     setOpen(false);
+  }
+
+  async function getUserInfo() {
+    await apiFetch<AuthUser>("/user/user-info", {
+      method: "GET",
+    })
+      .then((user) => {
+        setUserInfo(user);
+      })
+      .catch((err) => {
+        console.error("取得使用者資料失敗", err);
+      });
   }
 
   async function handleSave() {
@@ -137,10 +130,11 @@ export function SettingsEditDrawer() {
           gender,
           email,
           slogan,
-          avatarPhoto,
+          picture_url: avatarPhoto,
         }),
       });
       handleBack();
+      getUserInfo();
     } catch (err) {
       console.error("更新使用者資料失敗", err);
     }
@@ -150,7 +144,7 @@ export function SettingsEditDrawer() {
   // 這樣打開時看到的是目前的資料，且 input 是可以正常輸入的「受控元件」
   useEffect(() => {
     if (!open) return;
-    setAvatarPhoto(userInfo?.picture_url ?? null);
+    setAvatarPhoto(userInfo?.picture_url ?? defaultAvatarPhoto);
     setName(userInfo?.name ?? "");
     setPhone(userInfo?.phone ?? "");
     setBirthday(userInfo?.birthday ?? "");

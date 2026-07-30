@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, String
+from sqlalchemy import Boolean, Date, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -18,7 +18,9 @@ class User(Base):
     google_sub: Mapped[str | None] = mapped_column(
         String(255), unique=True, index=True, nullable=True
     )
-    picture_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    # 頭貼：存 base64 data URL（例如 "data:image/png;base64,...."），不是外部檔案網址，
+    # 長度可能很長，用 Text（不限長度）而不是 String(1024)
+    picture_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     # 帳密登入用的密碼雜湊（bcrypt）
     password_hash: Mapped[str] = mapped_column(String(255))
     # 基本資料（註冊 step 2），DB 層先開放 null，避免舊資料因為補欄位而炸掉，

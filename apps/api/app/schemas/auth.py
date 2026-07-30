@@ -35,9 +35,17 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str = Field(min_length=8)
 
+class SetPasswordRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
+
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class UpdateLanguageRequest(BaseModel):
+    language: str
 
 
 class UserOut(BaseModel):

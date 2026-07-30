@@ -147,6 +147,7 @@ export function SettingsEditDrawer() {
   const [birthday, setBirthday] = useState("1993 / 02 / 24");
   const [gender, setGender] = useState("女性");
   const [email, setEmail] = useState("jenny.chou@email.com");
+  const [slogan, setSlogan] = useState("我是一隻可愛的小狗");
   const [language, setLanguage] = useState("繁體中文");
   const [themeColor, setThemeColor] = useState(themeColors[0]);
   const [darkMode, setDarkMode] = useState(false);
@@ -285,18 +286,15 @@ export function SettingsEditDrawer() {
                 value={userInfo?.email ?? ""}
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputClass}
+                disabled={true}
               />
             </Field>
-          </div>
 
-          <div className="space-y-3">
-            <SectionHeader icon={SlidersHorizontal} title="偏好設定" />
-
-            <Field label="語言 / Language">
-              <Select
-                value={userInfo?.language ?? ""}
-                onChange={setLanguage}
-                options={["繁體中文", "English"]}
+            <Field label="標語">
+              <input
+                value={userInfo?.slogan ?? ""}
+                onChange={(e) => setSlogan(e.target.value)}
+                className={inputClass}
               />
             </Field>
           </div>
@@ -333,7 +331,7 @@ export function SettingsEditDrawer() {
             </div>
           </div> */}
 
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <SectionHeader icon={Lock} title="密碼設定" />
 
             <button
@@ -352,7 +350,7 @@ export function SettingsEditDrawer() {
               <span className="text-[12px] font-medium text-ink">設定密碼</span>
               <ChevronRight size={15} className="text-ink/30" />
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -10,7 +10,6 @@ from app.core.email import send_password_reset_email
 from app.core.security import (
     create_access_token,
     generate_reset_token,
-    get_current_user,
     hash_password,
     hash_reset_token,
     verify_password,
@@ -24,6 +23,7 @@ from app.schemas.auth import (
     MessageResponse,
     RegisterRequest,
     ResetPasswordRequest,
+    SetPasswordRequest,
     TokenResponse,
     UserOut,
 )
@@ -32,6 +32,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 settings = get_settings()
 
 
+
+# Google 登入
 @router.post("/google", response_model=TokenResponse)
 def login_with_google(
     payload: GoogleLoginRequest, db: Session = Depends(get_db)
@@ -96,6 +98,7 @@ def login_with_google(
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
 
 
+# 註冊
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
     existing = db.query(User).filter(User.email == payload.email).first()
@@ -126,6 +129,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
 
 
+# 登入
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     user = db.query(User).filter(User.email == payload.email).first()
@@ -145,16 +149,12 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.get("/user-info", response_model=UserOut)
-def get_user_info(current_user: User = Depends(get_current_user)) -> UserOut:
-    return UserOut.model_validate(current_user)
-
 
 # 不管這個 email 有沒有註冊過，都回這句一模一樣的訊息，
 # 避免有心人拿這支 API 去試哪些 email 有註冊（user enumeration）
 _FORGOT_PASSWORD_MESSAGE = "如果這個信箱有註冊過帳號，我們已經寄出重設密碼的連結。"
 
-
+# 忘記密碼
 @router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(
     payload: ForgotPasswordRequest, db: Session = Depends(get_db)
@@ -175,6 +175,7 @@ def forgot_password(
     return MessageResponse(message=_FORGOT_PASSWORD_MESSAGE)
 
 
+# 重設密碼
 @router.post("/reset-password", response_model=MessageResponse)
 def reset_password(
     payload: ResetPasswordRequest, db: Session = Depends(get_db)
@@ -200,3 +201,17 @@ def reset_password(
     db.commit()
 
     return MessageResponse(message="密碼已更新，請用新密碼登入")
+
+
+# 設定密碼
+@router.post("/set-password", response_model=MessageResponse)
+def set_password(
+    payload: SetPasswordRequest, db: Session = Depends(get_db)
+) -> MessageResponse:
+    user = db.query(User).filter(User.email == payload.email).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return MessageResponse(message="Password set successfully")

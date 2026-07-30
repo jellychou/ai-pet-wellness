@@ -5,6 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.db.base import Base
+from pydantic import BaseModel
 
 
 class User(Base):
@@ -47,3 +48,17 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+
+class  UpdateLanguageRequest(BaseModel):
+    language: str
+
+class UpdateUserInfoRequest(BaseModel):
+    name: str
+    phone: str
+    birthdate: date
+    picture_url: str
+    slogan: str
+    language: str
+    gender: str

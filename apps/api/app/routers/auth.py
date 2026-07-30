@@ -57,6 +57,7 @@ def login_with_google(
         ) from exc
 
     google_sub: str = idinfo["sub"]
+    login_method: str = "google"
     email: str = idinfo["email"]
     name: str = idinfo.get("name") or email
     picture: str | None = idinfo.get("picture")
@@ -76,6 +77,10 @@ def login_with_google(
             name=name,
             picture_url=picture,
             password_hash=hash_password(generate_reset_token()),
+            login_method=login_method,
+            gender=None,
+            language='zh-TW',
+            slogan=None,
         )
         db.add(user)
     else:
@@ -107,6 +112,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         birthdate=payload.birthdate,
         picture_url=payload.picture_url,
         slogan=payload.slogan,
+        loginMethod="email",
+        gender=payload.gender,
+        language='zh-TW',
     )
     db.add(user)
     db.commit()

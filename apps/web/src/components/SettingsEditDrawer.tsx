@@ -344,6 +344,14 @@ export function SettingsEditDrawer() {
               <span className="text-[12px] font-medium text-ink">變更密碼</span>
               <ChevronRight size={15} className="text-ink/30" />
             </button>
+            <button
+              type="button"
+              onClick={() => setChangePasswordOpen(true)}
+              className="flex w-full items-center justify-between rounded-xl border border-[#ece0d2] bg-white px-3 py-3 text-left transition hover:bg-[#fbf7f1]"
+            >
+              <span className="text-[12px] font-medium text-ink">設定密碼</span>
+              <ChevronRight size={15} className="text-ink/30" />
+            </button>
           </div>
         </div>
       </div>

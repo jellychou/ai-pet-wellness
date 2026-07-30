@@ -15,8 +15,9 @@ class RegisterRequest(BaseModel):
     birthdate: date
     picture_url: str | None = None
     slogan: str | None = None
-    language: str | None = None
+    language: str
     gender: str | None = None
+    login_method: str
 
 
 class LoginRequest(BaseModel):

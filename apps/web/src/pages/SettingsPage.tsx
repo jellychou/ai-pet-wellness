@@ -160,6 +160,7 @@ export function SettingsPage() {
 
       <Section title="帳號與安全">
         <Row icon={Lock} label="變更密碼" />
+        <Row icon={Lock} label="設定密碼" />
         {/* <Row icon={ShieldCheck} label="隱私設定" /> */}
         {/* <Row icon={UserRoundCheck} label="兩步驟驗證" value="未開啟" /> */}
       </Section>

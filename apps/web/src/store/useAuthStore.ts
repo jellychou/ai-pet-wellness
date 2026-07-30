@@ -11,6 +11,7 @@ export type AuthUser = {
   birthdate?: string | null;
   language?: string | null;
   gender?: string | null;
+  login_method: string | null;
 };
 
 type AuthState = {

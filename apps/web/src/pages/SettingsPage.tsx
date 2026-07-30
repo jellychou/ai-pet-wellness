@@ -165,8 +165,6 @@ export function SettingsPage() {
     });
   }
 
-  console.log(userInfo);
-
   return (
     <div className="mx-auto max-w-md space-y-5">
       <button

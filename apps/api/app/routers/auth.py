@@ -10,7 +10,6 @@ from app.core.email import send_password_reset_email
 from app.core.security import (
     create_access_token,
     generate_reset_token,
-    get_current_user,
     hash_password,
     hash_reset_token,
     verify_password,
@@ -26,6 +25,9 @@ from app.schemas.auth import (
     SetPasswordRequest,
     TokenResponse,
     UserOut,
+)
+from app.core.security import (
+    get_current_user,
 )
 from app.schemas.index import (
     MessageResponse,
@@ -62,18 +64,22 @@ def login_with_google(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Google 登入驗證失敗",
         ) from exc
-
     google_sub: str = idinfo["sub"]
     login_method: str = "google"
     email: str = idinfo["email"]
     name: str = idinfo.get("name") or email
-    picture: str | None = idinfo.get("picture")
 
     user = db.query(User).filter(User.google_sub == google_sub).first()
+
     if user is None:
         # 舊帳號可能是用同個 email 帳密註冊過、還沒綁過 google_sub，順便補上，
         # 這樣同一個 email 之後帳密、Google 兩種方式都能登入
         user = db.query(User).filter(User.email == email).first()
+
+    # 兩次查詢都做完、確定最終 user 是誰之後再決定 picture：
+    # 只要是既有帳號（不管是用 google_sub 還是 email 找到的），一律沿用它原本的 picture_url，
+    # 不會被 Google 的照片蓋掉；只有全新帳號才用 Google 給的照片
+    picture: str | None = user.picture_url if user else idinfo.get("picture")
 
     if user is None:
         # 全新帳號：Google 沒有給密碼，這裡先塞一組誰都猜不到、也永遠不會被拿去登入的雜湊值
@@ -212,10 +218,14 @@ def reset_password(
 def set_password(
     payload: SetPasswordRequest, db: Session = Depends(get_db)
 ) -> MessageResponse:
-    user = db.query(User).filter(User.email == payload.email).first()
+    user = get_current_user(db=db)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+    user.password_hash = hash_password(payload.password)
+    user.is_set_password = True
+    db.commit()
+    db.refresh(user)
     return MessageResponse(message="Password set successfully")

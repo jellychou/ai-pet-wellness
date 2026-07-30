@@ -36,7 +36,7 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(min_length=8)
 
 class SetPasswordRequest(BaseModel):
-    email: EmailStr
+    user_id: int
     password: str = Field(min_length=8)
 
 

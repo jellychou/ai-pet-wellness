@@ -41,7 +41,7 @@ settings = get_settings()
 
 
 # Google 登入
-@router.post("/google", response_model=TokenResponse)
+@router.post("/google", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def login_with_google(
     payload: GoogleLoginRequest, db: Session = Depends(get_db)
 ) -> TokenResponse:
@@ -141,7 +141,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
 
 
 # 登入
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     user = db.query(User).filter(User.email == payload.email).first()
     # user 不存在，或密碼不對，一律回同一種錯誤，
@@ -165,7 +165,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
 _FORGOT_PASSWORD_MESSAGE = "如果這個信箱有註冊過帳號，我們已經寄出重設密碼的連結。"
 
 # 忘記密碼
-@router.post("/forgot-password", response_model=MessageResponse)
+@router.post("/forgot-password", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 def forgot_password(
     payload: ForgotPasswordRequest, db: Session = Depends(get_db)
 ) -> MessageResponse:
@@ -186,7 +186,7 @@ def forgot_password(
 
 
 # 重設密碼
-@router.post("/reset-password", response_model=MessageResponse)
+@router.post("/reset-password", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 def reset_password(
     payload: ResetPasswordRequest, db: Session = Depends(get_db)
 ) -> MessageResponse:
@@ -214,16 +214,12 @@ def reset_password(
 
 
 # 設定密碼
-@router.post("/set-password", response_model=MessageResponse)
+@router.post("/set-password", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 def set_password(
-    payload: SetPasswordRequest, db: Session = Depends(get_db)
+    payload: SetPasswordRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> MessageResponse:
-    user = get_current_user(db=db)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
     user.password_hash = hash_password(payload.password)
     user.is_set_password = True
     db.commit()

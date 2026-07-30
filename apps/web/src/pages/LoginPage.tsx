@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
@@ -9,8 +9,33 @@ import { useAuthStore, type AuthUser } from "../store/useAuthStore";
 import { RegisterDrawer } from "../components/RegisterDrawer";
 import { ForgotPasswordDrawer } from "../components/ForgotPasswordDrawer";
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
+
 function BrandMark() {
   return <img src={logo} alt="logo" width={200} />;
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
+      <path
+        fill="#FFC107"
+        d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34 5.1 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-4z"
+      />
+      <path
+        fill="#FF3D00"
+        d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34 5.1 29.3 3 24 3 16.1 3 9.2 7.4 6.3 14.7z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 45c5.2 0 9.9-2 13.4-5.3l-6.2-5.2c-2 1.4-4.6 2.3-7.2 2.3-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.1 40.5 16 45 24 45z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.5l6.2 5.2C41 35.7 45 30.4 45 24c0-1.4-.1-2.7-.4-3.5z"
+      />
+    </svg>
+  );
 }
 
 export function LoginPage() {
@@ -24,6 +49,60 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [registerOpen, setRegisterOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [googleError, setGoogleError] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function handleCredentialResponse(response: CredentialResponse) {
+      setGoogleLoading(true);
+      setGoogleError("");
+      try {
+        const data = await apiFetch<{ access_token: string; user: AuthUser }>(
+          "/auth/google",
+          {
+            method: "POST",
+            body: JSON.stringify({ credential: response.credential }),
+          },
+        );
+        login(data.access_token, data.user);
+        navigate("/");
+      } catch (err) {
+        setGoogleError(
+          err instanceof ApiError
+            ? err.message
+            : "無法連上伺服器，請確認後端是否已啟動",
+        );
+      } finally {
+        setGoogleLoading(false);
+      }
+    }
+
+    function init() {
+      if (cancelled) return;
+      if (!window.google || !googleButtonRef.current) {
+        window.setTimeout(init, 100);
+        return;
+      }
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        width: 320,
+      });
+    }
+
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, [login, navigate]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -151,6 +230,35 @@ export function LoginPage() {
               <p className="mt-2 text-center text-xs text-red-500">{error}</p>
             )}
           </form>
+
+          <div className="my-6 flex items-center gap-3 text-xs text-ink/40">
+            <span className="h-px flex-1 bg-[#e6dccd]" />
+            {t("login.or")}
+            <span className="h-px flex-1 bg-[#e6dccd]" />
+          </div>
+
+          <div className="relative w-full">
+            <button
+              type="button"
+              disabled={googleLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ece0d2] bg-white py-3.5 text-sm font-medium text-ink shadow-[0_4px_16px_rgba(120,96,84,.06)] transition hover:bg-[#faf6f0] disabled:opacity-60"
+            >
+              <GoogleIcon />
+              {googleLoading ? t("login.loggingIn") : t("login.google")}
+            </button>
+            {/* Google 官方按鈕渲染在這裡，用 opacity:0 疊在上面的自訂按鈕上，
+                這樣畫面看起來是我們自己設計的按鈕，但點擊的其實是 Google 真正的按鈕 */}
+            <div
+              ref={googleButtonRef}
+              className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-2xl opacity-0"
+              aria-hidden="true"
+            />
+          </div>
+          {googleError && (
+            <p className="mt-2 text-center text-xs text-red-500">
+              {googleError}
+            </p>
+          )}
 
           <p className="mt-6 text-center text-xs text-ink/55">
             {t("login.noAccount")}{" "}

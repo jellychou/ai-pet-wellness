@@ -19,12 +19,18 @@ import { apiFetch } from "./lib/api";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+  // reload 網頁的當下，localStorage 還沒讀完之前先什麼都不畫，
+  // 避免用初始值 isAuthenticated=false 誤判成「沒登入」而先跳一次 /login
+  if (!hasHydrated) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function RedirectIfAuthed({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+  if (!hasHydrated) return null;
   if (isAuthenticated) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

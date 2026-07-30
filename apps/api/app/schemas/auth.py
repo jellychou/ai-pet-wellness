@@ -51,6 +51,10 @@ class UserOut(BaseModel):
     gender: str | None = None
     login_method: str | None = None
     is_set_password: bool = True
+    # 前端登入成功後會直接讀 user.pets 來判斷要不要導去「新增寵物」頁，
+    # 這裡沒有回傳的話，前端讀 data.user.pets.length 會直接 TypeError 炸掉
+    pets: list[dict] = []
+    active_pet_id: int | None = None
 
     model_config = {"from_attributes": True}
 

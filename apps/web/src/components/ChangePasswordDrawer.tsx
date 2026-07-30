@@ -1,15 +1,7 @@
 import { useMemo, useState } from "react";
-import {
-  Check,
-  CheckCircle2,
-  ChevronLeft,
-  Circle,
-  Eye,
-  EyeOff,
-  Lightbulb,
-  Lock,
-} from "lucide-react";
+import { Check, ChevronLeft, Eye, EyeOff, Lightbulb, Lock } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { apiFetch } from "../lib/api";
 
 const requirements = [
   { key: "length", label: "至少 8 個字元", test: (v: string) => v.length >= 8 },
@@ -52,8 +44,18 @@ export function ChangePasswordDrawer() {
     setOpen(false);
   }
 
-  function handleConfirm() {
-    handleBack();
+  async function handleConfirm() {
+    try {
+      await apiFetch("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          password: newPassword,
+        }),
+      });
+      handleBack();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const inputWrapClass =

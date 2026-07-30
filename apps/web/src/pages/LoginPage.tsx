@@ -42,8 +42,8 @@ export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const hasPet = useAuthStore((s) => s.hasPet);
   const [email, setEmail] = useState("");
+  const [hasPet, setHasPet] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -69,6 +69,7 @@ export function LoginPage() {
           },
         );
         login(data.access_token, data.user);
+        setHasPet(data.user.pets.length > 0);
         navigate(hasPet ? "/" : "/add-pet");
       } catch (err) {
         setGoogleError(
@@ -118,6 +119,7 @@ export function LoginPage() {
         },
       );
       login(data.access_token, data.user);
+      setHasPet(data.user.pets.length > 0);
       navigate(hasPet ? "/" : "/add-pet");
     } catch (err) {
       setError(

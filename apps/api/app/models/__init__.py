@@ -2,5 +2,6 @@
 from app.models.user import User
 from app.models.pet import Pet
 from app.models.vaccine import VaccineRecord
+from app.models.report import ReportRecord
 
-__all__ = ["User", "Pet", "VaccineRecord"]
+__all__ = ["User", "Pet", "VaccineRecord", "ReportRecord"]

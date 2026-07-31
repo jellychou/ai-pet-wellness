@@ -13,9 +13,7 @@ export function EditHealthDrawer() {
   const open = useAppStore((s) => s.editHealthOpen);
   const setOpen = useAppStore((s) => s.setEditHealthOpen);
   const setHealthDetailIndex = useAppStore((s) => s.setHealthDetailIndex);
-  const setAddHealthRecordOpen = useAppStore(
-    (s) => s.setAddHealthRecordOpen,
-  );
+  const setAddHealthRecordOpen = useAppStore((s) => s.setAddHealthRecordOpen);
   const navigate = useNavigate();
 
   function handleBack() {
@@ -44,14 +42,6 @@ export function EditHealthDrawer() {
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-base font-semibold text-ink">健康檢查紀錄</h1>
-            <button
-              type="button"
-              onClick={() => setAddHealthRecordOpen(true)}
-              className="flex items-center gap-1 text-sm font-medium text-[#b98a5c] transition hover:text-[#a97a4d]"
-            >
-              <Plus size={16} />
-              新增
-            </button>
           </div>
 
           <div className="flex items-center justify-between rounded-2xl bg-[#fbe9dc] p-4">
@@ -96,9 +86,7 @@ export function EditHealthDrawer() {
                   <div className="mt-1 text-xs text-ink/60">
                     體重 {r.weight}
                   </div>
-                  <div className="text-xs text-ink/60">
-                    醫院 {r.hospital}
-                  </div>
+                  <div className="text-xs text-ink/60">醫院 {r.hospital}</div>
                 </div>
               </button>
             ))}
@@ -106,9 +94,10 @@ export function EditHealthDrawer() {
 
           <button
             type="button"
-            className="w-full rounded-2xl bg-[#f3e6d6] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#ecdcc7]"
+            onClick={() => setAddHealthRecordOpen(true)}
+            className="w-full rounded-2xl bg-[#f3e6d6] py-2.5 text-sm font-semibold text-ink transition hover:bg-[#ecdcc7]"
           >
-            查看更多紀錄
+            新增健康檢查紀錄
           </button>
         </div>
       </div>

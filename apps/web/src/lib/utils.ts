@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const calculateAge = (birthday: string) => {
   const today = new Date();
   const birthDate = new Date(birthday);
@@ -10,4 +12,8 @@ export const calculateAge = (birthday: string) => {
     age--;
   }
   return age;
+};
+
+export const isPastDate = (date: string) => {
+  return dayjs(date).isBefore(dayjs());
 };

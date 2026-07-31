@@ -1,47 +1,68 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Syringe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { apiFetch } from "../lib/api";
+import { usePetStore } from "../store/usePetStore";
+import { isPastDate } from "../lib/utils";
+import { VaccineRecord } from "../data/pets";
 
-const tabs = ["全部", "已接種", "待接種"] as const;
-
-const vaccines = [
-  {
-    name: "狂犬病疫苗",
-    en: "Rabies",
-    date: "2026/05/02",
-    next: "2027/05/02",
-    status: "已接種" as const,
-  },
-  {
-    name: "DHPP 五合一疫苗",
-    en: "DHPP",
-    date: "2025/10/10",
-    next: "2026/10/10",
-    status: "已接種" as const,
-  },
-  {
-    name: "鉤端螺旋體疫苗",
-    en: "Leptospirosis",
-    date: "2026/06/15",
-    next: null,
-    status: "待接種" as const,
-  },
-];
+const tabs = [
+  { label: "全部", value: "all" },
+  { label: "已接種", value: "1" },
+  { label: "待接種", value: "0" },
+] as const;
 
 export function AddVaccineDrawer() {
   const open = useAppStore((s) => s.addVaccineOpen);
   const setOpen = useAppStore((s) => s.setAddVaccineOpen);
+  const selectedPet = usePetStore((s) => s.selectedPet);
   const setAddVaccineFormOpen = useAppStore((s) => s.setAddVaccineFormOpen);
+  const setAddPendingVaccineFormOpen = useAppStore(
+    (s) => s.setAddPendingVaccineFormOpen,
+  );
+  const vaccineRefreshKey = useAppStore((s) => s.vaccineRefreshKey);
   const navigate = useNavigate();
-  const [tab, setTab] = useState<(typeof tabs)[number]>("全部");
+  const [tab, setTab] = useState<(typeof tabs)[number]["value"]>("all");
+  const [vaccines, setVaccines] = useState<VaccineRecord[]>([]);
 
   function handleBack() {
     setOpen(false);
     navigate("/");
   }
 
-  const filtered = vaccines.filter((v) => tab === "全部" || v.status === tab);
+  const fetchVaccines = async () => {
+    try {
+      const petId = selectedPet?.id;
+      if (!petId) {
+        return;
+      }
+      const response = await apiFetch<VaccineRecord[]>(
+        `/vaccine/get-vaccines/${petId}`,
+      );
+      const vaccines = response.map((item: any) => {
+        return {
+          ...item,
+          status: isPastDate(item.vaccination_date) ? "1" : "0",
+        };
+      });
+      setVaccines(vaccines);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // 除了 mount 的時候，drawer 每次被打開、選中的寵物換了、或是有新的疫苗
+  // 紀錄被新增（vaccineRefreshKey 改變）都要重新抓一次，不然疊在上面的
+  // 新增疫苗 drawer 關掉之後，這裡（本來就是 open 的）不會自動重新 mount，
+  // 剛新增的紀錄就不會出現在列表裡
+  useEffect(() => {
+    if (!open) return;
+    fetchVaccines();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedPet?.id, vaccineRefreshKey]);
+
+  const filtered = vaccines.filter((v) => tab === "all" || v.status === tab);
 
   return (
     <div
@@ -71,16 +92,16 @@ export function AddVaccineDrawer() {
           <div className="flex gap-6 border-b border-[#ece4dc] text-sm">
             {tabs.map((t) => (
               <button
-                key={t}
+                key={t.value}
                 type="button"
-                onClick={() => setTab(t)}
+                onClick={() => setTab(t.value)}
                 className={`pb-2 transition ${
-                  tab === t
+                  tab === t.value
                     ? "border-b-2 border-[#5b83ab] font-medium text-ink"
                     : "text-ink/40"
                 }`}
               >
-                {t}
+                {t.label}
               </button>
             ))}
           </div>
@@ -88,14 +109,14 @@ export function AddVaccineDrawer() {
           <div className="space-y-3">
             {filtered.map((v) => (
               <div
-                key={v.name}
+                key={v.id}
                 className="rounded-2xl bg-[#fbf7f1] p-4 shadow-sm"
               >
                 <div className="flex items-start gap-3">
                   <Syringe
                     size={22}
                     className={
-                      v.status === "待接種"
+                      v.status === "0"
                         ? "mt-0.5 shrink-0 text-[#e78154]"
                         : "mt-0.5 shrink-0 text-[#8083c9]"
                     }
@@ -103,7 +124,7 @@ export function AddVaccineDrawer() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-sm font-semibold text-ink">
-                        {v.name}
+                        {v.vaccine_type}
                       </div>
                       <span
                         className={`pill shrink-0 ${
@@ -112,13 +133,13 @@ export function AddVaccineDrawer() {
                             : "bg-[#dce8ed] text-[#5d7c8c]"
                         }`}
                       >
-                        {v.status}
+                        {v.status === "1" ? "已接種" : "待接種"}
                       </span>
                     </div>
-                    <div className="text-xs text-ink/45">{v.en}</div>
+                    <div className="text-xs text-ink/45">{v.note}</div>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink/70">
-                      <span>{v.date}</span>
-                      {v.next && <span>下次接種 {v.next}</span>}
+                      <span>{v.vaccination_date}</span>
+                      {v.next_date && <span>下次接種 {v.next_date}</span>}
                     </div>
                   </div>
                 </div>
@@ -129,13 +150,20 @@ export function AddVaccineDrawer() {
       </div>
 
       <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto max-w-md flex gap-4">
           <button
             type="button"
             onClick={() => setAddVaccineFormOpen(true)}
-            className="w-full rounded-2xl bg-[#ead3ba] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#e4c6a5]"
+            className="w-1/2 rounded-2xl bg-[#ead3ba] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#e4c6a5]"
           >
             ＋ 新增疫苗
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddPendingVaccineFormOpen(true)}
+            className="w-1/2 rounded-2xl border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
+          >
+            ＋ 新增待接種疫苗
           </button>
         </div>
       </div>

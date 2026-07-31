@@ -11,6 +11,13 @@ type AppState = {
   setAddVaccineOpen: (v: boolean) => void;
   addVaccineFormOpen: boolean;
   setAddVaccineFormOpen: (v: boolean) => void;
+  addPendingVaccineFormOpen: boolean;
+  setAddPendingVaccineFormOpen: (v: boolean) => void;
+  // 疫苗紀錄列表(AddVaccineDrawer)只在自己 open 的當下打一次 API，
+  // 新增/編輯疫苗的 drawer 疊在上面關掉時不會觸發它重新 mount，
+  // 所以用這個數字當「有新資料了，重新抓一次」的訊號，每次新增成功就 +1
+  vaccineRefreshKey: number;
+  bumpVaccineRefreshKey: () => void;
   aiScanOpen: boolean;
   setAiScanOpen: (v: boolean) => void;
   editHealthOpen: boolean;
@@ -41,6 +48,12 @@ export const useAppStore = create<AppState>((set) => ({
   setAddVaccineOpen: (addVaccineOpen) => set({ addVaccineOpen }),
   addVaccineFormOpen: false,
   setAddVaccineFormOpen: (addVaccineFormOpen) => set({ addVaccineFormOpen }),
+  addPendingVaccineFormOpen: false,
+  setAddPendingVaccineFormOpen: (addPendingVaccineFormOpen) =>
+    set({ addPendingVaccineFormOpen }),
+  vaccineRefreshKey: 0,
+  bumpVaccineRefreshKey: () =>
+    set((s) => ({ vaccineRefreshKey: s.vaccineRefreshKey + 1 })),
   aiScanOpen: false,
   setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
   editHealthOpen: false,

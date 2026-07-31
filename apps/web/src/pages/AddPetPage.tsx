@@ -10,7 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/useAuthStore";
+import { apiFetch } from "../lib/api";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -75,7 +75,7 @@ function ToggleGroup({
   value,
   onChange,
 }: {
-  options: { label: string; icon?: string }[];
+  options: { label: string; icon?: string; value?: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -101,7 +101,6 @@ function ToggleGroup({
 
 export function AddPetPage() {
   const navigate = useNavigate();
-  const setHasPet = useAuthStore((s) => s.setHasPet);
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -125,16 +124,33 @@ export function AddPetPage() {
     e.target.value = "";
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!name || !breed || !gender || !birthday || !weight || !coatColor) {
       setError("請完整填寫所有必填欄位");
       return;
     }
     setError("");
-    // TODO: 目前後端還沒有寵物 API，這裡先只用本地旗標記錄「已新增寵物」，
-    // 之後接上真的 /pets API 後，這裡要改成實際呼叫後端建立寵物資料
-    setHasPet(true);
-    navigate("/", { replace: true });
+    try {
+      await apiFetch("/api/pet/add-pet", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          breed,
+          gender,
+          birthday,
+          weight,
+          coatColor,
+          neutered,
+          allergy,
+          activity,
+          chipNumber,
+          note,
+        }),
+      });
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const inputClass =
@@ -203,7 +219,7 @@ export function AddPetPage() {
               <input
                 value={breed}
                 onChange={(e) => setBreed(e.target.value)}
-                placeholder="請輸入寵物名字"
+                placeholder="請輸入寵物品種"
                 className={inputClass}
               />
             </Field>
@@ -213,8 +229,8 @@ export function AddPetPage() {
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "Female", icon: "♀" },
-                  { label: "Male", icon: "♂" },
+                  { label: "男生", icon: "♀", value: "Female" },
+                  { label: "女生", icon: "♂", value: "Male" },
                 ]}
               />
             </Field>
@@ -226,10 +242,6 @@ export function AddPetPage() {
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
                   className={`${inputClass} pr-9 [color-scheme:light]`}
-                />
-                <Calendar
-                  size={13}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
                 />
               </div>
             </Field>

@@ -42,7 +42,8 @@ def add_pet(payload: AddPetRequest, db: Session = Depends(get_db)):
     user.pets.append(payload.model_dump())
     db.commit()
     db.refresh(user)
-    return user.pets[-1]  
+    return {"message": "Pet added successfully"}
+
 
 # 更新寵物
 @router.put("/update-pet", status_code=status.HTTP_200_OK)

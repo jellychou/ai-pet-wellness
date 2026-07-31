@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.routers import auth, health, user
+from app.routers import auth, health, user, pet
 
 settings = get_settings()
 logger = logging.getLogger("uvicorn.error")
@@ -49,3 +49,4 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(pet.router)

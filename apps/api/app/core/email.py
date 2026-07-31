@@ -96,8 +96,8 @@ def send_password_reset_email(to_email: str, reset_link: str) -> None:
     """
 
     message = MIMEMultipart("alternative")
-    message["Subject"] = "重設您的 Food・Heart 密碼"
-    message["From"] = f"{settings.gmail_from_name} <{settings.gmail_from_email}>"
+    message["Subject"] = "重設您的 Pet・Wellness 密碼"
+    message["From"] = f"Pet・Wellness <{settings.gmail_from_email}>"
     message["To"] = to_email
     message.attach(MIMEText(text_body, "plain"))
     message.attach(MIMEText(html_body, "html"))

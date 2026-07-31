@@ -1,6 +1,5 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
-  Calendar,
   Camera,
   ChevronDown,
   ChevronLeft,
@@ -11,7 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { useAuthStore } from "../store/useAuthStore";
+import { apiFetch } from "../lib/api";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -117,7 +116,6 @@ const initialState = {
 export function AddPetDrawer() {
   const open = useAppStore((s) => s.addPetOpen);
   const setOpen = useAppStore((s) => s.setAddPetOpen);
-  const setHasPet = useAuthStore((s) => s.setHasPet);
 
   const [name, setName] = useState(initialState.name);
   const [breed, setBreed] = useState(initialState.breed);
@@ -162,15 +160,29 @@ export function AddPetDrawer() {
     setOpen(false);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!name || !breed || !gender || !birthday || !weight || !coatColor) {
       setError("請完整填寫所有必填欄位");
       return;
     }
     setError("");
-    // TODO: 目前後端還沒有寵物 API，這裡先只用本地旗標記錄「已新增寵物」，
-    // 之後接上真的 /pets API 後，這裡要改成實際呼叫後端建立寵物資料
-    setHasPet(true);
+    await apiFetch("/api/pet/add-pet", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        breed,
+        gender,
+        birthday,
+        weight,
+        coatColor,
+        neutered,
+        allergy,
+        activity,
+        chipNumber,
+        note,
+        avatar: avatarSrc,
+      }),
+    });
     resetForm();
     setOpen(false);
   }
@@ -283,10 +295,6 @@ export function AddPetDrawer() {
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
                   className={`${inputClass} pr-9 [color-scheme:light]`}
-                />
-                <Calendar
-                  size={13}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
                 />
               </div>
             </Field>

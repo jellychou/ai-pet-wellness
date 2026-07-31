@@ -128,12 +128,16 @@ export function AddVaccineDrawer() {
                       </div>
                       <span
                         className={`pill shrink-0 ${
-                          v.status === "待接種"
+                          v.status === "0"
                             ? "bg-[#f4ddc3] text-[#a46e3d]"
                             : "bg-[#dce8ed] text-[#5d7c8c]"
                         }`}
                       >
-                        {v.status === "1" ? "已接種" : "待接種"}
+                        {v.status === "all"
+                          ? "全部"
+                          : v.status === "0"
+                            ? "待接種"
+                            : "已接種"}
                       </span>
                     </div>
                     <div className="text-xs text-ink/45">{v.note}</div>

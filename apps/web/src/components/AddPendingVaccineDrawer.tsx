@@ -293,7 +293,7 @@ export function AddPendingVaccineDrawer() {
   }
 
   function handleNext() {
-    if (!vaccineType || !vaccineName) {
+    if (!vaccineType) {
       setError("請完整填寫所有必填欄位");
       return;
     }
@@ -452,19 +452,16 @@ export function AddPendingVaccineDrawer() {
                   options={vaccineTypeOptions}
                 />
               </Field>
-              <p className="-mt-2 text-[11px] text-ink/40">
-                不確定疫苗類型？
-                <span className="text-[#5b83ab]">查看常見疫苗說明</span>
-              </p>
-
-              <Field label="疫苗名稱" required>
-                <input
-                  value={vaccineName}
-                  onChange={(e) => setVaccineName(e.target.value)}
-                  placeholder="請輸入疫苗名稱（例：狂犬病疫苗）"
-                  className={inputClass}
-                />
-              </Field>
+              {vaccineType && vaccineType === "其他" && (
+                <Field label="疫苗名稱" required>
+                  <input
+                    value={vaccineName}
+                    onChange={(e) => setVaccineName(e.target.value)}
+                    placeholder="請輸入疫苗名稱（例：狂犬病疫苗）"
+                    className={inputClass}
+                  />
+                </Field>
+              )}
 
               <Field label="疫苗批號（選填）">
                 <input

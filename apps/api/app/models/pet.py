@@ -38,4 +38,6 @@ class Pet(Base):
         Boolean, nullable=False, server_default="false"
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="pets")
+    user: Mapped["User"] = relationship(
+        "User", back_populates="pets", foreign_keys=[user_id]
+    )

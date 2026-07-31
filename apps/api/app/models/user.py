@@ -60,8 +60,15 @@ class User(Base):
     # 直接存 JSONB —— 舊的 JSONB 版本每次改寵物都要整包重新賦值才會被
     # SQLAlchemy 追蹤到、也沒辦法用資料庫層的 FK/查詢，寵物一多、之後要接
     # 飲食紀錄等其他表時會一直重複踩同樣的坑，所以拆成真正的表
+    # users <-> pets 之間現在有兩條 FK（pets.user_id -> users.id 這條「一個
+    # user 有很多 pets」、下面 active_pet_id -> pets.id 這條「目前選中哪隻」），
+    # relationship 沒辦法自己猜要用哪條當 join 條件，一定要用 foreign_keys
+    # 明確指定成 pets.user_id，不然會噴 AmbiguousForeignKeysError
     pets: Mapped[list["Pet"]] = relationship(
-        "Pet", back_populates="user", cascade="all, delete-orphan"
+        "Pet",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="Pet.user_id",
     )
     # 目前選中的寵物，FK 指向 pets.id；那隻寵物被刪除時資料庫會自動把這裡設回
     # NULL（ON DELETE SET NULL），不用另外在程式碼裡處理

@@ -59,6 +59,7 @@ def add_report_record(payload: AddReportRecordRequest, db: Session = Depends(get
 
 
 # 刪除健康檢查紀錄
+
 @router.delete("/delete-report-record/{record_id}", response_model=ReportRecordOut)
 def delete_report_record(record_id: int = Path(gt=0), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
   _get_owned_report_record(db, current_user, record_id)

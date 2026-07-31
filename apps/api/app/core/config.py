@@ -43,8 +43,8 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
     # 寄件人顯示的名稱／email，不填的話 from email 就用 smtp_username
-    smtp_from_name: str = "Food・Heart"
-    smtp_from_email: str = ""
+    smtp_from_name: str = "Pet・Wellness"
+    smtp_from_email: str = "petwellness0418@gmail.com"
 
     @property
     def cors_origin_list(self) -> list[str]:

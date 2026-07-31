@@ -52,7 +52,6 @@ export function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      // 後端還沒有 /auth/reset-password，先保留呼叫的樣子，之後接上就能動
       await apiFetch("/auth/reset-password", {
         method: "POST",
         body: JSON.stringify({ token, new_password: password }),

@@ -1,12 +1,28 @@
 import { Plus } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { apiFetch } from "../lib/api";
+import { useEffect, useState } from "react";
+import { useAuthStore } from "../store/useAuthStore";
+import { Pet } from "../data/pets";
+import { usePetStore } from "../store/usePetStore";
 
-const petPhoto =
+const defaultPetAvatar =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
 
-// 目前後端還沒有寵物 API，先用一筆假資料撐住畫面。
-// 之後接上真的 /pets API 後，這裡要改成從後端抓使用者實際擁有的寵物列表。
-const mockPets = [{ name: "Coco", photo: petPhoto }];
+// 只定義欄位順序跟中文標籤，實際的值要從 API 抓回來的寵物資料算，
+// 不要把假資料寫死在這裡（之前 value 都是寫死的 "Coco"/"Golden Retriever"...）
+const petFieldDefs = [
+  { label: "名字", key: "name" },
+  { label: "品種", key: "breed" },
+  { label: "性別", key: "gender" },
+  { label: "生日", key: "birthday" },
+  { label: "體重", key: "weight" },
+  { label: "毛色", key: "coatColor" },
+  { label: "絕育狀態", key: "neutered" },
+  { label: "晶片號碼", key: "chipNumber" },
+  { label: "過敏", key: "allergy" },
+  { label: "運動量", key: "activity" },
+] as const satisfies { label: string; key: keyof Pet }[];
 
 function PetAvatarSwitcher({
   pets,
@@ -14,9 +30,9 @@ function PetAvatarSwitcher({
   onSelect,
   onAdd,
 }: {
-  pets: { name: string; photo: string }[];
-  selected: string;
-  onSelect: (name: string) => void;
+  pets: Pet[];
+  selected: number;
+  onSelect: (id: number) => void;
   onAdd: () => void;
 }) {
   return (
@@ -25,25 +41,25 @@ function PetAvatarSwitcher({
         <button
           key={pet.name}
           type="button"
-          onClick={() => onSelect(pet.name)}
+          onClick={() => onSelect(pet.id)}
           className="flex shrink-0 flex-col items-center gap-1"
         >
           <span
             className={`grid h-14 w-14 place-items-center rounded-full p-0.5 transition ${
-              selected === pet.name
+              selected === pet.id
                 ? "ring-2 ring-[#caa06f]"
                 : "ring-2 ring-transparent"
             }`}
           >
             <img
-              src={pet.photo}
+              src={pet.avatar ?? defaultPetAvatar}
               alt={pet.name}
               className="h-full w-full rounded-full object-cover"
             />
           </span>
           <span
             className={`text-[11px] ${
-              selected === pet.name
+              selected === pet.id
                 ? "font-semibold text-[#c9784a]"
                 : "text-ink/50"
             }`}
@@ -70,26 +86,47 @@ function PetAvatarSwitcher({
 export function PetsPage() {
   const setEditPetOpen = useAppStore((s) => s.setEditPetOpen);
   const setAddPetOpen = useAppStore((s) => s.setAddPetOpen);
-  const selectedPet = useAppStore((s) => s.selectedPet);
-  const setSelectedPet = useAppStore((s) => s.setSelectedPet);
-  const rows = [
-    ["名字", "Coco"],
-    ["品種", "Golden Retriever"],
-    ["性別", "Female"],
-    ["生日", "2020/05/20（4 歲）"],
-    ["體重", "25.4 kg"],
-    ["毛色", "Golden"],
-    ["絕育狀態", "已絕育"],
-    ["晶片號碼", "900215000123456"],
-    ["過敏", "雞肉、牛肉"],
-    ["運動量", "中等"],
-  ];
+  const setSelectedPet = usePetStore((s) => s.setSelectedPet);
+  const selectedPet = usePetStore((s) => s.selectedPet);
+  const userInfo = useAuthStore((s) => s.userInfo);
+  const [rows, setRows] = useState<{ label: string; value: string }[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
+
+  const fetchPets = async () => {
+    const response = await apiFetch<Pet[]>("/pet/get-pets");
+    setPets(response);
+  };
+
+  useEffect(() => {
+    fetchPets();
+  }, []);
+
+  // userInfo 是 App.tsx 另外非同步打 /user/user-info 才抓回來的，
+  // PetsPage 掛載當下 userInfo 通常還沒到，所以不能只在 fetchPets 裡算一次
+  // active pet；改成 pets 或 userInfo 任何一個之後才到位，都重新算一次，
+  // userInfo 還沒到之前先退回第一隻寵物撐住畫面，不要整個空白
+  useEffect(() => {
+    const activePet =
+      pets.find((pet) => pet.id === userInfo?.active_pet_id) ?? pets[0] ?? null;
+    setSelectedPet(activePet);
+    setRows(
+      activePet
+        ? petFieldDefs.map(({ label, key }) => ({
+            label,
+            value: String(activePet[key] ?? ""),
+          }))
+        : [],
+    );
+  }, [pets, userInfo]);
+
   return (
     <>
       <PetAvatarSwitcher
-        pets={mockPets}
-        selected={selectedPet}
-        onSelect={setSelectedPet}
+        pets={pets}
+        selected={selectedPet?.id ?? 0}
+        onSelect={(id) =>
+          setSelectedPet(pets.find((pet) => pet.id === id) ?? null)
+        }
         onAdd={() => setAddPetOpen(true)}
       />
       <section className="card p-4 mb-[12px]">
@@ -99,19 +136,19 @@ export function PetsPage() {
         <div className="mb-3 flex justify-center">
           <div className="relative">
             <img
-              src={petPhoto}
+              src={selectedPet?.avatar ?? defaultPetAvatar}
               className="h-20 w-20 rounded-full object-cover"
             />
           </div>
         </div>
         <div className="divide-y divide-[#eee7df]">
-          {rows.map(([k, v]) => (
+          {rows.map(({ label, value }, index) => (
             <div
-              key={k}
+              key={index}
               className="grid grid-cols-[86px_1fr] py-1.5 text-[12px]"
             >
-              <span className="font-medium">{k}</span>
-              <span>{v}</span>
+              <span className="font-medium">{label}</span>
+              <span>{value}</span>
             </div>
           ))}
         </div>
@@ -127,12 +164,16 @@ export function PetsPage() {
           <h2 className="section-title">熱量建議 / Calorie Advisor</h2>
         </div>
         <div className="flex items-center gap-3">
-          <img src={petPhoto} className="h-12 w-12 rounded-full object-cover" />
+          <img
+            src={selectedPet?.avatar ?? ""}
+            className="h-12 w-12 rounded-full object-cover"
+          />
           <div>
             <b className="text-xs">Coco</b>
             <div className="text-[12px] text-ink/45">
-              Golden Retriever
-              <br />4 歲 / 25.4 kg
+              {selectedPet?.breed}
+              <br />
+              {selectedPet?.birthday} / {selectedPet?.weight} kg
             </div>
           </div>
         </div>

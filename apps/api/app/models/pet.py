@@ -2,7 +2,7 @@
 
 from app.db.base import Base
 from datetime import date
-from sqlalchemy import String, Date, Float, Integer, JSONB
+from sqlalchemy import String, Date, Float, Integer, JSONB, Boolean
 
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -29,3 +29,4 @@ class Pet(Base):
     daily_water_goal: Mapped[int] = mapped_column(Integer)
     daily_water: Mapped[int] = mapped_column(Integer)
     daily_mind: str | None = None
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -15,6 +15,7 @@ class AddPetRequest(BaseModel):
     chipNumber: str | None = None
     note: str | None = None
     avatar: str | None = None
+    is_active: bool = False
 
 
 class UpdatePetRequest(BaseModel):
@@ -30,3 +31,5 @@ class UpdatePetRequest(BaseModel):
     activity: str
     chipNumber: str | None = None
     note: str | None = None
+    is_active: bool = False
+    avatar: str | None = None

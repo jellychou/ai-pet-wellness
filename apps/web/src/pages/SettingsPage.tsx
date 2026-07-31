@@ -142,7 +142,7 @@ export function SettingsPage() {
   const setSettingsEditOpen = useAppStore((s) => s.setSettingsEditOpen);
   const setChangePasswordOpen = useAppStore((s) => s.setChangePasswordOpen);
   const setSetPasswordOpen = useAppStore((s) => s.setSetPasswordOpen);
-  const { showSuccess, showError, AlertSlot } = useAlert();
+  const { showSuccess, showError } = useAlert();
 
   const isEnglish = i18n.language === "en";
 
@@ -331,7 +331,6 @@ export function SettingsPage() {
         <LogOut size={16} />
         登出
       </button>
-      {AlertSlot}
     </div>
   );
 }

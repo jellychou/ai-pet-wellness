@@ -1,4 +1,10 @@
-import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+  useEffect,
+} from "react";
 import {
   Calendar,
   Camera,
@@ -13,16 +19,14 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { apiFetch } from "../lib/api";
+import { Pet } from "../data/pets";
+import { useAlert } from "../hooks/useAlert";
+import { usePetStore } from "../store/usePetStore";
 
-const petPhoto =
+const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
-
-const initialPhotos = [
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=200&fit=crop",
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=220&fit=crop",
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=220&h=200&fit=crop",
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=210&h=210&fit=crop",
-];
 
 const tips = [
   "請確保資訊正確，有助於提供更精準的建議",
@@ -84,7 +88,7 @@ function ToggleGroup({
   value,
   onChange,
 }: {
-  options: { label: string; icon?: string }[];
+  options: { label: string; icon?: string; value: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -94,9 +98,9 @@ function ToggleGroup({
         <button
           key={o.label}
           type="button"
-          onClick={() => onChange(o.label)}
+          onClick={() => onChange(o.value)}
           className={`rounded-xl border py-2 text-[11px] font-medium transition ${
-            value === o.label
+            value === o.value
               ? "border-[#f0c9a0] bg-[#fbe9d9] text-[#c9784a]"
               : "border-[#ece4dc] bg-[#f7f4f0] text-ink/45"
           }`}
@@ -112,45 +116,35 @@ export function EditPetDrawer() {
   const open = useAppStore((s) => s.editPetOpen);
   const setOpen = useAppStore((s) => s.setEditPetOpen);
   const navigate = useNavigate();
+  const setSelectedPet = usePetStore((s) => s.setSelectedPet);
 
-  const [name, setName] = useState("Coco");
-  const [breed, setBreed] = useState("Golden Retriever");
-  const [gender, setGender] = useState("Female");
-  const [birthday, setBirthday] = useState("2020/06/20（4歲）");
-  const [weight, setWeight] = useState("25.4");
-  const [coatColor, setCoatColor] = useState("Golden");
-  const [neutered, setNeutered] = useState("已絕育");
-  const [allergy, setAllergy] = useState("雞肉、牛肉");
-  const [activity, setActivity] = useState("中等");
-  const [chipNumber, setChipNumber] = useState("900215000123456");
-  const [ownerContact, setOwnerContact] = useState("均誼 周");
-  const [phone, setPhone] = useState("0912-345-678");
-  const [email, setEmail] = useState("junyichou@gmail.com");
+  const [name, setName] = useState("");
+  const [breed, setBreed] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [weight, setWeight] = useState(0);
+  const [coatColor, setCoatColor] = useState("");
+  const [neutered, setNeutered] = useState("");
+  const [allergy, setAllergy] = useState("");
+  const [activity, setActivity] = useState("中");
+  const [chipNumber, setChipNumber] = useState("");
   const [note, setNote] = useState("");
-  const [photos, setPhotos] = useState(initialPhotos);
-  const [avatarSrc, setAvatarSrc] = useState(petPhoto);
+  const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const photosInputRef = useRef<HTMLInputElement>(null);
-
-  function removePhoto(index: number) {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
-  }
+  const userInfo = useAuthStore((s) => s.userInfo);
+  const [pet, setPet] = useState<Pet | null>(null);
+  const { showSuccess, showError } = useAlert();
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatarSrc(URL.createObjectURL(file));
-    e.target.value = "";
-  }
-
-  function handlePhotosPick(e: ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []);
-    if (picked.length) {
-      setPhotos((prev) => [
-        ...prev,
-        ...picked.map((f) => URL.createObjectURL(f)),
-      ]);
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatarSrc(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
     e.target.value = "";
   }
 
@@ -159,9 +153,60 @@ export function EditPetDrawer() {
     navigate("/pets");
   }
 
-  function handleSave() {
-    handleBack();
+  async function handleSave() {
+    try {
+      console.log(avatarSrc);
+      await apiFetch<Pet>("/pet/update-pet", {
+        method: "PUT",
+        body: JSON.stringify({
+          id: userInfo?.active_pet_id,
+          name: name,
+          breed: breed,
+          gender: gender,
+          birthday: birthday,
+          weight: weight,
+          coatColor: coatColor,
+          neutered: neutered,
+          allergy: allergy,
+          activity: activity,
+          chipNumber: chipNumber,
+          note: note,
+          avatar: avatarSrc,
+        }),
+      });
+      showSuccess("寵物資訊已更新");
+      fetchPet();
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      showError("寵物資訊更新失敗");
+    }
   }
+
+  const fetchPet = async () => {
+    if (!open) return;
+    const response = await apiFetch<Pet>(
+      `/pet/get-pet/${userInfo?.active_pet_id}`,
+    );
+    setPet(response);
+    setSelectedPet(response);
+    setName(response?.name ?? "");
+    setBreed(response?.breed ?? "");
+    setGender(response?.gender ?? "");
+    setBirthday(response?.birthday ?? "");
+    setWeight(response?.weight ?? 0);
+    setCoatColor(response?.coatColor ?? "");
+    setNeutered(response?.neutered ?? "");
+    setAllergy(response?.allergy ?? "");
+    setActivity(response?.activity ?? "");
+    setChipNumber(response?.chipNumber ?? "");
+    setNote(response?.note ?? "");
+    setAvatarSrc(response?.avatar ?? defaultPetPhoto);
+  };
+
+  useEffect(() => {
+    fetchPet();
+  }, [userInfo, open]);
 
   const inputClass =
     "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
@@ -219,14 +264,6 @@ export function EditPetDrawer() {
                 <Camera size={12} />
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => avatarInputRef.current?.click()}
-              className="mt-3 flex items-center gap-1 rounded-full bg-[#fbe9d9] px-3 py-1.5 text-[12px] font-medium text-[#c9784a] transition hover:bg-[#f6ddc2]"
-            >
-              <Camera size={11} />
-              更換頭像
-            </button>
           </div>
 
           <div className="space-y-3">
@@ -256,8 +293,8 @@ export function EditPetDrawer() {
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "Female", icon: "♀" },
-                  { label: "Male", icon: "♂" },
+                  { label: "女生", icon: "♀", value: "Female" },
+                  { label: "男生", icon: "♂", value: "Male" },
                 ]}
               />
             </Field>
@@ -280,7 +317,7 @@ export function EditPetDrawer() {
               <div className="relative">
                 <input
                   value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
+                  onChange={(e) => setWeight(Number(e.target.value) ?? 0)}
                   inputMode="decimal"
                   className={`${inputClass} pr-9`}
                 />
@@ -310,7 +347,10 @@ export function EditPetDrawer() {
               <ToggleGroup
                 value={neutered}
                 onChange={setNeutered}
-                options={[{ label: "已絕育" }, { label: "未絕育" }]}
+                options={[
+                  { label: "已絕育", value: "1" },
+                  { label: "未絕育", value: "0" },
+                ]}
               />
             </Field>
 
@@ -341,30 +381,6 @@ export function EditPetDrawer() {
               <input
                 value={chipNumber}
                 onChange={(e) => setChipNumber(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="飼主聯絡人">
-              <input
-                value={ownerContact}
-                onChange={(e) => setOwnerContact(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="聯絡電話">
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="聯絡 Email">
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 className={inputClass}
               />
             </Field>

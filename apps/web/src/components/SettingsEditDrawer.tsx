@@ -87,7 +87,7 @@ export function SettingsEditDrawer() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
-  const { showSuccess, showError, AlertSlot } = useAlert();
+  const { showSuccess, showError } = useAlert();
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -333,7 +333,6 @@ export function SettingsEditDrawer() {
           </div> */}
         </div>
       </div>
-      {AlertSlot}
     </div>
   );
 }

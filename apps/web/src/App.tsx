@@ -16,6 +16,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { RecordsPage } from "./pages/RecordsPage";
 import { useAuthStore, type AuthUser } from "./store/useAuthStore";
 import { apiFetch } from "./lib/api";
+import { AlertProvider } from "./hooks/useAlert";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   // 注意：zustand persist 不會另外存一個叫 "token" 的 localStorage key，
@@ -60,49 +61,53 @@ export default function App() {
   }, [token, setUserInfo]);
 
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          <RedirectIfAuthed>
-            <LoginPage />
-          </RedirectIfAuthed>
-        }
-      />
-      <Route
-        path="/reset-password"
-        element={
-          <RedirectIfAuthed>
-            <ResetPasswordPage />
-          </RedirectIfAuthed>
-        }
-      />
-      <Route
-        path="/add-pet"
-        element={
-          <RequireAuth>
-            <AddPetPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        element={
-          <RequireAuth>
-            <AppLayout />
-          </RequireAuth>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="ai" element={<AICenterPage />} />
-        <Route path="pets" element={<PetsPage />} />
-        <Route path="food" element={<FoodPage />} />
-        <Route path="health" element={<HealthPage />} />
-        <Route path="timeline" element={<TimelinePage />} />
-        <Route path="stats" element={<StatsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="records" element={<RecordsPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    // 包在最外層一次，裡面任何元件都可以直接 useAlert() 拿
+    // showSuccess/showError 來用，不用各自 import、各自渲染 AlertSlot
+    <AlertProvider>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <RedirectIfAuthed>
+              <LoginPage />
+            </RedirectIfAuthed>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <RedirectIfAuthed>
+              <ResetPasswordPage />
+            </RedirectIfAuthed>
+          }
+        />
+        <Route
+          path="/add-pet"
+          element={
+            <RequireAuth>
+              <AddPetPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          element={
+            <RequireAuth>
+              <AppLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="ai" element={<AICenterPage />} />
+          <Route path="pets" element={<PetsPage />} />
+          <Route path="food" element={<FoodPage />} />
+          <Route path="health" element={<HealthPage />} />
+          <Route path="timeline" element={<TimelinePage />} />
+          <Route path="stats" element={<StatsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="records" element={<RecordsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AlertProvider>
   );
 }

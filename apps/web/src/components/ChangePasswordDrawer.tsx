@@ -38,7 +38,7 @@ export function ChangePasswordDrawer() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { showSuccess, showError, AlertSlot } = useAlert();
+  const { showSuccess, showError } = useAlert();
 
   const strength = useMemo(() => strengthOf(newPassword), [newPassword]);
 
@@ -70,7 +70,6 @@ export function ChangePasswordDrawer() {
     "flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/30";
 
   return (
-    <>
     <div
       className={`fixed inset-0 z-[70] flex flex-col bg-[#fbf8f4] transition-transform duration-300 ${
         open ? "translate-x-0" : "pointer-events-none translate-x-full"
@@ -230,8 +229,5 @@ export function ChangePasswordDrawer() {
         </div>
       </div>
     </div>
-
-    {AlertSlot}
-    </>
   );
 }

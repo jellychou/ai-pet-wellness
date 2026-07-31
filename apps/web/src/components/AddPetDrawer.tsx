@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
+import { uploadImageToCloudinary } from "../lib/cloudinary";
+import { useAlert } from "../hooks/useAlert";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -129,8 +131,10 @@ export function AddPetDrawer() {
   const [chipNumber, setChipNumber] = useState(initialState.chipNumber);
   const [note, setNote] = useState(initialState.note);
   const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { showError } = useAlert();
 
   function resetForm() {
     setName(initialState.name);
@@ -145,14 +149,28 @@ export function AddPetDrawer() {
     setChipNumber(initialState.chipNumber);
     setNote(initialState.note);
     setAvatarSrc(defaultPetPhoto);
+    setIsUploadingAvatar(false);
     setError("");
   }
 
-  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+  // 改成上傳到 Cloudinary、存回傳的網址。原本用 URL.createObjectURL 產生的
+  // blob: 網址只在當下這個分頁有效，存進資料庫、重新整理頁面或換裝置看都會
+  // 直接失效變成無法顯示的圖片，是個沒發現的 bug；Cloudinary 網址才是能長期
+  // 使用、也不會佔資料庫傳輸額度的做法
+  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarSrc(URL.createObjectURL(file));
     e.target.value = "";
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setAvatarSrc(url);
+    } catch (error) {
+      console.error(error);
+      showError("圖片上傳失敗，請稍後再試");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   }
 
   function handleBack() {
@@ -237,8 +255,9 @@ export function AddPetDrawer() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
                 aria-label="更換頭像"
-                className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85]"
+                className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85] disabled:opacity-60"
               >
                 <Camera size={12} />
               </button>

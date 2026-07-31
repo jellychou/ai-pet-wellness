@@ -9,6 +9,7 @@ import { apiFetch } from "../lib/api";
 import type { AuthUser } from "../store/useAuthStore";
 import defaultAvatarPhoto from "../assets/images/default-avatar.png";
 import { useAlert } from "../hooks/useAlert";
+import { uploadImageToCloudinary } from "../lib/cloudinary";
 
 function SectionHeader({
   icon: Icon,
@@ -84,25 +85,31 @@ export function SettingsEditDrawer() {
   const [email, setEmail] = useState("");
   const [slogan, setSlogan] = useState("");
   const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
   const { showSuccess, showError } = useAlert();
 
-  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+  // 不用 URL.createObjectURL：那個 blob: URL 只在當下這個分頁有效，重新整理
+  // 頁面、存到後端再讀回來、或換一台裝置都會失效變成無法顯示的圖片。
+  // 也不用讀成 base64 直接存進 DB：那樣每次抓使用者資料都要整包圖片一起
+  // 傳輸，很快就把 Neon 免費方案的 network transfer 額度用完。改成上傳到
+  // Cloudinary，存的是它回傳的網址，只是一段字串。
+  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    // 不用 URL.createObjectURL：那個 blob: URL 只在當下這個分頁有效，
-    // 重新整理頁面、存到後端再讀回來、或換一台裝置都會失效變成無法顯示的圖片。
-    // 改成讀成 base64 data URL 直接存進 DB，是一個完全獨立、不依賴瀏覽器暫存的字串。
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatarPhoto(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setAvatarPhoto(url);
+    } catch (error) {
+      console.error(error);
+      showError("圖片上傳失敗，請稍後再試");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   }
 
   function handleBack() {
@@ -212,8 +219,9 @@ export function SettingsEditDrawer() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
                 aria-label="更換頭像"
-                className="absolute bottom-1 right-1 grid h-8 w-8 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85]"
+                className="absolute bottom-1 right-1 grid h-8 w-8 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85] disabled:opacity-60"
               >
                 <Camera size={14} />
               </button>

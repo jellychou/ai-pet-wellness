@@ -24,6 +24,8 @@ import { apiFetch } from "../lib/api";
 import { Pet } from "../data/pets";
 import { useAlert } from "../hooks/useAlert";
 import { usePetStore } from "../store/usePetStore";
+import { AuthUser } from "../store/useAuthStore";
+import { uploadImageToCloudinary } from "../lib/cloudinary";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -118,6 +120,9 @@ export function EditPetDrawer() {
   const navigate = useNavigate();
   const setSelectedPet = usePetStore((s) => s.setSelectedPet);
   const selectedPet = usePetStore((s) => s.selectedPet);
+  const setUserInfo = useAuthStore((s) => s.setUserInfo);
+  const setAllPetsList = usePetStore((s) => s.setAllPetsList);
+  const allPetsList = usePetStore((s) => s.allPetsList);
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -130,22 +135,30 @@ export function EditPetDrawer() {
   const [activity, setActivity] = useState("中");
   const [chipNumber, setChipNumber] = useState("");
   const [note, setNote] = useState("");
+  const [isDeleting, setIsDeleting] = useState(true);
   const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
   const { showSuccess, showError } = useAlert();
 
-  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+  // 改成直接上傳到 Cloudinary，不再讀成 base64 存進資料庫——base64 版本每次
+  // 抓寵物資料都要整包圖片一起傳輸，很快就把 Neon 免費方案的 network
+  // transfer 額度用完；現在存的是 Cloudinary 回傳的網址，只是一段字串
+  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatarSrc(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setAvatarSrc(url);
+    } catch (error) {
+      console.error(error);
+      showError("圖片上傳失敗，請稍後再試");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   }
 
   function handleBack() {
@@ -182,6 +195,41 @@ export function EditPetDrawer() {
     }
   }
 
+  const fetchUserInfo = async () => {
+    const userInfo = await apiFetch<AuthUser>("/user/user-info", {
+      method: "GET",
+    });
+    setUserInfo(userInfo);
+  };
+
+  const fetchAllPetsList = async () => {
+    const allPetsList = await apiFetch<Pet[]>("/pet/all-pets", {
+      method: "GET",
+    });
+    setAllPetsList(allPetsList);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await apiFetch<Pet>(`/pet/delete-pet/${userInfo?.active_pet_id}`, {
+        method: "DELETE",
+      });
+      showSuccess("寵物已刪除");
+      fetchUserInfo();
+      fetchAllPetsList();
+      setSelectedPet(
+        allPetsList.find((pet) => pet.id === userInfo?.active_pet_id) ??
+          allPetsList[0] ??
+          null,
+      );
+      fetchPet();
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      showError("寵物刪除失敗");
+    }
+  };
+
   const fetchPet = async () => {
     if (!open) return;
     const response = await apiFetch<Pet>(
@@ -203,6 +251,9 @@ export function EditPetDrawer() {
     setChipNumber(selectedPet?.chipNumber ?? "");
     setNote(selectedPet?.note ?? "");
     setAvatarSrc(selectedPet?.avatar ?? defaultPetPhoto);
+    setIsDeleting(
+      userInfo?.pets?.length && userInfo?.pets?.length > 1 ? false : true,
+    );
   }, [selectedPet]);
 
   const inputClass =
@@ -255,8 +306,9 @@ export function EditPetDrawer() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
                 aria-label="更換頭像"
-                className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85]"
+                className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85] disabled:opacity-60"
               >
                 <Camera size={12} />
               </button>
@@ -418,6 +470,16 @@ export function EditPetDrawer() {
               ))}
             </div>
           </div>
+          {userInfo?.pets?.length && userInfo?.pets?.length > 1 && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
+            >
+              刪除寵物
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Pet } from "../data/pets";
 import { usePetStore } from "../store/usePetStore";
@@ -105,7 +105,9 @@ export function PetsPage() {
   const pets = usePetStore((s) => s.pets);
   const userInfo = useAuthStore((s) => s.userInfo);
   const [rows, setRows] = useState<{ label: string; value: string }[]>([]);
-  const dailyCalories = selectedPet ? calculateDailyCalories(selectedPet) : null;
+  const dailyCalories = selectedPet
+    ? calculateDailyCalories(selectedPet)
+    : null;
 
   useEffect(() => {
     setRows(

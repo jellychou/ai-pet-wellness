@@ -1,12 +1,17 @@
-from datetime import date, datetime
+from __future__ import annotations
 
-from sqlalchemy import Boolean, Date, DateTime, String, Text, Integer
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import date, datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.pet import Pet
 
 
 class User(Base):
@@ -51,14 +56,18 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    # 這個使用者底下的所有寵物，先用 JSONB 陣列存（不開獨立的 pets table），
-    # 陣列裡每個物件是一隻寵物的資料（name/breed/gender/birthday/weight...），
-    # 之後如果寵物的資料變複雜、需要單獨查詢/關聯，再考慮拆成獨立的 pets table
-    pets: Mapped[list[dict]] = mapped_column(
-        JSONB, nullable=False, server_default="[]"
+    # 寵物資料放獨立的 pets table（見 app/models/pet.py），這裡只是關聯，不再
+    # 直接存 JSONB —— 舊的 JSONB 版本每次改寵物都要整包重新賦值才會被
+    # SQLAlchemy 追蹤到、也沒辦法用資料庫層的 FK/查詢，寵物一多、之後要接
+    # 飲食紀錄等其他表時會一直重複踩同樣的坑，所以拆成真正的表
+    pets: Mapped[list["Pet"]] = relationship(
+        "Pet", back_populates="user", cascade="all, delete-orphan"
     )
-    # 目前選中的寵物 ID，用於在 UI 上顯示/操作該寵物
-    active_pet_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # 目前選中的寵物，FK 指向 pets.id；那隻寵物被刪除時資料庫會自動把這裡設回
+    # NULL（ON DELETE SET NULL），不用另外在程式碼裡處理
+    active_pet_id: Mapped[int | None] = mapped_column(
+        ForeignKey("pets.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 

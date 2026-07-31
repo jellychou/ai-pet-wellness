@@ -106,7 +106,7 @@ const initialState = {
   birthday: "",
   weight: "",
   coatColor: "",
-  neutered: "已絕育",
+  neutered: "0",
   allergy: "無",
   activity: "中等",
   chipNumber: "",
@@ -243,14 +243,6 @@ export function AddPetDrawer() {
                 <Camera size={12} />
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => avatarInputRef.current?.click()}
-              className="mt-3 flex items-center gap-1 rounded-full bg-[#fbe9d9] px-3 py-1.5 text-[12px] font-medium text-[#c9784a] transition hover:bg-[#f6ddc2]"
-            >
-              <Camera size={11} />
-              上傳照片
-            </button>
           </div>
 
           <div className="space-y-3">

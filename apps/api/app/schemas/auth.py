@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import date
 
+from app.schemas.pet import PetOut
+
 
 class GoogleLoginRequest(BaseModel):
     # 前端 Google Identity Services 回傳的 ID token（一組 JWT）
@@ -52,8 +54,10 @@ class UserOut(BaseModel):
     login_method: str | None = None
     is_set_password: bool = True
     # 前端登入成功後會直接讀 user.pets 來判斷要不要導去「新增寵物」頁，
-    # 這裡沒有回傳的話，前端讀 data.user.pets.length 會直接 TypeError 炸掉
-    pets: list[dict] = []
+    # 這裡沒有回傳的話，前端讀 data.user.pets.length 會直接 TypeError 炸掉。
+    # pets 現在是真正的 pets table 關聯（見 app/models/pet.py），不是 JSONB，
+    # 用 PetOut 而不是 list[dict] 才能靠 from_attributes 正確序列化
+    pets: list[PetOut] = []
     active_pet_id: int | None = None
 
     model_config = {"from_attributes": True}

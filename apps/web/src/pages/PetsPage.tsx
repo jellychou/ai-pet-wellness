@@ -11,18 +11,30 @@ const defaultPetAvatar =
 
 // 只定義欄位順序跟中文標籤，實際的值要從 API 抓回來的寵物資料算，
 // 不要把假資料寫死在這裡（之前 value 都是寫死的 "Coco"/"Golden Retriever"...）
-const petFieldDefs = [
+// format 是可選的：像 neutered 這種原始值是代碼（"1"/"0"）、需要轉成中文
+// 顯示的欄位才需要給，格式化邏輯跟著欄位定義走，不用在渲染那裡另外寫 if/else
+type PetFieldDef = {
+  label: string;
+  key: keyof Pet;
+  format?: (value: Pet[keyof Pet]) => string;
+};
+
+const petFieldDefs: PetFieldDef[] = [
   { label: "名字", key: "name" },
   { label: "品種", key: "breed" },
   { label: "性別", key: "gender" },
   { label: "生日", key: "birthday" },
   { label: "體重", key: "weight" },
   { label: "毛色", key: "coatColor" },
-  { label: "絕育狀態", key: "neutered" },
+  {
+    label: "絕育狀態",
+    key: "neutered",
+    format: (value) => (value === "1" ? "已絕育" : "未絕育"),
+  },
   { label: "晶片號碼", key: "chipNumber" },
   { label: "過敏", key: "allergy" },
   { label: "運動量", key: "activity" },
-] as const satisfies { label: string; key: keyof Pet }[];
+];
 
 function PetAvatarSwitcher({
   pets,
@@ -36,7 +48,7 @@ function PetAvatarSwitcher({
   onAdd: () => void;
 }) {
   return (
-    <div className="mb-3 flex gap-3 overflow-x-auto px-1 pb-1">
+    <div className="mb-3 flex gap-3 overflow-x-auto px-1 py-1">
       {pets.map((pet) => (
         <button
           key={pet.name}
@@ -54,7 +66,7 @@ function PetAvatarSwitcher({
             <img
               src={pet.avatar ?? defaultPetAvatar}
               alt={pet.name}
-              className="h-full w-full rounded-full object-cover"
+              className="h-full w-full rounded-full object-cover overflow-hidden"
             />
           </span>
           <span
@@ -84,7 +96,9 @@ function PetAvatarSwitcher({
 }
 
 export function PetsPage() {
+  const editPetOpen = useAppStore((s) => s.editPetOpen);
   const setEditPetOpen = useAppStore((s) => s.setEditPetOpen);
+  const addPetOpen = useAppStore((s) => s.addPetOpen);
   const setAddPetOpen = useAppStore((s) => s.setAddPetOpen);
   const setSelectedPet = usePetStore((s) => s.setSelectedPet);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -98,8 +112,9 @@ export function PetsPage() {
   };
 
   useEffect(() => {
+    if (editPetOpen || addPetOpen) return;
     fetchPets();
-  }, []);
+  }, [editPetOpen, addPetOpen]);
 
   // userInfo 是 App.tsx 另外非同步打 /user/user-info 才抓回來的，
   // PetsPage 掛載當下 userInfo 通常還沒到，所以不能只在 fetchPets 裡算一次
@@ -111,9 +126,11 @@ export function PetsPage() {
     setSelectedPet(activePet);
     setRows(
       activePet
-        ? petFieldDefs.map(({ label, key }) => ({
+        ? petFieldDefs.map(({ label, key, format }) => ({
             label,
-            value: String(activePet[key] ?? ""),
+            value: format
+              ? format(activePet[key])
+              : String(activePet[key] ?? ""),
           }))
         : [],
     );
@@ -169,7 +186,7 @@ export function PetsPage() {
             className="h-12 w-12 rounded-full object-cover"
           />
           <div>
-            <b className="text-xs">Coco</b>
+            <b className="text-xs">{selectedPet?.name}</b>
             <div className="text-[12px] text-ink/45">
               {selectedPet?.breed}
               <br />

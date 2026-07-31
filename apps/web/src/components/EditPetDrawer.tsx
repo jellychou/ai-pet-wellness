@@ -155,7 +155,6 @@ export function EditPetDrawer() {
 
   async function handleSave() {
     try {
-      console.log(avatarSrc);
       await apiFetch<Pet>("/pet/update-pet", {
         method: "PUT",
         body: JSON.stringify({

@@ -105,8 +105,12 @@ def upgrade() -> None:
 
         old_to_new_id: dict[int, int] = {}
         for pet in pets_json:
+            # 用 table()/column() 拼出來的輕量 Core table 沒有帶主鍵資訊，
+            # insert() 之後 result.inserted_primary_key 會是空的，一定要自己
+            # 加 .returning(...) 明確拿新 id（Postgres 支援 RETURNING）
             result = connection.execute(
-                pets_table.insert().values(
+                pets_table.insert()
+                .values(
                     user_id=user_id,
                     name=pet.get("name") or "",
                     breed=pet.get("breed") or "",
@@ -122,8 +126,9 @@ def upgrade() -> None:
                     avatar=pet.get("avatar"),
                     is_active=bool(pet.get("is_active", False)),
                 )
+                .returning(pets_table.c.id)
             )
-            new_id = result.inserted_primary_key[0]
+            new_id = result.scalar_one()
             old_id = pet.get("id")
             if old_id is not None:
                 old_to_new_id[old_id] = new_id

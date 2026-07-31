@@ -42,8 +42,8 @@ export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const setUserInfo = useAuthStore((s) => s.setUserInfo);
   const [email, setEmail] = useState("");
-  const [hasPet, setHasPet] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -69,9 +69,15 @@ export function LoginPage() {
           },
         );
         login(data.access_token, data.user);
-        localStorage.setItem("token", data.access_token);
-        setHasPet(data.user.pets.length > 0);
-        navigate(hasPet ? "/" : "/add-pet");
+        // 要用 userInfo.pets 判斷的話，不能借用 store 裡舊的 userInfo
+        // （那是 App.tsx 另外非同步打 /user/user-info 抓回來的，login() 剛執行完
+        // 的當下通常還沒更新）。這裡自己重新打一次 /user/user-info，抓到最新的
+        // userInfo 存進 store，再用這份剛抓到的資料判斷，才不會永遠判斷成「沒有寵物」
+        const freshUserInfo = await apiFetch<AuthUser>("/user/user-info", {
+          method: "GET",
+        });
+        setUserInfo(freshUserInfo);
+        navigate(freshUserInfo.pets.length > 0 ? "/" : "/add-pet");
       } catch (err) {
         setGoogleError(
           err instanceof ApiError
@@ -105,7 +111,7 @@ export function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [login, navigate, hasPet]);
+  }, [login, navigate, setUserInfo]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -120,9 +126,11 @@ export function LoginPage() {
         },
       );
       login(data.access_token, data.user);
-      localStorage.setItem("token", data.access_token);
-      setHasPet(data.user.pets.length > 0);
-      navigate(hasPet ? "/" : "/add-pet");
+      const freshUserInfo = await apiFetch<AuthUser>("/user/user-info", {
+        method: "GET",
+      });
+      await setUserInfo(freshUserInfo);
+      navigate(freshUserInfo.pets.length > 0 ? "/" : "/add-pet");
     } catch (err) {
       setError(
         err instanceof ApiError

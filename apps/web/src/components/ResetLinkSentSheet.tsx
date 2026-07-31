@@ -15,7 +15,6 @@ export function ResetLinkSentSheet({
   open,
   email,
   onClose,
-  onGoToInbox,
   onResend,
 }: ResetLinkSentSheetProps) {
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
@@ -83,7 +82,9 @@ export function ResetLinkSentSheet({
               />
             </div>
 
-            <h2 className="mt-4 text-lg font-bold text-ink">重設連結已寄出！</h2>
+            <h2 className="mt-4 text-lg font-bold text-ink">
+              重設連結已寄出！
+            </h2>
             <p className="mt-2 text-sm leading-6 text-ink/60">
               我們已將重設密碼的連結寄到
               <br />
@@ -97,13 +98,6 @@ export function ResetLinkSentSheet({
           </div>
 
           <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              onClick={onGoToInbox}
-              className="w-full rounded-full bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
-            >
-              前往信箱
-            </button>
             <button
               type="button"
               onClick={handleResend}

@@ -1,15 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  Calendar,
-  Cat,
-  Check,
-  Dog,
-  Eye,
-  EyeOff,
-  Heart,
-  Lock,
-  Mail,
-} from "lucide-react";
+import { Check, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import patternBg from "../assets/images/pattern-watermark.svg";
@@ -91,6 +81,15 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // 註冊成功後先把 token/user 存在這裡，不要馬上呼叫 login()。
+  // 因為 login() 一叫，App.tsx 的 RedirectIfAuthed 馬上就會判斷成已登入，
+  // 把整個 /login 頁面（連同這個 drawer）導離、卸載掉，
+  // 畫面根本來不及顯示 step 3 的「完成註冊」就直接跳去首頁了。
+  // 改成等使用者在 step 3 按下「開始使用」時才真的 login()，導頁的時機才會對。
+  const [pendingAuth, setPendingAuth] = useState<{
+    token: string;
+    user: AuthUser;
+  } | null>(null);
 
   const strength = useMemo(() => strengthOf(password), [password]);
 
@@ -103,6 +102,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
     setPhone("");
     setBirthday("");
     setError("");
+    setPendingAuth(null);
     onClose();
   }
 
@@ -146,7 +146,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
           }),
         },
       );
-      login(data.access_token, data.user);
+      setPendingAuth({ token: data.access_token, user: data.user });
       setStep(3);
     } catch (err) {
       setError(
@@ -160,6 +160,9 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
   }
 
   function handleFinish() {
+    if (pendingAuth) {
+      login(pendingAuth.token, pendingAuth.user);
+    }
     resetAndClose();
     // 剛註冊的帳號一定還沒有寵物資料，直接導去新增寵物頁面
     navigate("/add-pet");
@@ -362,7 +365,6 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                       onChange={(e) => setBirthday(e.target.value)}
                       className={`${inputClass} [color-scheme:light]`}
                     />
-                    <Calendar size={16} className="text-ink/35" />
                   </div>
                 </div>
               </div>
@@ -393,10 +395,10 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
           {step === 3 && (
             <>
-              <div className="mt-2 text-center">
+              <div className="mt-10 text-center">
                 <h2 className="text-xl font-bold text-ink">完成註冊</h2>
                 <p className="mt-1 text-sm text-ink/60">
-                  歡迎加入 Food・Heart！
+                  歡迎加入 Pet・Wellness！
                   <br />
                   開始記錄毛孩的健康與快樂生活吧！
                 </p>
@@ -404,14 +406,11 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
               <div className="mt-8 flex justify-center">
                 <div className="relative grid h-56 w-56 place-items-center rounded-full bg-[#fbe9d9]/70">
-                  <Heart
-                    size={28}
-                    className="absolute top-6 fill-[#e08a7b] text-[#e08a7b]"
+                  <img
+                    src={logo}
+                    alt="logo"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="flex items-end gap-3">
-                    <Dog size={64} className="text-[#c9a06f]" />
-                    <Cat size={56} className="text-[#7d93a6]" />
-                  </div>
                 </div>
               </div>
 

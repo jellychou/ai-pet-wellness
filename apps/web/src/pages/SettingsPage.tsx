@@ -20,6 +20,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
 import defaultAvatarPhoto from "../assets/images/default-avatar.png";
+import { useAlert } from "../hooks/useAlert";
 
 // lucide-react 沒有性別符號類 icon，這裡用 MUI icons 的 Transgender 包一層，
 // 讓它符合 Row 元件期待的 size/className 介面，可以跟其他 lucide icon 一樣使用
@@ -141,6 +142,7 @@ export function SettingsPage() {
   const setSettingsEditOpen = useAppStore((s) => s.setSettingsEditOpen);
   const setChangePasswordOpen = useAppStore((s) => s.setChangePasswordOpen);
   const setSetPasswordOpen = useAppStore((s) => s.setSetPasswordOpen);
+  const { showSuccess, showError, AlertSlot } = useAlert();
 
   const isEnglish = i18n.language === "en";
 
@@ -163,9 +165,16 @@ export function SettingsPage() {
     apiFetch<{ message: string }>("/user/update-language", {
       method: "PUT",
       body: JSON.stringify({ language: nextLanguage }),
-    }).catch((err) => {
-      console.error("更新語言失敗", err);
-    });
+    })
+      .then(() => {
+        showSuccess("更新語言成功");
+      })
+      .catch((err) => {
+        console.error("更新語言失敗", err);
+        showError(
+          err instanceof Error ? err.message : "更新語言失敗，請稍後再試",
+        );
+      });
   }
 
   return (
@@ -322,6 +331,7 @@ export function SettingsPage() {
         <LogOut size={16} />
         登出
       </button>
+      {AlertSlot}
     </div>
   );
 }

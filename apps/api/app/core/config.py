@@ -32,6 +32,20 @@ class Settings(BaseSettings):
     # 重設密碼 token 的有效時間
     reset_token_expires_minutes: int = 30
 
+    # 忘記密碼信走 Gmail SMTP 寄送。
+    # 建議申請一個全新的、專門給這個 App 用的 Gmail 帳號，不要用私人信箱。
+    # SMTP_USERNAME/SMTP_PASSWORD 沒設的話（例如本機開發還沒申請），
+    # 會自動退回只印到 log 的 dev 版本，不會噴錯。
+    # SMTP_PASSWORD 要用 Gmail「應用程式密碼」，不是登入密碼：
+    # 這個 Gmail 帳號要先開兩步驟驗證，再去 https://myaccount.google.com/apppasswords 產生一組。
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    # 寄件人顯示的名稱／email，不填的話 from email 就用 smtp_username
+    smtp_from_name: str = "Food・Heart"
+    smtp_from_email: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

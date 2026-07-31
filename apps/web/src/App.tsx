@@ -46,7 +46,9 @@ async function getUserInfo() {
 }
 
 export default function App() {
-  const token = localStorage.getItem("token");
+  // 同樣不能直接讀 localStorage.getItem("token")：這個 key 不存在，
+  // 一定要透過 useAuthStore 讀 zustand persist 出來的 token
+  const token = useAuthStore((s) => s.token);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
 
   useEffect(() => {

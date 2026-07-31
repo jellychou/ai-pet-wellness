@@ -57,7 +57,8 @@ export const useAuthStore = create<AuthState>()(
       hasPet: false,
       hasHydrated: false,
       login: (token, user) => set({ token, user }),
-      logout: () => set({ token: null, user: null, hasPet: false }),
+      logout: () =>
+        set({ token: null, user: null, userInfo: null, hasPet: false }),
       setUserInfo: (userInfo) => set({ userInfo }),
       setHasPet: (hasPet) => set({ hasPet }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),

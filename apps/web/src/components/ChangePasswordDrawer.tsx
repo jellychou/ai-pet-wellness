@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Eye, EyeOff, Lightbulb, Lock } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
+import { useAlert } from "../hooks/useAlert";
 
 const requirements = [
   { key: "length", label: "至少 8 個字元", test: (v: string) => v.length >= 8 },
@@ -37,6 +38,7 @@ export function ChangePasswordDrawer() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { showSuccess, showError, AlertSlot } = useAlert();
 
   const strength = useMemo(() => strengthOf(newPassword), [newPassword]);
 
@@ -52,9 +54,13 @@ export function ChangePasswordDrawer() {
           password: newPassword,
         }),
       });
+      showSuccess("密碼變更成功");
       handleBack();
     } catch (error) {
       console.error(error);
+      showError(
+        error instanceof Error ? error.message : "密碼變更失敗，請稍後再試",
+      );
     }
   }
 
@@ -64,6 +70,7 @@ export function ChangePasswordDrawer() {
     "flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/30";
 
   return (
+    <>
     <div
       className={`fixed inset-0 z-[70] flex flex-col bg-[#fbf8f4] transition-transform duration-300 ${
         open ? "translate-x-0" : "pointer-events-none translate-x-full"
@@ -223,5 +230,8 @@ export function ChangePasswordDrawer() {
         </div>
       </div>
     </div>
+
+    {AlertSlot}
+    </>
   );
 }

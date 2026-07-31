@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { apiFetch } from "../lib/api";
 import type { AuthUser } from "../store/useAuthStore";
 import defaultAvatarPhoto from "../assets/images/default-avatar.png";
+import { useAlert } from "../hooks/useAlert";
 
 function SectionHeader({
   icon: Icon,
@@ -86,6 +87,7 @@ export function SettingsEditDrawer() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
+  const { showSuccess, showError, AlertSlot } = useAlert();
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -133,10 +135,14 @@ export function SettingsEditDrawer() {
           picture_url: avatarPhoto,
         }),
       });
+      showSuccess("更新使用者資料成功");
       handleBack();
       getUserInfo();
     } catch (err) {
       console.error("更新使用者資料失敗", err);
+      showError(
+        err instanceof Error ? err.message : "更新使用者資料失敗，請稍後再試",
+      );
     }
   }
 
@@ -155,6 +161,9 @@ export function SettingsEditDrawer() {
 
   const inputClass =
     "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
+
+  const inputWrapClass =
+    "flex items-center rounded-2xl border border-[#ece0d2] bg-white px-4 py-3";
 
   return (
     <div
@@ -231,18 +240,14 @@ export function SettingsEditDrawer() {
             </Field>
 
             <Field label="生日" required>
-              <DatePicker
-                value={birthday ? dayjs(birthday) : null}
-                onChange={(newValue) =>
-                  setBirthday(newValue ? newValue.format("YYYY-MM-DD") : "")
-                }
-                format="YYYY / MM / DD"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                  },
-                }}
-              />
+              <div className={inputWrapClass}>
+                <input
+                  type="date"
+                  value={birthday}
+                  onChange={(e) => setBirthday(e.target.value)}
+                  className={`${inputClass} [color-scheme:light]`}
+                />
+              </div>
             </Field>
 
             <Field label="性別">
@@ -328,6 +333,7 @@ export function SettingsEditDrawer() {
           </div> */}
         </div>
       </div>
+      {AlertSlot}
     </div>
   );
 }

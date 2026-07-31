@@ -103,6 +103,7 @@ function ToggleGroup({
 
 const initialState = {
   name: "",
+  species: "dog",
   breed: "",
   gender: "Female",
   birthday: "",
@@ -120,6 +121,7 @@ export function AddPetDrawer() {
   const setOpen = useAppStore((s) => s.setAddPetOpen);
 
   const [name, setName] = useState(initialState.name);
+  const [species, setSpecies] = useState(initialState.species);
   const [breed, setBreed] = useState(initialState.breed);
   const [gender, setGender] = useState(initialState.gender);
   const [birthday, setBirthday] = useState(initialState.birthday);
@@ -138,6 +140,7 @@ export function AddPetDrawer() {
 
   function resetForm() {
     setName(initialState.name);
+    setSpecies(initialState.species);
     setBreed(initialState.breed);
     setGender(initialState.gender);
     setBirthday(initialState.birthday);
@@ -188,6 +191,7 @@ export function AddPetDrawer() {
       method: "POST",
       body: JSON.stringify({
         name,
+        species,
         breed,
         gender,
         birthday,
@@ -276,6 +280,17 @@ export function AddPetDrawer() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="請輸入寵物名字"
                 className={inputClass}
+              />
+            </Field>
+
+            <Field label="物種" required>
+              <ToggleGroup
+                value={species}
+                onChange={setSpecies}
+                options={[
+                  { label: "狗", icon: "🐶", value: "dog" },
+                  { label: "貓", icon: "🐱", value: "cat" },
+                ]}
               />
             </Field>
 

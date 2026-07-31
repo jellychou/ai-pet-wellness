@@ -4,6 +4,7 @@ from datetime import date
 
 class AddPetRequest(BaseModel):
     name: str
+    species: str = "dog"
     breed: str
     gender: str
     birthday: date
@@ -21,6 +22,7 @@ class AddPetRequest(BaseModel):
 class UpdatePetRequest(BaseModel):
     id: int
     name: str
+    species: str = "dog"
     breed: str
     gender: str
     birthday: date
@@ -40,6 +42,7 @@ class UpdatePetRequest(BaseModel):
 class PetOut(BaseModel):
     id: int
     name: str
+    species: str = "dog"
     breed: str
     gender: str
     birthday: date

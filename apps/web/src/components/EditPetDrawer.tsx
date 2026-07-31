@@ -125,6 +125,7 @@ export function EditPetDrawer() {
   const allPetsList = usePetStore((s) => s.allPetsList);
 
   const [name, setName] = useState("");
+  const [species, setSpecies] = useState("dog");
   const [breed, setBreed] = useState("");
   const [gender, setGender] = useState("");
   const [birthday, setBirthday] = useState("");
@@ -173,6 +174,7 @@ export function EditPetDrawer() {
         body: JSON.stringify({
           id: userInfo?.active_pet_id,
           name: name,
+          species: species,
           breed: breed,
           gender: gender,
           birthday: birthday,
@@ -240,6 +242,7 @@ export function EditPetDrawer() {
 
   useEffect(() => {
     setName(selectedPet?.name ?? "");
+    setSpecies(selectedPet?.species ?? "dog");
     setBreed(selectedPet?.breed ?? "");
     setGender(selectedPet?.gender ?? "");
     setBirthday(selectedPet?.birthday ?? "");
@@ -326,6 +329,17 @@ export function EditPetDrawer() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
+              />
+            </Field>
+
+            <Field label="物種" required>
+              <ToggleGroup
+                value={species}
+                onChange={setSpecies}
+                options={[
+                  { label: "狗", icon: "🐶", value: "dog" },
+                  { label: "貓", icon: "🐱", value: "cat" },
+                ]}
               />
             </Field>
 

@@ -22,6 +22,11 @@ class Pet(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    # "dog" 或 "cat"。之後算熱量/營養素的時候，狗跟貓的比例需求差很多
+    # （貓是肉食動物，蛋白質需求比狗高很多），需要這個欄位才能分開算
+    species: Mapped[str] = mapped_column(
+        String(10), nullable=False, server_default="dog"
+    )
     breed: Mapped[str] = mapped_column(String(100), nullable=False)
     gender: Mapped[str] = mapped_column(String(20), nullable=False)
     birthday: Mapped[date] = mapped_column(Date, nullable=False)

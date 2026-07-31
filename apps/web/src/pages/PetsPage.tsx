@@ -22,6 +22,11 @@ type PetFieldDef = {
 
 const petFieldDefs: PetFieldDef[] = [
   { label: "名字", key: "name" },
+  {
+    label: "物種",
+    key: "species",
+    format: (value) => (value === "cat" ? "貓" : "狗"),
+  },
   { label: "品種", key: "breed" },
   { label: "性別", key: "gender" },
   { label: "生日", key: "birthday" },

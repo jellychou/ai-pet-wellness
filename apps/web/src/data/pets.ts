@@ -2,6 +2,7 @@ export type Pet = {
   id: number;
   avatar: string;
   name: string;
+  species: "dog" | "cat";
   breed: string;
   gender: string;
   birthday: string;

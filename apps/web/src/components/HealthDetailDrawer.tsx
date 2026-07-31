@@ -183,14 +183,6 @@ export function HealthDetailDrawer() {
                       </span>
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-[#dcccb8] text-ink/40 transition hover:bg-cream/40"
-                  >
-                    <span className="text-2xl leading-none">＋</span>
-                    <span className="text-[10px]">新增附件</span>
-                  </button>
                 </div>
               </div>
             </>

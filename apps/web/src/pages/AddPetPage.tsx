@@ -75,7 +75,7 @@ function ToggleGroup({
   value,
   onChange,
 }: {
-  options: { label: string; icon?: string; value?: string }[];
+  options: { label: string; icon?: string; value: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -85,9 +85,9 @@ function ToggleGroup({
         <button
           key={o.label}
           type="button"
-          onClick={() => onChange(o.label)}
+          onClick={() => onChange(o.value)}
           className={`rounded-xl border py-2 text-[11px] font-medium transition ${
-            value === o.label
+            value === o.value
               ? "border-[#f0c9a0] bg-[#fbe9d9] text-[#c9784a]"
               : "border-[#ece4dc] bg-[#f7f4f0] text-ink/45"
           }`}
@@ -131,7 +131,7 @@ export function AddPetPage() {
     }
     setError("");
     try {
-      await apiFetch("/api/pet/add-pet", {
+      await apiFetch("/pet/add-pet", {
         method: "POST",
         body: JSON.stringify({
           name,
@@ -229,8 +229,8 @@ export function AddPetPage() {
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "男生", icon: "♀", value: "Female" },
-                  { label: "女生", icon: "♂", value: "Male" },
+                  { label: "女生", icon: "♀", value: "Female" },
+                  { label: "男生", icon: "♂", value: "Male" },
                 ]}
               />
             </Field>
@@ -281,7 +281,10 @@ export function AddPetPage() {
               <ToggleGroup
                 value={neutered}
                 onChange={setNeutered}
-                options={[{ label: "已絕育" }, { label: "未絕育" }]}
+                options={[
+                  { label: "已絕育", value: "1" },
+                  { label: "未絕育", value: "0" },
+                ]}
               />
             </Field>
 

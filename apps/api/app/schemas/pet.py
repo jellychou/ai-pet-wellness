@@ -3,7 +3,6 @@ from datetime import date
 
 
 class AddPetRequest(BaseModel):
-    id: int
     name: str
     breed: str
     gender: str

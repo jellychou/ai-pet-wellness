@@ -1,7 +1,21 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft, FileText, Image as ImageIcon, X } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Image as ImageIcon,
+  Trash2,
+  X,
+} from "lucide-react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
 import { useAppStore } from "../store/useAppStore";
 import { ReportTypeEnum } from "../data/pets";
+import { apiFetch } from "../lib/api";
+import { useAlert } from "../hooks/useAlert";
 
 type Attachment = {
   name: string;
@@ -30,8 +44,14 @@ export function HealthDetailDrawer() {
   // 本來就已經抓過完整資料了，點下去直接把那筆傳過來，這裡不用再打一次 API
   const record = useAppStore((s) => s.healthDetailRecord);
   const setRecord = useAppStore((s) => s.setHealthDetailRecord);
+  const bumpHealthRecordRefreshKey = useAppStore(
+    (s) => s.bumpHealthRecordRefreshKey,
+  );
   const open = record !== null;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showSuccess, showError } = useAlert();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // 使用者在詳情頁另外選的檔案，目前只是本機預覽用（還沒有串上傳/儲存），
   // 用 record.id 當 key，切換不同紀錄時不會互相干擾
@@ -45,6 +65,26 @@ export function HealthDetailDrawer() {
 
   function handleBack() {
     setRecord(null);
+  }
+
+  async function handleDelete() {
+    if (!record) return;
+    setIsDeleting(true);
+    try {
+      await apiFetch(`/report/delete-report-record/${record.id}`, {
+        method: "DELETE",
+      });
+      showSuccess("已刪除健康檢查紀錄");
+      bumpHealthRecordRefreshKey();
+      setConfirmOpen(false);
+      setRecord(null);
+    } catch (error) {
+      showError(
+        error instanceof Error ? error.message : "刪除失敗，請稍後再試",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   function handleFilesPick(e: ChangeEvent<HTMLInputElement>) {
@@ -189,6 +229,43 @@ export function HealthDetailDrawer() {
           )}
         </div>
       </div>
+
+      {record && (
+        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+          <div className="mx-auto max-w-md">
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(true)}
+              disabled={isDeleting}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd] disabled:opacity-60"
+            >
+              <Trash2 size={16} />
+              {isDeleting ? "刪除中..." : "刪除這筆紀錄"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Dialog
+        open={confirmOpen}
+        onClose={() => !isDeleting && setConfirmOpen(false)}
+        aria-labelledby="delete-record-title"
+      >
+        <DialogTitle id="delete-record-title">刪除健康檢查紀錄</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            確定要刪除這筆健康檢查紀錄嗎？此動作無法復原。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)} disabled={isDeleting}>
+            取消
+          </Button>
+          <Button onClick={handleDelete} color="error" disabled={isDeleting}>
+            {isDeleting ? "刪除中..." : "刪除"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {previewAttachment && (
         <div

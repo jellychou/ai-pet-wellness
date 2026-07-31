@@ -18,6 +18,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { apiFetch } from "../lib/api";
@@ -136,12 +142,13 @@ export function EditPetDrawer() {
   const [activity, setActivity] = useState("中");
   const [chipNumber, setChipNumber] = useState("");
   const [note, setNote] = useState("");
-  const [isDeleting, setIsDeleting] = useState(true);
   const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
   const { showSuccess, showError } = useAlert();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // 改成直接上傳到 Cloudinary，不再讀成 base64 存進資料庫——base64 版本每次
   // 抓寵物資料都要整包圖片一起傳輸，很快就把 Neon 免費方案的 network
@@ -212,6 +219,7 @@ export function EditPetDrawer() {
   };
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       await apiFetch<Pet>(`/pet/delete-pet/${userInfo?.active_pet_id}`, {
         method: "DELETE",
@@ -225,10 +233,13 @@ export function EditPetDrawer() {
           null,
       );
       fetchPet();
+      setConfirmDeleteOpen(false);
       setOpen(false);
     } catch (error) {
       console.error(error);
       showError("寵物刪除失敗");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -487,7 +498,7 @@ export function EditPetDrawer() {
           {userInfo?.pets?.length && userInfo?.pets?.length > 1 && (
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setConfirmDeleteOpen(true)}
               disabled={isDeleting}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
             >
@@ -496,6 +507,30 @@ export function EditPetDrawer() {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => !isDeleting && setConfirmDeleteOpen(false)}
+        aria-labelledby="delete-pet-title"
+      >
+        <DialogTitle id="delete-pet-title">刪除寵物</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            確定要刪除這隻寵物嗎？所有相關的疫苗與健康檢查紀錄都會一併刪除，此動作無法復原。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setConfirmDeleteOpen(false)}
+            disabled={isDeleting}
+          >
+            取消
+          </Button>
+          <Button onClick={handleDelete} color="error" disabled={isDeleting}>
+            {isDeleting ? "刪除中..." : "刪除"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

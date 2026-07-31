@@ -18,6 +18,7 @@ export function EditHealthDrawer() {
   const selectedPet = usePetStore((s) => s.selectedPet);
   const setHealthDetailRecord = useAppStore((s) => s.setHealthDetailRecord);
   const setAddHealthRecordOpen = useAppStore((s) => s.setAddHealthRecordOpen);
+  const healthRecordRefreshKey = useAppStore((s) => s.healthRecordRefreshKey);
   const navigate = useNavigate();
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
 
@@ -47,7 +48,7 @@ export function EditHealthDrawer() {
 
   useEffect(() => {
     fetchHealthRecords();
-  }, [selectedPet?.id]);
+  }, [selectedPet?.id, healthRecordRefreshKey]);
 
   return (
     <div

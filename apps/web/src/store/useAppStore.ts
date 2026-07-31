@@ -28,6 +28,11 @@ type AppState = {
   // 那筆傳過去最省事，不用再讓 HealthDetailDrawer 自己想辦法打 API 撈
   healthDetailRecord: HealthRecord | null;
   setHealthDetailRecord: (v: HealthRecord | null) => void;
+  // 跟 vaccineRefreshKey 同樣的道理：EditHealthDrawer 只在自己 mount/切換寵物時
+  // 打一次 API，HealthDetailDrawer 刪除紀錄後不會觸發它重新 mount，
+  // 所以用這個數字當訊號，刪除成功就 +1，讓列表重新抓一次
+  healthRecordRefreshKey: number;
+  bumpHealthRecordRefreshKey: () => void;
   editPetOpen: boolean;
   setEditPetOpen: (v: boolean) => void;
   addHealthRecordOpen: boolean;
@@ -64,6 +69,9 @@ export const useAppStore = create<AppState>((set) => ({
   setEditHealthOpen: (editHealthOpen) => set({ editHealthOpen }),
   healthDetailRecord: null,
   setHealthDetailRecord: (healthDetailRecord) => set({ healthDetailRecord }),
+  healthRecordRefreshKey: 0,
+  bumpHealthRecordRefreshKey: () =>
+    set((s) => ({ healthRecordRefreshKey: s.healthRecordRefreshKey + 1 })),
   editPetOpen: false,
   setEditPetOpen: (editPetOpen) => set({ editPetOpen }),
   addHealthRecordOpen: false,

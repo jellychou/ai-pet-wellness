@@ -32,6 +32,7 @@ const vaccines = [
 export function AddVaccineDrawer() {
   const open = useAppStore((s) => s.addVaccineOpen);
   const setOpen = useAppStore((s) => s.setAddVaccineOpen);
+  const setAddVaccineFormOpen = useAppStore((s) => s.setAddVaccineFormOpen);
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof tabs)[number]>("全部");
 
@@ -86,7 +87,10 @@ export function AddVaccineDrawer() {
 
           <div className="space-y-3">
             {filtered.map((v) => (
-              <div key={v.name} className="rounded-2xl bg-[#FDF0D5] p-4">
+              <div
+                key={v.name}
+                className="rounded-2xl bg-[#fbf7f1] p-4 shadow-sm"
+              >
                 <div className="flex items-start gap-3">
                   <Syringe
                     size={22}
@@ -128,6 +132,7 @@ export function AddVaccineDrawer() {
         <div className="mx-auto max-w-md">
           <button
             type="button"
+            onClick={() => setAddVaccineFormOpen(true)}
             className="w-full rounded-2xl bg-[#ead3ba] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#e4c6a5]"
           >
             ＋ 新增疫苗

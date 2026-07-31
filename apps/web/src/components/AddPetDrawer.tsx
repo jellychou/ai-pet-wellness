@@ -13,6 +13,8 @@ import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
+import { usePetStore } from "../store/usePetStore";
+import { Pet } from "../data/pets";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -119,6 +121,7 @@ const initialState = {
 export function AddPetDrawer() {
   const open = useAppStore((s) => s.addPetOpen);
   const setOpen = useAppStore((s) => s.setAddPetOpen);
+  const setAllPetsList = usePetStore((s) => s.setAllPetsList);
 
   const [name, setName] = useState(initialState.name);
   const [species, setSpecies] = useState(initialState.species);
@@ -206,7 +209,16 @@ export function AddPetDrawer() {
       }),
     });
     resetForm();
+    fetchAllPetsList();
     setOpen(false);
+  }
+
+  function fetchAllPetsList() {
+    apiFetch("/pet/get-all-pets", {
+      method: "GET",
+    }).then((res) => {
+      setAllPetsList(res as Pet[]);
+    });
   }
 
   const inputClass =

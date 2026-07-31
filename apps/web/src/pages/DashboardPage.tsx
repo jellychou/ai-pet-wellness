@@ -14,6 +14,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
+import { calculateDailyCalories, calculateMacros } from "../lib/calorie";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -55,54 +56,54 @@ function Metric({
   );
 }
 
-function VaccineCard({ onAddVaccine }: { onAddVaccine: () => void }) {
-  const vaccines = [
-    ["狂犬病疫苗", "Rabies", "2026/05/02", "已施打"],
-    ["DHPP 五合一疫苗", "DHPP", "2025/10/10", "已施打"],
-    ["鉤端螺旋體疫苗", "Leptospirosis", "2026/06/15", "待施打"],
-  ];
-  return (
-    <section className="card p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="section-title">疫苗記錄 / Vaccine</h2>
-      </div>
-      <div className="mb-3 flex gap-6 border-b border-[#ece4dc] text-[12px]">
-        <span className="border-b-2 border-[#7693a5] pb-2">全部</span>
-        <span>已接種</span>
-        <span>待接種</span>
-      </div>
-      <div className="space-y-2">
-        {vaccines.map((v, i) => (
-          <div
-            key={v[0]}
-            className="flex items-center gap-3 rounded-xl bg-[#fbf7f1] p-3"
-          >
-            <Syringe
-              size={24}
-              className={i === 2 ? "text-[#e78154]" : "text-[#8083c9]"}
-            />
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold">{v[0]}</div>
-              <div className="text-[9px] text-ink/45">{v[1]}</div>
-              <div className="mt-1 text-[9px]">{v[2]}</div>
-            </div>
-            <span
-              className={`pill ${i === 2 ? "bg-[#f4ddc3] text-[#a46e3d]" : "bg-[#dce8ed] text-[#5d7c8c]"}`}
-            >
-              {v[3]}
-            </span>
-          </div>
-        ))}
-      </div>
-      <button
-        onClick={onAddVaccine}
-        className="mt-3 w-full rounded-xl bg-[#b88672] py-2 text-xs text-white"
-      >
-        ＋ 新增疫苗
-      </button>
-    </section>
-  );
-}
+// function VaccineCard({ onAddVaccine }: { onAddVaccine: () => void }) {
+//   const vaccines = [
+//     ["狂犬病疫苗", "Rabies", "2026/05/02", "已施打"],
+//     ["DHPP 五合一疫苗", "DHPP", "2025/10/10", "已施打"],
+//     ["鉤端螺旋體疫苗", "Leptospirosis", "2026/06/15", "待施打"],
+//   ];
+//   return (
+//     <section className="card p-4">
+//       <div className="mb-3 flex items-center justify-between">
+//         <h2 className="section-title">疫苗記錄 / Vaccine</h2>
+//       </div>
+//       <div className="mb-3 flex gap-6 border-b border-[#ece4dc] text-[12px]">
+//         <span className="border-b-2 border-[#7693a5] pb-2">全部</span>
+//         <span>已接種</span>
+//         <span>待接種</span>
+//       </div>
+//       <div className="space-y-2">
+//         {vaccines.map((v, i) => (
+//           <div
+//             key={v[0]}
+//             className="flex items-center gap-3 rounded-xl bg-[#fbf7f1] p-3"
+//           >
+//             <Syringe
+//               size={24}
+//               className={i === 2 ? "text-[#e78154]" : "text-[#8083c9]"}
+//             />
+//             <div className="min-w-0 flex-1">
+//               <div className="text-[11px] font-semibold">{v[0]}</div>
+//               <div className="text-[9px] text-ink/45">{v[1]}</div>
+//               <div className="mt-1 text-[9px]">{v[2]}</div>
+//             </div>
+//             <span
+//               className={`pill ${i === 2 ? "bg-[#f4ddc3] text-[#a46e3d]" : "bg-[#dce8ed] text-[#5d7c8c]"}`}
+//             >
+//               {v[3]}
+//             </span>
+//           </div>
+//         ))}
+//       </div>
+//       <button
+//         onClick={onAddVaccine}
+//         className="mt-3 w-full rounded-xl bg-[#b88672] py-2 text-xs text-white"
+//       >
+//         ＋ 新增疫苗
+//       </button>
+//     </section>
+//   );
+// }
 
 function FoodCard({ onAddFood }: { onAddFood: () => void }) {
   const meals = [
@@ -111,6 +112,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
     ["晚餐", "鮭魚 Salmon", "150 g / 285 kcal", "🍣"],
     ["點心", "蘋果 Apple", "50 g / 26 kcal", "🍏"],
   ];
+
   return (
     <section className="card p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -171,6 +173,10 @@ export function DashboardPage() {
   const setEditHealthOpen = useAppStore((s) => s.setEditHealthOpen);
   const userInfo = useAuthStore((s) => s.userInfo);
   const selectedPet = usePetStore((s) => s.selectedPet);
+  const dailyCalories = selectedPet
+    ? String(calculateDailyCalories(selectedPet) ?? "--")
+    : null;
+  const macros = selectedPet ? calculateMacros(selectedPet) : null;
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-3">
@@ -208,15 +214,15 @@ export function DashboardPage() {
               <Metric
                 icon={Heart}
                 title="健康分數"
-                value="92"
+                value="0"
                 unit="/100"
                 tone="peach"
               />
               <Metric
                 icon={Flame}
                 title="今日熱量"
-                value="430"
-                unit="/500 kcal"
+                value="0"
+                unit={`/${dailyCalories ?? "--"} kcal`}
                 tone="peach"
               />
               <Metric icon={Droplets} title="喝水量" value="80" unit="%" />
@@ -236,6 +242,27 @@ export function DashboardPage() {
               </p>
             </div>
             <span className="text-3xl">🐕🥣</span>
+          </div>
+          {/* 依每日建議熱量 + 物種（狗/貓比例不同）換算出來的建議攝取量，
+              是簡化過的參考值，不是精確的個體營養需求 */}
+          <div className="mt-3 rounded-xl bg-[#fbf7f1] p-3">
+            <div className="mb-2 text-[12px] font-semibold">今日建議營養素</div>
+            <div className="grid grid-cols-3 gap-2 text-center text-[9px]">
+              <div>
+                <div>蛋白質</div>
+                <b className="text-xs">
+                  {macros ? `${macros.protein} g` : "--"}
+                </b>
+              </div>
+              <div>
+                <div>脂肪</div>
+                <b className="text-xs">{macros ? `${macros.fat} g` : "--"}</b>
+              </div>
+              <div>
+                <div>碳水</div>
+                <b className="text-xs">{macros ? `${macros.carb} g` : "--"}</b>
+              </div>
+            </div>
           </div>
           <div className="mt-3">
             <div className="mb-2 text-[12px] font-medium">Quick Action</div>
@@ -265,7 +292,7 @@ export function DashboardPage() {
           </div>
         </div>
         {/* <PetProfileCard /> */}
-        <VaccineCard onAddVaccine={() => setAddVaccineOpen(true)} />
+        {/* <VaccineCard onAddVaccine={() => setAddVaccineOpen(true)} /> */}
         <FoodCard onAddFood={() => setAddFoodOpen(true)} />
       </section>
       <footer className="flex items-center justify-between rounded-xl px-5 py-2 text-[12px] text-[#78A4CB]">

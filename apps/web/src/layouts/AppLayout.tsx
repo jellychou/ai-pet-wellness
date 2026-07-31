@@ -4,6 +4,7 @@ import { Sidebar } from "../components/Sidebar";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { AddFoodDrawer } from "../components/AddFoodDrawer";
 import { AddVaccineDrawer } from "../components/AddVaccineDrawer";
+import { AddVaccineFormDrawer } from "../components/AddVaccineFormDrawer";
 import { AiScanDrawer } from "../components/AiScanDrawer";
 import { EditHealthDrawer } from "../components/EditHealthDrawer";
 import { HealthDetailDrawer } from "../components/HealthDetailDrawer";
@@ -47,6 +48,7 @@ export function AppLayout() {
       <MobileBottomNav />
       <AddFoodDrawer />
       <AddVaccineDrawer />
+      <AddVaccineFormDrawer />
       <AiScanDrawer />
       <EditHealthDrawer />
       <HealthDetailDrawer />

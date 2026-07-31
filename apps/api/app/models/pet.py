@@ -10,6 +10,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.vaccine import VaccineRecord
 
 
 class Pet(Base):
@@ -45,4 +46,8 @@ class Pet(Base):
 
     user: Mapped["User"] = relationship(
         "User", back_populates="pets", foreign_keys=[user_id]
+    )
+    # 寵物被刪除時，屬於牠的疫苗紀錄也一起刪掉，不留孤兒資料
+    vaccine_records: Mapped[list["VaccineRecord"]] = relationship(
+        "VaccineRecord", back_populates="pet", cascade="all, delete-orphan"
     )

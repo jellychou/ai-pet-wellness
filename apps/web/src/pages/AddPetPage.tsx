@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { usePetStore } from "../store/usePetStore";
+import { Pet } from "../data/pets";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -101,6 +103,7 @@ function ToggleGroup({
 
 export function AddPetPage() {
   const navigate = useNavigate();
+  const setAllPetsList = usePetStore((s) => s.setAllPetsList);
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -147,10 +150,19 @@ export function AddPetPage() {
           note,
         }),
       });
+      fetchAllPetsList();
       navigate("/", { replace: true });
     } catch (error) {
       console.error(error);
     }
+  }
+
+  function fetchAllPetsList() {
+    apiFetch("/pet/get-all-pets", {
+      method: "GET",
+    }).then((res) => {
+      setAllPetsList(res as Pet[]);
+    });
   }
 
   const inputClass =

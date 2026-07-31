@@ -9,6 +9,8 @@ type AppState = {
   setAddFoodOpen: (v: boolean) => void;
   addVaccineOpen: boolean;
   setAddVaccineOpen: (v: boolean) => void;
+  addVaccineFormOpen: boolean;
+  setAddVaccineFormOpen: (v: boolean) => void;
   aiScanOpen: boolean;
   setAiScanOpen: (v: boolean) => void;
   editHealthOpen: boolean;
@@ -37,6 +39,8 @@ export const useAppStore = create<AppState>((set) => ({
   setAddFoodOpen: (addFoodOpen) => set({ addFoodOpen }),
   addVaccineOpen: false,
   setAddVaccineOpen: (addVaccineOpen) => set({ addVaccineOpen }),
+  addVaccineFormOpen: false,
+  setAddVaccineFormOpen: (addVaccineFormOpen) => set({ addVaccineFormOpen }),
   aiScanOpen: false,
   setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
   editHealthOpen: false,

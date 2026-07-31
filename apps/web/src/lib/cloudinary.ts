@@ -35,3 +35,37 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
   const data = (await res.json()) as { secure_url: string };
   return data.secure_url;
 }
+
+// 健康檢查報告除了圖片，還可能是 PDF（血檢單、超音波報告等），Cloudinary 的
+// image/upload 端點只吃圖片，PDF 會被拒絕；改用 auto/upload 讓 Cloudinary
+// 自己判斷檔案類型（圖片/PDF/其他都吃），一樣是 unsigned 上傳，回傳網址存進
+// report_files。
+export async function uploadFileToCloudinary(file: File): Promise<string> {
+  if (!CLOUD_NAME || !UPLOAD_PRESET) {
+    throw new Error(
+      "尚未設定 VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET",
+    );
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(
+      body?.error?.message ?? `檔案「${file.name}」上傳失敗（${res.status}）`,
+    );
+  }
+
+  const data = (await res.json()) as { secure_url: string };
+  return data.secure_url;
+}

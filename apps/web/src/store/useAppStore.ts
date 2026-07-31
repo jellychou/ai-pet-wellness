@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { HealthRecord } from "../data/pets";
 
 type AppState = {
   sidebarOpen: boolean;
@@ -22,8 +23,11 @@ type AppState = {
   setAiScanOpen: (v: boolean) => void;
   editHealthOpen: boolean;
   setEditHealthOpen: (v: boolean) => void;
-  healthDetailIndex: number | null;
-  setHealthDetailIndex: (v: number | null) => void;
+  // 存整筆紀錄，不是只存 id——後端沒有「用 record id 查單筆健康檢查紀錄」的
+  // API，EditHealthDrawer 列表本來就已經把完整資料抓下來了，直接把點到的
+  // 那筆傳過去最省事，不用再讓 HealthDetailDrawer 自己想辦法打 API 撈
+  healthDetailRecord: HealthRecord | null;
+  setHealthDetailRecord: (v: HealthRecord | null) => void;
   editPetOpen: boolean;
   setEditPetOpen: (v: boolean) => void;
   addHealthRecordOpen: boolean;
@@ -58,8 +62,8 @@ export const useAppStore = create<AppState>((set) => ({
   setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
   editHealthOpen: false,
   setEditHealthOpen: (editHealthOpen) => set({ editHealthOpen }),
-  healthDetailIndex: null,
-  setHealthDetailIndex: (healthDetailIndex) => set({ healthDetailIndex }),
+  healthDetailRecord: null,
+  setHealthDetailRecord: (healthDetailRecord) => set({ healthDetailRecord }),
   editPetOpen: false,
   setEditPetOpen: (editPetOpen) => set({ editPetOpen }),
   addHealthRecordOpen: false,

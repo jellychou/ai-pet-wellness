@@ -3,23 +3,51 @@ import {
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
-  Plus,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
-import { healthRecords } from "../data/healthRecords";
+import { HealthRecord } from "../data/pets";
+import { apiFetch } from "../lib/api";
+import { usePetStore } from "../store/usePetStore";
+import { ReportTypeEnum } from "../data/pets";
 
 export function EditHealthDrawer() {
   const open = useAppStore((s) => s.editHealthOpen);
   const setOpen = useAppStore((s) => s.setEditHealthOpen);
-  const setHealthDetailIndex = useAppStore((s) => s.setHealthDetailIndex);
+  const selectedPet = usePetStore((s) => s.selectedPet);
+  const setHealthDetailRecord = useAppStore((s) => s.setHealthDetailRecord);
   const setAddHealthRecordOpen = useAppStore((s) => s.setAddHealthRecordOpen);
   const navigate = useNavigate();
+  const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
 
   function handleBack() {
     setOpen(false);
     navigate("/");
   }
+
+  const fetchHealthRecords = async () => {
+    const petId = selectedPet?.id;
+    if (!petId) return;
+    try {
+      const response = await apiFetch<HealthRecord[]>(
+        `/report/report-records/${petId}`,
+        { method: "GET" },
+      );
+      setHealthRecords(response);
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const formatReportType = (type: string) => {
+    return ReportTypeEnum[type as keyof typeof ReportTypeEnum];
+  };
+
+  useEffect(() => {
+    fetchHealthRecords();
+  }, [selectedPet?.id]);
 
   return (
     <div
@@ -65,33 +93,38 @@ export function EditHealthDrawer() {
           <div className="space-y-3">
             {healthRecords.map((r, i) => (
               <button
-                key={r.date}
+                key={r.id}
                 type="button"
-                onClick={() => setHealthDetailIndex(i)}
+                onClick={() => setHealthDetailRecord(r)}
                 className="flex w-full items-start gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 text-left transition hover:bg-[#f6f0e8]"
               >
                 <span
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${r.color}`}
+                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f6d9c2] text-[#d9834f]`}
                 >
                   <ClipboardList size={18} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between text-xs text-ink/35">
-                    <span>{r.date}</span>
+                    <span>{r.report_date}</span>
                     <ChevronRight size={14} />
                   </div>
                   <div className="mt-1 text-sm font-semibold text-ink">
-                    {r.title}
+                    {formatReportType(r.report_type)}
                   </div>
                   <div className="mt-1 text-xs text-ink/60">
-                    體重 {r.weight}
+                    體重 {r.report_weight} kg
                   </div>
-                  <div className="text-xs text-ink/60">醫院 {r.hospital}</div>
+                  <div className="mt-1 text-xs text-ink/60">
+                    醫院 {r.report_hospital}
+                  </div>
                 </div>
               </button>
             ))}
           </div>
-
+        </div>
+      </div>
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+        <div className="mx-auto max-w-md flex gap-4">
           <button
             type="button"
             onClick={() => setAddHealthRecordOpen(true)}

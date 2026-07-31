@@ -1,62 +1,94 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import {
-  ArrowLeft,
-  FileText,
-  Image as ImageIcon,
-  MoreVertical,
-  Plus,
-} from "lucide-react";
+import { ArrowLeft, FileText, Image as ImageIcon, X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { healthRecords, type HealthAttachment } from "../data/healthRecords";
+import { ReportTypeEnum } from "../data/pets";
+
+type Attachment = {
+  name: string;
+  type: "pdf" | "image";
+  url?: string;
+};
+
+// 從 Cloudinary 網址推斷這個附件要顯示成圖片還是 PDF 縮圖；PDF 一樣保留
+// url，點下去會用 iframe 直接在彈窗裡顯示（瀏覽器內建的 PDF 檢視器）
+function attachmentFromUrl(url: string): Attachment {
+  const name = url.split("/").pop() ?? url;
+  const isPdf = url.toLowerCase().endsWith(".pdf");
+  return {
+    name,
+    type: isPdf ? "pdf" : "image",
+    url,
+  };
+}
+
+function formatReportType(type: string) {
+  return ReportTypeEnum[type as keyof typeof ReportTypeEnum] ?? type;
+}
 
 export function HealthDetailDrawer() {
-  const index = useAppStore((s) => s.healthDetailIndex);
-  const setIndex = useAppStore((s) => s.setHealthDetailIndex);
-  const open = index !== null;
-  const record = index !== null ? healthRecords[index] : null;
+  // 存的是整筆紀錄（不是 id）——後端沒有「用 id 查單筆」的 API，列表那邊
+  // 本來就已經抓過完整資料了，點下去直接把那筆傳過來，這裡不用再打一次 API
+  const record = useAppStore((s) => s.healthDetailRecord);
+  const setRecord = useAppStore((s) => s.setHealthDetailRecord);
+  const open = record !== null;
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 使用者在詳情頁另外選的檔案，目前只是本機預覽用（還沒有串上傳/儲存），
+  // 用 record.id 當 key，切換不同紀錄時不會互相干擾
   const [extraAttachments, setExtraAttachments] = useState<
-    Record<number, HealthAttachment[]>
+    Record<number, Attachment[]>
   >({});
+  // 點到附件時要放大顯示的那一個，圖片跟 PDF 都共用同一個彈窗
+  const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(
+    null,
+  );
 
   function handleBack() {
-    setIndex(null);
-  }
-
-  function handleAddFileClick() {
-    fileInputRef.current?.click();
+    setRecord(null);
   }
 
   function handleFilesPick(e: ChangeEvent<HTMLInputElement>) {
-    if (index === null) return;
+    if (!record) return;
     const picked = Array.from(e.target.files ?? []);
     if (!picked.length) return;
-    const added: HealthAttachment[] = picked.map((file) => ({
+    const added: Attachment[] = picked.map((file) => ({
       name: file.name,
       type: file.type === "application/pdf" ? "pdf" : "image",
-      url: file.type === "application/pdf" ? undefined : URL.createObjectURL(file),
+      url: URL.createObjectURL(file),
     }));
     setExtraAttachments((prev) => ({
       ...prev,
-      [index]: [...(prev[index] ?? []), ...added],
+      [record.id]: [...(prev[record.id] ?? []), ...added],
     }));
     e.target.value = "";
   }
 
-  const allAttachments = [
-    ...(record?.attachments ?? []),
-    ...(index !== null ? (extraAttachments[index] ?? []) : []),
-  ];
+  function handleAttachmentClick(attachment: Attachment) {
+    if (!attachment.url) return;
+    if (attachment.type === "pdf") {
+      // PDF 開新分頁讓瀏覽器用完整版的原生檢視器渲染，比塞進 iframe 可靠——
+      // 尤其手機版 Safari，iframe 常常直接顯示空白或觸發下載而不是預覽
+      window.open(attachment.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setPreviewAttachment(attachment);
+  }
+
+  const allAttachments = record
+    ? [
+        ...record.report_files.map(attachmentFromUrl),
+        ...(extraAttachments[record.id] ?? []),
+      ]
+    : [];
 
   const rows = record
     ? [
-        ["體重", record.weight],
-        ["體溫", record.temp],
-        ["心跳", record.heartRate],
-        ["血液檢查", record.bloodTest],
-        ["醫院", record.hospital],
-        ["醫師", record.doctor],
-        ["備註", record.note],
+        ["體重", `${record.report_weight} kg`],
+        ["體溫", `${record.report_temperature} °C`],
+        ["心跳", `${record.report_heart_rate} bpm`],
+        ["醫院", record.report_hospital],
+        ["醫師", record.report_vet],
+        ["備註", record.report_note || "—"],
       ]
     : [];
 
@@ -81,14 +113,15 @@ export function HealthDetailDrawer() {
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-base font-semibold text-ink">檢查詳情</h1>
+            <span className="w-9" />
           </div>
 
           {record && (
             <>
               <div>
-                <div className="text-sm text-ink/45">{record.date}</div>
+                <div className="text-sm text-ink/45">{record.report_date}</div>
                 <div className="mt-1 text-lg font-bold text-ink">
-                  {record.title}
+                  {formatReportType(record.report_type)}
                 </div>
               </div>
 
@@ -106,7 +139,7 @@ export function HealthDetailDrawer() {
 
               <div>
                 <div className="text-sm font-semibold text-ink">
-                  上傳檢驗報告 / 圖片
+                  檢驗報告 / 圖片
                 </div>
                 <input
                   ref={fileInputRef}
@@ -118,19 +151,21 @@ export function HealthDetailDrawer() {
                 />
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   {allAttachments.map((a, i) => (
-                    <div
+                    <button
+                      type="button"
                       key={`${a.name}-${i}`}
-                      className="flex flex-col items-center gap-2"
+                      onClick={() => handleAttachmentClick(a)}
+                      className="flex flex-col items-center gap-2 text-left"
                     >
                       {a.type === "image" && a.url ? (
                         <img
                           src={a.url}
                           alt={a.name}
-                          className="aspect-square w-full rounded-2xl object-cover"
+                          className="aspect-square w-full rounded-2xl object-cover transition hover:opacity-90"
                         />
                       ) : (
                         <div
-                          className={`grid aspect-square w-full place-items-center rounded-2xl ${
+                          className={`grid aspect-square w-full place-items-center rounded-2xl transition hover:opacity-90 ${
                             a.type === "pdf"
                               ? "bg-[#fdeceb] text-[#d9645a]"
                               : "bg-[#dce8f5] text-[#5b83ab]"
@@ -146,15 +181,15 @@ export function HealthDetailDrawer() {
                       <span className="w-full truncate text-center text-[10px] text-ink/60">
                         {a.name}
                       </span>
-                    </div>
+                    </button>
                   ))}
                   <button
                     type="button"
-                    onClick={handleAddFileClick}
+                    onClick={() => fileInputRef.current?.click()}
                     className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-[#dcccb8] text-ink/40 transition hover:bg-cream/40"
                   >
-                    <Plus size={20} />
-                    <span className="text-[10px]">新增檔案</span>
+                    <span className="text-2xl leading-none">＋</span>
+                    <span className="text-[10px]">新增附件</span>
                   </button>
                 </div>
               </div>
@@ -162,6 +197,32 @@ export function HealthDetailDrawer() {
           )}
         </div>
       </div>
+
+      {previewAttachment && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setPreviewAttachment(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewAttachment(null)}
+            aria-label="關閉"
+            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          >
+            <X size={20} />
+          </button>
+
+          {/* PDF 不會走到這裡——點 PDF 是直接開新分頁，這個彈窗只放大顯示圖片 */}
+          <img
+            src={previewAttachment.url}
+            alt={previewAttachment.name}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-full max-w-full rounded-lg object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 }

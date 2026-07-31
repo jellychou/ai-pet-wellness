@@ -36,3 +36,27 @@ export type VaccineRecord = {
   // 前端自己依 vaccination_date 算出來的狀態，不是後端回傳的欄位
   status: string | "all" | "1" | "0";
 };
+
+export type HealthRecord = {
+  id: number;
+  pet_id: number;
+  report_date: string;
+  report_type: string;
+  report_result: string;
+  report_weight: number;
+  report_temperature: number;
+  report_heart_rate: number;
+  report_hospital: string;
+  report_vet: string;
+  report_note: string;
+  report_files: string[];
+};
+
+export enum ReportTypeEnum {
+  "1" = "年度健康檢查",
+  "2" = "血液檢查",
+  "3" = "糞便檢查",
+  "4" = "心臟檢查",
+  "5" = "超音波檢查",
+  "6" = "其他檢查",
+}

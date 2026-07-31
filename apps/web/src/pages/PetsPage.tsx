@@ -136,14 +136,21 @@ export function PetsPage() {
     );
   }, [pets, userInfo]);
 
+  const setActivePet = async (petId: number) => {
+    try {
+      await apiFetch(`/pet/set-active-pet/${petId}`, { method: "PUT" });
+      setSelectedPet(pets.find((pet) => pet.id === petId) ?? null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <PetAvatarSwitcher
         pets={pets}
         selected={selectedPet?.id ?? 0}
-        onSelect={(id) =>
-          setSelectedPet(pets.find((pet) => pet.id === id) ?? null)
-        }
+        onSelect={(id) => setActivePet(id)}
         onAdd={() => setAddPetOpen(true)}
       />
       <section className="card p-4 mb-[12px]">

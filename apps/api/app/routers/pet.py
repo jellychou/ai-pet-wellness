@@ -107,3 +107,16 @@ def delete_pet(
 
     db.commit()
     return {"message": "Pet deleted successfully"}
+
+
+# 設定寵物為活動寵物
+@router.put("/set-active-pet/{pet_id}", status_code=status.HTTP_200_OK)
+def set_active_pet(
+    pet_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    pet = _get_owned_pet(db, current_user, pet_id)
+    current_user.active_pet_id = pet.id
+    db.commit()
+    return {"message": "Active pet set successfully"}

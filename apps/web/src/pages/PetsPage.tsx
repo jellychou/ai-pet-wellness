@@ -1,10 +1,11 @@
 import { Plus } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Pet } from "../data/pets";
 import { usePetStore } from "../store/usePetStore";
+import { calculateDailyCalories } from "../lib/calorie";
 
 const defaultPetAvatar =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -96,50 +97,44 @@ function PetAvatarSwitcher({
 }
 
 export function PetsPage() {
-  const editPetOpen = useAppStore((s) => s.editPetOpen);
   const setEditPetOpen = useAppStore((s) => s.setEditPetOpen);
-  const addPetOpen = useAppStore((s) => s.addPetOpen);
+  const allPetsList = usePetStore((s) => s.allPetsList);
   const setAddPetOpen = useAppStore((s) => s.setAddPetOpen);
   const setSelectedPet = usePetStore((s) => s.setSelectedPet);
   const selectedPet = usePetStore((s) => s.selectedPet);
+  const pets = usePetStore((s) => s.pets);
   const userInfo = useAuthStore((s) => s.userInfo);
   const [rows, setRows] = useState<{ label: string; value: string }[]>([]);
-  const [pets, setPets] = useState<Pet[]>([]);
-
-  const fetchPets = async () => {
-    const response = await apiFetch<Pet[]>("/pet/get-pets");
-    setPets(response);
-  };
+  const dailyCalories = selectedPet ? calculateDailyCalories(selectedPet) : null;
 
   useEffect(() => {
-    if (editPetOpen || addPetOpen) return;
-    fetchPets();
-  }, [editPetOpen, addPetOpen]);
-
-  // userInfo 是 App.tsx 另外非同步打 /user/user-info 才抓回來的，
-  // PetsPage 掛載當下 userInfo 通常還沒到，所以不能只在 fetchPets 裡算一次
-  // active pet；改成 pets 或 userInfo 任何一個之後才到位，都重新算一次，
-  // userInfo 還沒到之前先退回第一隻寵物撐住畫面，不要整個空白
-  useEffect(() => {
-    const activePet =
-      pets.find((pet) => pet.id === userInfo?.active_pet_id) ?? pets[0] ?? null;
-    setSelectedPet(activePet);
     setRows(
-      activePet
+      selectedPet
         ? petFieldDefs.map(({ label, key, format }) => ({
             label,
             value: format
-              ? format(activePet[key])
-              : String(activePet[key] ?? ""),
+              ? format(selectedPet[key])
+              : String(selectedPet[key] ?? ""),
           }))
         : [],
     );
-  }, [pets, userInfo]);
+  }, [allPetsList]);
 
   const setActivePet = async (petId: number) => {
     try {
       await apiFetch(`/pet/set-active-pet/${petId}`, { method: "PUT" });
-      setSelectedPet(pets.find((pet) => pet.id === petId) ?? null);
+      const activePet = pets.find((pet) => pet.id === petId) ?? null;
+      setSelectedPet(activePet);
+      setRows(
+        activePet
+          ? petFieldDefs.map(({ label, key, format }) => ({
+              label,
+              value: format
+                ? format(activePet[key])
+                : String(activePet[key] ?? ""),
+            }))
+          : [],
+      );
     } catch (error) {
       console.error(error);
     }
@@ -205,11 +200,13 @@ export function PetsPage() {
           <div className="absolute inset-0 grid place-items-center text-center">
             <div>
               <div className="text-[9px]">建議每日熱量</div>
-              <b className="text-xl">520</b>
+              <b className="text-xl">{dailyCalories ?? "--"}</b>
               <span className="text-[9px]"> kcal</span>
             </div>
           </div>
         </div>
+        {/* TODO: 已攝取/還可攝取要接真的飲食紀錄（food_records）才能算，
+            現在還沒有那張表，先維持假資料，不要被當成真的算出來的數字 */}
         <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[12px]">
           <div className="rounded-xl bg-[#fbf7f1] p-2">
             已攝取

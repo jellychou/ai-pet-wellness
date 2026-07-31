@@ -117,6 +117,7 @@ export function EditPetDrawer() {
   const setOpen = useAppStore((s) => s.setEditPetOpen);
   const navigate = useNavigate();
   const setSelectedPet = usePetStore((s) => s.setSelectedPet);
+  const selectedPet = usePetStore((s) => s.selectedPet);
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -132,7 +133,6 @@ export function EditPetDrawer() {
   const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
-  const [pet, setPet] = useState<Pet | null>(null);
   const { showSuccess, showError } = useAlert();
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
@@ -187,25 +187,23 @@ export function EditPetDrawer() {
     const response = await apiFetch<Pet>(
       `/pet/get-pet/${userInfo?.active_pet_id}`,
     );
-    setPet(response);
     setSelectedPet(response);
-    setName(response?.name ?? "");
-    setBreed(response?.breed ?? "");
-    setGender(response?.gender ?? "");
-    setBirthday(response?.birthday ?? "");
-    setWeight(response?.weight ?? 0);
-    setCoatColor(response?.coatColor ?? "");
-    setNeutered(response?.neutered ?? "");
-    setAllergy(response?.allergy ?? "");
-    setActivity(response?.activity ?? "");
-    setChipNumber(response?.chipNumber ?? "");
-    setNote(response?.note ?? "");
-    setAvatarSrc(response?.avatar ?? defaultPetPhoto);
   };
 
   useEffect(() => {
-    fetchPet();
-  }, [userInfo, open]);
+    setName(selectedPet?.name ?? "");
+    setBreed(selectedPet?.breed ?? "");
+    setGender(selectedPet?.gender ?? "");
+    setBirthday(selectedPet?.birthday ?? "");
+    setWeight(selectedPet?.weight ?? 0);
+    setCoatColor(selectedPet?.coatColor ?? "");
+    setNeutered(selectedPet?.neutered ?? "");
+    setAllergy(selectedPet?.allergy ?? "");
+    setActivity(selectedPet?.activity ?? "");
+    setChipNumber(selectedPet?.chipNumber ?? "");
+    setNote(selectedPet?.note ?? "");
+    setAvatarSrc(selectedPet?.avatar ?? defaultPetPhoto);
+  }, [selectedPet]);
 
   const inputClass =
     "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";

@@ -1,5 +1,4 @@
 import {
-  Activity,
   Bone,
   Camera,
   ClipboardPlus,
@@ -8,14 +7,15 @@ import {
   Heart,
   HeartPulse,
   MessageCircleHeart,
-  MoreVertical,
   Syringe,
-  Weight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { usePetStore } from "../store/usePetStore";
+import { calculateAge } from "../lib/utils";
 
-const petPhoto =
+const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
 
 function Metric({
@@ -51,15 +51,6 @@ function Metric({
         {value}
         <span className="ml-1 text-[12px] font-normal text-ink/45">{unit}</span>
       </div>
-    </div>
-  );
-}
-
-function MiniHeader({ title }: { title: string }) {
-  return (
-    <div className="mb-3 flex items-center justify-between">
-      <h2 className="section-title">{title}</h2>
-      <MoreVertical size={15} className="text-ink/45" />
     </div>
   );
 }
@@ -178,28 +169,39 @@ export function DashboardPage() {
   const setAddVaccineOpen = useAppStore((s) => s.setAddVaccineOpen);
   const setAiScanOpen = useAppStore((s) => s.setAiScanOpen);
   const setEditHealthOpen = useAppStore((s) => s.setEditHealthOpen);
+  const userInfo = useAuthStore((s) => s.userInfo);
+  const selectedPet = usePetStore((s) => s.selectedPet);
+
   return (
     <div className="mx-auto max-w-[1500px] space-y-3">
       <section className="grid gap-3 xl:grid-cols-[1.55fr_.95fr_.95fr_.95fr]">
         <div className="card p-4 xl:col-span-1">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-xl font-semibold">Hello Jenny 👋</h1>
+              <h1 className="text-xl font-semibold">
+                Hello {userInfo?.name} 👋
+              </h1>
               <p className="mt-1 text-[12px] text-ink/50">
-                今天也要和 Coco 一起健康生活！
+                今天也要和 <b>{selectedPet?.name}</b> 一起健康生活！
               </p>
             </div>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-[1.15fr_1.55fr]">
             <div className="flex items-center gap-3 rounded-xl bg-[#fbf7f1] p-3">
               <img
-                src={petPhoto}
+                src={selectedPet?.avatar ?? defaultPetPhoto}
                 className="h-20 w-20 rounded-full object-cover"
               />
               <div>
-                <div className="text-lg font-semibold mb-2">Coco ♀</div>
-                <div className="text-[12px]">Golden Retriever</div>
-                <div className="text-[12px] text-ink/45">4 歲 / 25.4 kg</div>
+                <div className="text-lg font-semibold mb-2">
+                  {selectedPet?.name} {selectedPet?.gender === "1" ? "♀" : "♂"}
+                </div>
+                <div className="text-[12px]">{selectedPet?.breed}</div>
+                <div className="text-[12px] text-ink/45">
+                  {" "}
+                  {calculateAge(selectedPet?.birthday ?? "")} 歲 /{" "}
+                  {selectedPet?.weight} kg
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">

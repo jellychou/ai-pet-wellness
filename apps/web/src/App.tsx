@@ -17,6 +17,8 @@ import { RecordsPage } from "./pages/RecordsPage";
 import { useAuthStore, type AuthUser } from "./store/useAuthStore";
 import { apiFetch } from "./lib/api";
 import { AlertProvider } from "./hooks/useAlert";
+import { usePetStore } from "./store/usePetStore";
+import { Pet } from "./data/pets";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   // 注意：zustand persist 不會另外存一個叫 "token" 的 localStorage key，
@@ -51,11 +53,19 @@ export default function App() {
   // 一定要透過 useAuthStore 讀 zustand persist 出來的 token
   const token = useAuthStore((s) => s.token);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
+  const setAllPetsList = usePetStore((s) => s.setAllPetsList);
+  const setSelectedPet = usePetStore((s) => s.setSelectedPet);
 
   useEffect(() => {
     if (token) {
       getUserInfo().then((user) => {
         setUserInfo(user);
+        setAllPetsList(user.pets as Pet[]);
+        const activePet =
+          user.pets.find((pet) => pet.id === user.active_pet_id) ??
+          user.pets[0] ??
+          null;
+        setSelectedPet(activePet as Pet);
       });
     }
   }, [token, setUserInfo]);

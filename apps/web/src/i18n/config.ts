@@ -14,6 +14,7 @@ const resources = {
         stats: "統計分析",
         settings: "設定",
         records: "日誌記錄",
+        aiScan: "AI 拍照診斷",
       },
       common: {
         hello: "嗨，Jenny",
@@ -63,6 +64,7 @@ const resources = {
         stats: "Analytics",
         settings: "Settings",
         notifications: "Notifications",
+        aiScan: "AI Diagnosis",
       },
       common: {
         hello: "Hi, Jenny",

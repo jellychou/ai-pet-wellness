@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from openai import OpenAI, OpenAIError, RateLimitError
@@ -8,10 +9,12 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import get_current_user
 from app.db.session import get_db
+from app.models.ai_scan import AiScanLog
 from app.models.pet import Pet
 from app.models.user import User
 from app.schemas.ai_scan import (
     AiScanFinding,
+    AiScanUsageOut,
     AnalyzeImageRequest,
     AnalyzeImageResponse,
 )
@@ -21,6 +24,11 @@ settings = get_settings()
 logger = logging.getLogger("uvicorn.error")
 
 DISCLAIMER = "此分析僅供參考，非醫療診斷，正式判斷請以獸醫實際檢查為準。"
+
+# 一天最多打幾次 OpenAI 圖片分析——這是帳號層級的花費控管（每次呼叫都要
+# 花 OpenAI 額度），不是資料庫效能考量，跟前面 billing/auto-reload 的討論
+# 是同一個目的：避免異常用量把額度燒光
+DAILY_LIMIT = 5
 
 # 明確要求模型只回傳固定格式的 JSON，才能穩定 parse；同時把「不是獸醫、
 # 不能下確定診斷」寫進 system prompt，降低模型自己講得太篤定的機率
@@ -51,6 +59,34 @@ def _get_owned_pet(db: Session, current_user: User, pet_id: int) -> Pet:
     return pet
 
 
+# 「今天」用 UTC 當天 00:00 起算，不特別處理使用者所在時區——這支功能本身
+# 就只是粗略的花費安全網，不需要跟使用者當地日期切齊那麼精確
+def _count_today(db: Session, user_id: int) -> int:
+    today_start = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    return (
+        db.query(AiScanLog)
+        .filter(AiScanLog.user_id == user_id, AiScanLog.created_at >= today_start)
+        .count()
+    )
+
+
+# 前端開啟 AI 拍照診斷室的時候先打這支，用來顯示「今日已使用 X/5 次」的
+# 標語，還沒上傳照片就能提早告知額度用完了，不用等按下去才被 429 擋下來
+@router.get(
+    "/usage-today",
+    response_model=AiScanUsageOut,
+    status_code=status.HTTP_200_OK,
+)
+def get_usage_today(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    used = _count_today(db, current_user.id)
+    return AiScanUsageOut(used=used, limit=DAILY_LIMIT)
+
+
 @router.post(
     "/analyze-image",
     response_model=AnalyzeImageResponse,
@@ -62,6 +98,13 @@ def analyze_image(
     current_user: User = Depends(get_current_user),
 ):
     _get_owned_pet(db, current_user, payload.pet_id)
+
+    used = _count_today(db, current_user.id)
+    if used >= DAILY_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"今天的 AI 診斷次數已用完（每天最多 {DAILY_LIMIT} 次），請明天再試",
+        )
 
     if not settings.openai_api_key:
         raise HTTPException(
@@ -126,8 +169,15 @@ def analyze_image(
         for f in parsed.get("findings", [])
     ]
 
+    # 分析成功才算一次額度——OpenAI 報錯、JSON parse 失敗這些情況都在上面
+    # 提早 raise 掉了，不會走到這裡，使用者不會因為失敗的請求被扣次數
+    db.add(AiScanLog(user_id=current_user.id, pet_id=payload.pet_id))
+    db.commit()
+    used_after = _count_today(db, current_user.id)
+
     return AnalyzeImageResponse(
         summary=str(parsed.get("summary", "")),
         findings=findings,
         disclaimer=DISCLAIMER,
+        usage=AiScanUsageOut(used=used_after, limit=DAILY_LIMIT),
     )

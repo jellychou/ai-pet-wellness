@@ -19,8 +19,6 @@ type AppState = {
   // 所以用這個數字當「有新資料了，重新抓一次」的訊號，每次新增成功就 +1
   vaccineRefreshKey: number;
   bumpVaccineRefreshKey: () => void;
-  aiScanOpen: boolean;
-  setAiScanOpen: (v: boolean) => void;
   editHealthOpen: boolean;
   setEditHealthOpen: (v: boolean) => void;
   // 存整筆紀錄，不是只存 id——後端沒有「用 record id 查單筆健康檢查紀錄」的
@@ -63,8 +61,6 @@ export const useAppStore = create<AppState>((set) => ({
   vaccineRefreshKey: 0,
   bumpVaccineRefreshKey: () =>
     set((s) => ({ vaccineRefreshKey: s.vaccineRefreshKey + 1 })),
-  aiScanOpen: false,
-  setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
   editHealthOpen: false,
   setEditHealthOpen: (editHealthOpen) => set({ editHealthOpen }),
   healthDetailRecord: null,

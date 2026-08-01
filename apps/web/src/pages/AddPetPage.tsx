@@ -13,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { usePetStore } from "../store/usePetStore";
 import { Pet } from "../data/pets";
+import { uploadImageToCloudinary } from "../lib/cloudinary";
+import { useAlert } from "../hooks/useAlert";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -119,12 +121,23 @@ export function AddPetPage() {
   const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
   const [error, setError] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const { showError } = useAlert();
 
-  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarSrc(URL.createObjectURL(file));
     e.target.value = "";
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setAvatarSrc(url);
+    } catch (error) {
+      console.error(error);
+      showError("圖片上傳失敗，請稍後再試");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   }
 
   async function handleSubmit() {

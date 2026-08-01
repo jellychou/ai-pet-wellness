@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Bot, Camera, Check, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
@@ -12,6 +12,10 @@ type AiScanFinding = {
   confidence: number;
   description: string;
 };
+
+// 分析 loading 畫面用的假進度清單，跟 AddFoodDrawer 同一套做法——實際分析
+// 是一次 API call 打完，不是真的分這幾步驟執行，純粹讓等待感覺有在動
+const LOADING_STEPS = ["辨識症狀特徵", "比對可能狀況", "評估緊急程度", "生成建議"];
 
 type AiScanUsage = {
   used: number;
@@ -39,6 +43,9 @@ export function AiScanDrawer() {
   // 使用者常常會誤以為那就是「已經上傳的照片」
   const [earPhoto, setEarPhoto] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  // 跟 AddFoodDrawer 同樣的道理：純粹照時間軸假裝逐步完成，不代表後端真的
+  // 在做這幾個獨立步驟
+  const [loadingStep, setLoadingStep] = useState(0);
   const [result, setResult] = useState<AnalyzeImageResponse | null>(null);
   const [usage, setUsage] = useState<AiScanUsage | null>(null);
 
@@ -58,6 +65,19 @@ export function AiScanDrawer() {
   // used 已經超過 limit 也不算真的用完
   const limitReached =
     usage != null && !usage.unlimited && usage.used >= usage.limit;
+
+  // 開始分析就從第一步跑起，每 4 秒跳下一步，跑到最後一步就停在那裡等真正
+  // 的 API 回應，理由跟 AddFoodDrawer 一樣
+  useEffect(() => {
+    if (!analyzing) {
+      setLoadingStep(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setLoadingStep((step) => Math.min(step + 1, LOADING_STEPS.length - 1));
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [analyzing]);
 
   function handleBack() {
     setOpen(false);
@@ -171,30 +191,67 @@ export function AiScanDrawer() {
             className="hidden"
             onChange={handlePhotoPick}
           />
-          <div className="relative">
-            {earPhoto ? (
-              <img
-                src={earPhoto}
-                alt="寵物拍照診斷照片"
-                className="h-56 w-full rounded-2xl object-contain"
-              />
-            ) : (
-              <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
-                  <Camera size={22} />
+          {analyzing ? (
+            <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-[#eee5da] bg-[#fffdfa] px-6 py-8">
+              <p className="text-base font-semibold text-ink">AI 判讀中…</p>
+              <div className="relative grid h-20 w-20 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                <Bot size={40} />
+                <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-white text-[#688696] shadow-[0_2px_8px_rgba(0,0,0,.12)]">
+                  <Search size={16} />
                 </span>
-                <p className="text-sm font-medium text-ink/50">尚未上傳照片</p>
-                <p className="text-xs text-ink/35">
-                  點擊下方「拍照AI診斷」開始
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-ink/70">
+                  AI 正在判讀照片…
                 </p>
+                <p className="mt-0.5 text-xs text-ink/40">請稍候 10~20 秒</p>
               </div>
-            )}
-            {analyzing && (
-              <div className="absolute inset-0 grid place-items-center rounded-2xl bg-black/40 text-sm font-medium text-white">
-                AI 判讀中…
-              </div>
-            )}
-          </div>
+              <ul className="w-full max-w-[220px] space-y-2">
+                {LOADING_STEPS.map((step, i) => (
+                  <li key={step} className="flex items-center gap-2 text-xs">
+                    <span
+                      className={`grid h-4 w-4 shrink-0 place-items-center rounded-full transition-colors ${
+                        i <= loadingStep
+                          ? "bg-[#3fa88f] text-white"
+                          : "bg-[#eee5da] text-transparent"
+                      }`}
+                    >
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                    <span
+                      className={
+                        i <= loadingStep ? "text-ink/70" : "text-ink/30"
+                      }
+                    >
+                      {step}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="relative">
+              {earPhoto ? (
+                <img
+                  src={earPhoto}
+                  alt="寵物拍照診斷照片"
+                  className="h-56 w-full rounded-2xl object-contain"
+                />
+              ) : (
+                <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                    <Camera size={22} />
+                  </span>
+                  <p className="text-sm font-medium text-ink/50">
+                    尚未上傳照片
+                  </p>
+                  <p className="text-xs text-ink/35">
+                    點擊下方「拍照AI診斷」開始
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {result && (
             <>

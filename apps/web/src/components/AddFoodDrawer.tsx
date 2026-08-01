@@ -13,7 +13,11 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppStore, type FoodScanResult } from "../store/useAppStore";
+import {
+  useAppStore,
+  type FoodScanItem,
+  type FoodScanResult,
+} from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
@@ -28,6 +32,59 @@ type FoodScanUsage = {
 };
 
 type AnalyzeFoodResponse = FoodScanResult & { usage: FoodScanUsage };
+
+// 逐項食材/品項分解表，跟畫面上其他區塊不同的地方是這裡是唯讀的——目前
+// 只有整份餐點的 food_name/estimated_grams/calories 可以在「修改結果」
+// 裡校正，個別品項還沒有編輯功能。included=false 的品項（AI 判斷不該計入
+// 總熱量，例如明顯沒吃完的配菜）用淡化 + 刪除線顯示，note 說明原因
+function ItemsTable({ items }: { items: FoodScanItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="overflow-hidden rounded-xl border border-[#eee5da]">
+      <table className="w-full text-left text-[11px]">
+        <thead>
+          <tr className="bg-[#f7f2ea] text-ink/50">
+            <th className="px-2.5 py-2 font-medium">食材</th>
+            <th className="px-2.5 py-2 text-right font-medium">估計份量</th>
+            <th className="px-2.5 py-2 text-right font-medium">熱量</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, i) => (
+            <tr
+              key={`${item.name}-${i}`}
+              className={`border-t border-[#eee5da] ${item.included ? "" : "opacity-50"}`}
+            >
+              <td className="px-2.5 py-2 align-top">
+                <div
+                  className={
+                    item.included ? "text-ink/80" : "text-ink/50 line-through"
+                  }
+                >
+                  {item.name}
+                </div>
+                {item.note && (
+                  <div className="mt-0.5 text-[10px] text-ink/35">
+                    {item.note}
+                  </div>
+                )}
+              </td>
+              <td className="whitespace-nowrap px-2.5 py-2 text-right text-ink/60">
+                約 {item.estimated_grams_low}–{item.estimated_grams_high}g
+              </td>
+              <td className="whitespace-nowrap px-2.5 py-2 text-right font-medium text-ink">
+                {item.calories_low}–{item.calories_high}
+                <span className="ml-0.5 text-[9px] font-normal text-ink/40">
+                  kcal
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function NutritionGrid({ result }: { result: FoodScanResult }) {
   const items = [
@@ -73,9 +130,31 @@ function ResultCard({ result }: { result: FoodScanResult }) {
         AI 估計這份大約 {result.estimated_grams} g
       </div>
 
-      <div className="mt-3 flex items-baseline gap-1">
-        <span className="text-4xl font-bold text-ink">{result.calories}</span>
-        <span className="text-sm text-ink/50">kcal（這份總量）</span>
+      {result.items.length > 0 && (
+        <div className="mt-3">
+          <ItemsTable items={result.items} />
+        </div>
+      )}
+
+      {result.estimate_note && (
+        <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-4 text-ink/40">
+          <Info size={12} className="mt-0.5 shrink-0" />
+          {result.estimate_note}
+        </p>
+      )}
+
+      <div className="mt-3">
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-bold text-ink">
+            {result.calories}
+          </span>
+          <span className="text-sm text-ink/50">kcal（最佳估計）</span>
+        </div>
+        {(result.calories_low > 0 || result.calories_high > 0) && (
+          <div className="mt-0.5 text-xs text-ink/40">
+            整體估計範圍約 {result.calories_low}–{result.calories_high} kcal
+          </div>
+        )}
       </div>
 
       <div className="my-4 h-px bg-[#eee5da]" />

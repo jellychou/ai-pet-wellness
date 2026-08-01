@@ -1,23 +1,44 @@
 import { create } from "zustand";
 import type { HealthRecord } from "../data/pets";
 
+// 逐項食材/品項分解裡的一項，例如「黑松露野菇燉飯」「干貝 x2」——low/high
+// 都是估計範圍，不是精確值。included=false 表示 AI 判斷這項不該計入整份
+// 餐點的總熱量（例如明顯沒吃完的配菜），note 可以簡短說明為什麼
+export type FoodScanItem = {
+  name: string;
+  estimated_grams_low: number;
+  estimated_grams_high: number;
+  calories_low: number;
+  calories_high: number;
+  included: boolean;
+  note: string;
+};
+
 // AI 食物辨別的分析結果——AddFoodDrawer 分析完成後存進來，EditFoodResultDrawer
-// 可以在原地修改（目前只有 food_name/calories 真的會影響後續流程，category/
+// 可以在原地修改（目前只有 food_name/estimated_grams/calories 這幾個「單一
+// 最佳估計」欄位真的會影響後續流程，items 逐項分解目前是唯讀顯示；category/
 // cooking method 是 UI 上額外的分類欄位，後端 schema 沒有對應欄位，純粹讓
 // 使用者自己備註用，不會送到後端），AddFoodRecordDrawer 讀這筆資料算總熱量
 export type FoodScanResult = {
   food_detected: boolean;
   food_name: string;
   confidence: number;
-  // AI 直接目測估計「照片裡這一份」食物的總重量（公克）——使用者身邊通常
-  // 沒有秤，所以下面 calories/protein/fat/carb/fiber 都是對應這個總重量
-  // 的「這一份」總量估計，不是每 100g 的密度
+  // 逐項食材/品項分解，最多 8 項
+  items: FoodScanItem[];
+  // AI 直接目測估計「照片裡這一份」食物的總重量（公克，只加總 included
+  // 的品項）——使用者身邊通常沒有秤，所以下面 calories/protein/fat/carb/
+  // fiber 都是對應這個總重量的整份總量估計，不是每 100g 的密度
   estimated_grams: number;
+  // 整份總熱量的估計範圍，跟 calories 的「單一最佳估計」互補顯示
+  calories_low: number;
+  calories_high: number;
   calories: number;
   protein: number;
   fat: number;
   carb: number;
   fiber: number;
+  // 估算準確度的簡短說明，前端要顯示在結果卡片上
+  estimate_note: string;
   safety_level: number; // 0-5，0 = food_detected 是 false
   is_safe: boolean;
   suitable_species: ("dog" | "cat")[];

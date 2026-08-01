@@ -6,6 +6,16 @@ import { apiFetch } from "../lib/api";
 
 const speciesLabel: Record<string, string> = { dog: "狗狗", cat: "貓咪" };
 
+type FoodScanHistoryItemEntry = {
+  name: string;
+  estimated_grams_low: number;
+  estimated_grams_high: number;
+  calories_low: number;
+  calories_high: number;
+  included: boolean;
+  note: string;
+};
+
 type FoodScanHistoryItem = {
   id: number;
   pet_id: number;
@@ -13,12 +23,16 @@ type FoodScanHistoryItem = {
   food_detected: boolean;
   food_name: string;
   confidence: number;
+  items: FoodScanHistoryItemEntry[];
   estimated_grams: number;
+  calories_low: number;
+  calories_high: number;
   calories: number;
   protein: number;
   fat: number;
   carb: number;
   fiber: number;
+  estimate_note: string;
   safety_level: number;
   is_safe: boolean;
   suitable_species: string[];
@@ -98,14 +112,28 @@ export function FoodScanHistoryDrawer() {
                     </div>
                     {item.food_detected ? (
                       <>
-                        <div className="mt-1 flex items-center justify-between">
+                        <div className="mt-1 flex items-center justify-between gap-2">
                           <p className="text-sm font-medium text-ink/80">
                             {item.food_name}
                           </p>
-                          <span className="flex items-center gap-1 text-[11px] text-ink/40">
-                            約 {item.estimated_grams}g / {item.calories} kcal
+                          <span className="shrink-0 text-[11px] font-medium text-ink/60">
+                            {item.calories} kcal
                           </span>
                         </div>
+                        {item.items.length > 0 && (
+                          <p className="mt-0.5 truncate text-[11px] text-ink/40">
+                            {item.items
+                              .filter((entry) => entry.included)
+                              .map((entry) => entry.name)
+                              .join("、")}
+                          </p>
+                        )}
+                        {(item.calories_low > 0 || item.calories_high > 0) && (
+                          <p className="mt-0.5 text-[11px] text-ink/35">
+                            約 {item.estimated_grams}g・範圍 {item.calories_low}
+                            –{item.calories_high} kcal
+                          </p>
+                        )}
                         <div className="mt-1 flex items-center gap-2">
                           <span
                             className={`flex ${

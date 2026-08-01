@@ -16,6 +16,7 @@ from app.schemas.food_scan import (
     AnalyzeFoodRequest,
     AnalyzeFoodResponse,
     FoodScanHistoryItemOut,
+    FoodScanItem,
     FoodScanUsageOut,
 )
 
@@ -33,42 +34,61 @@ DAILY_LIMIT = 10
 # 食物的耐受度跟人類不一樣（巧克力、葡萄、洋蔥、木糖醇等對牠們是有毒的），
 # 這是這支功能最重要的判斷依據。
 #
-# 熱量/營養資訊改成直接估「照片裡這一份的總量」，不是每 100g 的密度——
-# 使用者身邊通常沒有秤，沒辦法先秤重再回頭查密度換算，直接問 AI「這份大概
-# 幾公克、大概幾大卡」才是使用者真正能用的答案。
+# 熱量/營養資訊改成逐項食材/品項分解（干貝、蟹肉、燉飯...各自估重量範圍與
+# 熱量範圍），不是整張照片一個籠統的食物名稱，也不是每 100g 的密度——
+# 使用者身邊通常沒有秤，沒辦法先秤重再回頭查密度換算，直接看到「這道菜裡
+# 大概有哪些東西、各自大概幾公克/幾大卡」才是使用者真正能用的分析。
 SYSTEM_PROMPT = (
-    "你是協助寵物照護的助理，會判斷使用者上傳的食物照片是否適合餵給狗或貓，並"
-    "直接估計照片中「這一份」食物的總重量與對應的營養資訊。使用者身邊通常沒有"
-    "秤，沒辦法秤重後再回報，所以請你根據照片裡的份量大小直接目測估計總重量"
-    "（可以參考照片中常見的參照物比例，例如餐盤、湯匙、寵物碗、手掌等），"
-    "不要用「每 100g」的密度回答，要直接給「這一份」的總量。狗和貓對很多"
-    "人類食物的耐受度跟人類不一樣，有些食物對牠們是有毒的（例如巧克力、"
-    "葡萄/葡萄乾、洋蔥/大蒜、木糖醇、酒精、咖啡因、夏威夷豆等），請根據你的"
-    "知識謹慎判斷安全性，寧可保守也不要輕描淡寫。\n"
+    "你是協助寵物照護的助理，會判斷使用者上傳的食物照片是否適合餵給狗或貓。"
+    "請逐項列出照片中你辨識到的每一種主要食材/品項，分別給每一項的重量範圍"
+    "與熱量範圍估計，再加總成整份餐點的估計。使用者身邊通常沒有秤，沒辦法"
+    "秤重後再回報，所以請直接根據照片內容（份量大小、常見容器/餐具/份數"
+    "比例等）目測估計，每一項的重量跟熱量都給一個合理的範圍（low/high），"
+    "不要用「每 100g」的密度回答。狗和貓對很多人類食物的耐受度跟人類不"
+    "一樣，有些食物對牠們是有毒的（例如巧克力、葡萄/葡萄乾、洋蔥/大蒜、"
+    "木糖醇、酒精、咖啡因、夏威夷豆等），請根據你的知識謹慎判斷安全性，"
+    "寧可保守也不要輕描淡寫。\n"
     "請只回傳一個 JSON 物件，格式如下，不要有其他文字：\n"
     '{"food_detected": true/false, '
-    '"food_name": "食物名稱（例如「雞胸肉 Chicken Breast」），food_detected 是 '
-    'false 時給空字串", '
+    '"food_name": "整份餐點的簡短描述（例如「黑松露野菇燉飯套餐」），'
+    'food_detected 是 false 時給空字串", '
     '"confidence": 0-100 整數, '
-    '"estimated_grams": 照片中「這一份」食物的總重量估計（數字，公克，'
-    'food_detected 是 false 時給 0）, '
-    '"calories": 這一份（依上面 estimated_grams 估計的總重量）的總熱量估計'
-    "（數字，kcal，不是每 100g 密度）, "
-    '"protein": 這一份的總蛋白質估計（公克）, '
-    '"fat": 這一份的總脂肪估計（公克）, '
-    '"carb": 這一份的總碳水化合物估計（公克）, '
-    '"fiber": 這一份的總纖維估計（公克）, '
+    '"items": [{"name": "食材/品項名稱（例如「黑松露野菇燉飯」「干貝 x2」）", '
+    '"estimated_grams_low": 這項重量估計下限（數字，公克）, '
+    '"estimated_grams_high": 這項重量估計上限（數字，公克）, '
+    '"calories_low": 這項熱量估計下限（數字，kcal）, '
+    '"calories_high": 這項熱量估計上限（數字，kcal）, '
+    '"included": true/false（這項是否要計入整份餐點的總熱量，例如明顯沒'
+    '吃完的配菜、純裝飾用的香草可以設 false）, '
+    '"note": "簡短備註，例如「看起來沒有全部吃完，因此不計入」，沒有的話'
+    '給空字串"}, ...]，最多列 8 項最主要的食材/品項，不要瑣碎到每一根蔥'
+    "都列, "
+    '"estimated_grams": 所有 included=true 品項加總的重量最佳估計'
+    "（數字，公克，food_detected 是 false 時給 0）, "
+    '"calories_low": 整份餐點總熱量估計下限（數字，kcal，加總所有 '
+    'included 品項的 calories_low）, '
+    '"calories_high": 整份餐點總熱量估計上限（數字，kcal，加總所有 '
+    'included 品項的 calories_high）, '
+    '"calories": 整份餐點總熱量的單一最佳估計（數字，kcal，落在 '
+    "calories_low 到 calories_high 之間，依常見份量抓一個代表值）, "
+    '"protein": 整份餐點總蛋白質最佳估計（公克）, '
+    '"fat": 整份餐點總脂肪最佳估計（公克）, '
+    '"carb": 整份餐點總碳水化合物最佳估計（公克）, '
+    '"fiber": 整份餐點總纖維最佳估計（公克）, '
+    '"estimate_note": "估算準確度的簡短說明，例如「只能做估算，無法僅靠'
+    '照片精準得知重量、奶油、起司或油脂用量，因此誤差可能約 ±20~30%」", '
     '"safety_level": 1-5 整數（5 = 很安全，1 = 危險/有毒，food_detected 是 '
     'false 時給 0）, '
     '"is_safe": true/false, '
     '"suitable_species": ["dog", "cat"] 的子集合，這個食物適合餵的物種，可能是'
     "空陣列, "
     '"suggestions": ["建議或注意事項", ...]，最多 3 條，簡短的中文句子}\n'
-    "如果照片裡看不出是食物（例如空盤子、包裝袋、不相關的東西），food_detected "
-    "設 false，其他數值/陣列欄位給 0 或空陣列，不要瞎猜。份量估計不用非常"
-    "精確，合理的目測估計即可，但一定要直接給總重量/總熱量，不要用每 100g"
-    "密度回答。如果食物對狗或貓有毒/危險，safety_level 要低（1-2）、"
-    "is_safe 設 false，suggestions 要清楚警告危險性。"
+    "如果照片裡看不出是食物（例如空盤子、包裝袋、不相關的東西），"
+    "food_detected 設 false，items 給空陣列，其他數值/陣列欄位給 0 或空"
+    "陣列，不要瞎猜。份量估計不用非常精確，合理的目測範圍即可，但一定要"
+    "直接給重量/熱量的範圍，不要用每 100g 密度回答。如果食物對狗或貓有毒/"
+    "危險，safety_level 要低（1-2）、is_safe 設 false，suggestions 要清楚"
+    "警告危險性。"
 )
 
 
@@ -109,6 +129,46 @@ def _build_usage(db: Session, user: User) -> FoodScanUsageOut:
 
 def _clamp(value: int, lo: int, hi: int) -> int:
     return max(lo, min(hi, value))
+
+
+# OpenAI 回傳的 JSON 是不可信輸入，items 陣列裡任何一項格式不對都不該讓整支
+# API 500——單純跳過那一項，其他項目照常處理。最多留 8 項，跟 SYSTEM_PROMPT
+# 裡要求的上限一致，防止異常大的陣列把 DB/前端畫面塞爆
+def _parse_items(raw_items: object) -> list[FoodScanItem]:
+    if not isinstance(raw_items, list):
+        return []
+
+    items: list[FoodScanItem] = []
+    for entry in raw_items[:8]:
+        if not isinstance(entry, dict):
+            continue
+        try:
+            grams_low = max(0.0, float(entry.get("estimated_grams_low", 0) or 0))
+            grams_high = max(0.0, float(entry.get("estimated_grams_high", 0) or 0))
+            cal_low = max(0.0, float(entry.get("calories_low", 0) or 0))
+            cal_high = max(0.0, float(entry.get("calories_high", 0) or 0))
+        except (TypeError, ValueError):
+            continue
+
+        # 防呆：萬一 AI 把 low/high 反過來給，直接交換，不要讓畫面出現
+        # "100-50g" 這種倒過來的範圍
+        if grams_low > grams_high:
+            grams_low, grams_high = grams_high, grams_low
+        if cal_low > cal_high:
+            cal_low, cal_high = cal_high, cal_low
+
+        items.append(
+            FoodScanItem(
+                name=str(entry.get("name", "")).strip() or "未命名品項",
+                estimated_grams_low=grams_low,
+                estimated_grams_high=grams_high,
+                calories_low=cal_low,
+                calories_high=cal_high,
+                included=bool(entry.get("included", True)),
+                note=str(entry.get("note", "") or ""),
+            )
+        )
+    return items
 
 
 # 前端開啟 AI 食物辨別室的時候先打這支，用來顯示「今日已使用 X/10 次」的
@@ -178,7 +238,9 @@ def analyze_food(
         completion = client.chat.completions.create(
             model=settings.openai_model,
             response_format={"type": "json_object"},
-            max_tokens=500,
+            # 逐項分解後回應變大很多（最多 8 個品項，每項好幾個欄位），
+            # 500 tokens 的舊上限會把 items 陣列截斷成壞掉的 JSON
+            max_tokens=1200,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {
@@ -220,11 +282,15 @@ def analyze_food(
         s for s in (parsed.get("suitable_species") or []) if s in ("dog", "cat")
     ]
     suggestions = [str(s) for s in (parsed.get("suggestions") or [])][:5]
+    items = _parse_items(parsed.get("items"))
+    estimate_note = str(parsed.get("estimate_note", "") or "")
 
     try:
         confidence = _clamp(int(parsed.get("confidence", 0)), 0, 100)
         safety_level = _clamp(int(parsed.get("safety_level", 0)), 0, 5)
         estimated_grams = float(parsed.get("estimated_grams", 0) or 0)
+        calories_low = float(parsed.get("calories_low", 0) or 0)
+        calories_high = float(parsed.get("calories_high", 0) or 0)
         calories = float(parsed.get("calories", 0) or 0)
         protein = float(parsed.get("protein", 0) or 0)
         fat = float(parsed.get("fat", 0) or 0)
@@ -236,6 +302,9 @@ def analyze_food(
             status_code=502, detail="AI 回傳格式錯誤，請稍後再試"
         ) from exc
 
+    if calories_low > calories_high:
+        calories_low, calories_high = calories_high, calories_low
+
     # 分析成功才算一次額度、也才存進紀錄——OpenAI 報錯、JSON parse 失敗這些
     # 情況都在上面提早 raise 掉了，不會走到這裡
     db.add(
@@ -246,12 +315,16 @@ def analyze_food(
             food_detected=food_detected,
             food_name=str(parsed.get("food_name", "")),
             confidence=confidence,
+            items=[item.model_dump() for item in items],
             estimated_grams=estimated_grams,
+            calories_low=calories_low,
+            calories_high=calories_high,
             calories=calories,
             protein=protein,
             fat=fat,
             carb=carb,
             fiber=fiber,
+            estimate_note=estimate_note,
             safety_level=safety_level,
             is_safe=bool(parsed.get("is_safe", False)),
             suitable_species=suitable_species,
@@ -264,12 +337,16 @@ def analyze_food(
         food_detected=food_detected,
         food_name=str(parsed.get("food_name", "")),
         confidence=confidence,
+        items=items,
         estimated_grams=estimated_grams,
+        calories_low=calories_low,
+        calories_high=calories_high,
         calories=calories,
         protein=protein,
         fat=fat,
         carb=carb,
         fiber=fiber,
+        estimate_note=estimate_note,
         safety_level=safety_level,
         is_safe=bool(parsed.get("is_safe", False)),
         suitable_species=suitable_species,

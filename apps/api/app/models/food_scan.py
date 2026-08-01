@@ -41,19 +41,35 @@ class FoodScanLog(Base):
     food_name: Mapped[str] = mapped_column(String(255), nullable=False)
     # 0-100，AI 自己估的信心程度，不是統計上嚴謹的機率
     confidence: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    # AI 直接目測估計「照片裡這一份」食物的總重量（公克）——使用者身上通常
-    # 沒有秤，沒辦法回報實際重量，所以改成請 AI 直接估重，下面 calories/
-    # protein/fat/carb/fiber 都是對應這個總重量的「這一份」總量，不是密度
+    # 逐項食材/品項分解：[{name, estimated_grams_low, estimated_grams_high,
+    # calories_low, calories_high, included, note}, ...]。included=false 的
+    # 項目（例如明顯沒吃完的配菜）不計入下面的 estimated_grams/calories 加總，
+    # 但還是保留在列表裡讓使用者看到「有看到這個但沒算進去」
+    items: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
+    # AI 直接目測估計「照片裡這一份」食物的總重量（公克，只加總 included 的
+    # 品項）——使用者身上通常沒有秤，沒辦法回報實際重量，所以改成請 AI 直接
+    # 估重，下面 calories/protein/fat/carb/fiber 都是對應這個總重量的整份
+    # 總量，不是每 100g 密度
     estimated_grams: Mapped[float] = mapped_column(
         Float, nullable=False, server_default="0"
     )
-    # 以下營養資訊都是「這一份」（對應 estimated_grams）的總量估計，
-    # 不是每 100g 的密度
+    # 整份總熱量的估計範圍（下限/上限），跟 calories 的「單一最佳估計」互補
+    calories_low: Mapped[float] = mapped_column(
+        Float, nullable=False, server_default="0"
+    )
+    calories_high: Mapped[float] = mapped_column(
+        Float, nullable=False, server_default="0"
+    )
+    # 以下都是整份餐點（對應 estimated_grams）的總量估計，不是每 100g 密度。
+    # calories 是單一最佳估計值，通常落在 calories_low ~ calories_high 之間
     calories: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     protein: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     fat: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     carb: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     fiber: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
+    # 估算準確度的簡短說明（例如「只能做估算，誤差可能約 ±20~30%」），
+    # 前端要顯示在結果卡片上，避免使用者把估計值當成秤重般精確的數字
+    estimate_note: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     # 1-5，星等式的安全等級（5 = 很安全，1 = 危險/有毒）
     safety_level: Mapped[int] = mapped_column(Integer, nullable=False, server_default="3")
     is_safe: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")

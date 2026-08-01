@@ -19,10 +19,14 @@ class AiScanFinding(BaseModel):
 
 
 # 每天可以打幾次 AI 圖片分析、目前用了幾次——前端拿來顯示「今日已使用 X/5 次」
-# 的標語，還有超過額度時擋在使用者按下上傳之前，不用等後端真的回 429 才知道
+# 的標語，還有超過額度時擋在使用者按下上傳之前，不用等後端真的回 429 才知道。
+# unlimited 給 admin 帳號用：limit/used 還是會帶正常數字（方便顯示「已使用
+# 幾次」這件事本身），但前端看到 unlimited=True 就不該把 used>=limit 當成
+# 擋下上傳的理由
 class AiScanUsageOut(BaseModel):
     used: int
     limit: int
+    unlimited: bool = False
 
 
 class AnalyzeImageResponse(BaseModel):

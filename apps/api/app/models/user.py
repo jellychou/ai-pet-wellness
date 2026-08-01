@@ -75,7 +75,11 @@ class User(Base):
     active_pet_id: Mapped[int | None] = mapped_column(
         ForeignKey("pets.id", ondelete="SET NULL"), nullable=True
     )
-    permissions: Mapped[str] = mapped_column(String(255), nullable=False, default="user")
+    # "user"（一般使用者）或 "admin"（管理員）。目前唯一的用途是 AI 拍照
+    # 診斷的每日次數限制：admin 不受限——見 app/routers/ai_scan.py
+    permissions: Mapped[str] = mapped_column(
+        String(255), nullable=False, default="user", server_default="user"
+    )
 
 
 

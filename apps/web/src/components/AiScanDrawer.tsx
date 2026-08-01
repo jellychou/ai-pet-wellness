@@ -19,6 +19,7 @@ type AiScanFinding = {
 type AiScanUsage = {
   used: number;
   limit: number;
+  unlimited: boolean;
 };
 
 type AnalyzeImageResponse = {
@@ -52,8 +53,11 @@ export function AiScanDrawer() {
 
   // 用 != 而不是 !==：後端如果剛好回傳一個沒有 usage 欄位的舊版回應
   // （例如部署還沒更新到最新版本），response.usage 會是 undefined 而不是
-  // null，用 !== null 判斷不出來，讀 usage.used 就會直接炸掉
-  const limitReached = usage != null && usage.used >= usage.limit;
+  // null，用 !== null 判斷不出來，讀 usage.used 就會直接炸掉。
+  // unlimited 是給 admin 帳號用的（見後端 permissions 欄位），就算
+  // used 已經超過 limit 也不算真的用完
+  const limitReached =
+    usage != null && !usage.unlimited && usage.used >= usage.limit;
 
   function handleBack() {
     setOpen(false);
@@ -152,8 +156,9 @@ export function AiScanDrawer() {
                   : "bg-[#eef4f6] text-[#688696]"
               }`}
             >
-              今日已使用 {usage.used} / {usage.limit} 次
-              {limitReached && "，請明天再試"}
+              {usage.unlimited
+                ? `管理員帳號，今日已使用 ${usage.used} 次，無次數限制`
+                : `今日已使用 ${usage.used} / ${usage.limit} 次${limitReached ? "，請明天再試" : ""}`}
             </div>
           )}
 

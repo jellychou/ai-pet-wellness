@@ -73,6 +73,15 @@ def _count_today(db: Session, user_id: int) -> int:
     )
 
 
+def _is_admin(user: User) -> bool:
+    return user.permissions == "admin"
+
+
+def _build_usage(db: Session, user: User) -> AiScanUsageOut:
+    used = _count_today(db, user.id)
+    return AiScanUsageOut(used=used, limit=DAILY_LIMIT, unlimited=_is_admin(user))
+
+
 # 前端開啟 AI 拍照診斷室的時候先打這支，用來顯示「今日已使用 X/5 次」的
 # 標語，還沒上傳照片就能提早告知額度用完了，不用等按下去才被 429 擋下來
 @router.get(
@@ -84,8 +93,7 @@ def get_usage_today(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    used = _count_today(db, current_user.id)
-    return AiScanUsageOut(used=used, limit=DAILY_LIMIT)
+    return _build_usage(db, current_user)
 
 
 # 「檢視記錄」列表：某隻寵物過去的 AI 診斷紀錄，最新的排前面。跟其他
@@ -123,12 +131,14 @@ def analyze_image(
 ):
     _get_owned_pet(db, current_user, payload.pet_id)
 
-    used = _count_today(db, current_user.id)
-    if used >= DAILY_LIMIT:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"今天的 AI 診斷次數已用完（每天最多 {DAILY_LIMIT} 次），請明天再試",
-        )
+    # admin 帳號不受每日次數限制——見 app/models/user.py 的 permissions 欄位
+    if not _is_admin(current_user):
+        used = _count_today(db, current_user.id)
+        if used >= DAILY_LIMIT:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"今天的 AI 診斷次數已用完（每天最多 {DAILY_LIMIT} 次），請明天再試",
+            )
 
     if not settings.openai_api_key:
         raise HTTPException(
@@ -206,11 +216,10 @@ def analyze_image(
         )
     )
     db.commit()
-    used_after = _count_today(db, current_user.id)
 
     return AnalyzeImageResponse(
         summary=str(parsed.get("summary", "")),
         findings=findings,
         disclaimer=DISCLAIMER,
-        usage=AiScanUsageOut(used=used_after, limit=DAILY_LIMIT),
+        usage=_build_usage(db, current_user),
     )

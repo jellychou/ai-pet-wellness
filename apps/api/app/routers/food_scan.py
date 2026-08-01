@@ -83,16 +83,20 @@ SYSTEM_PROMPT = (
     '"suitable_species": ["dog", "cat"] 的子集合，這個食物適合餵的物種，可能是'
     "空陣列, "
     '"suggestions": ["建議或注意事項", ...]，最多 3 條，簡短的中文句子}\n'
-    "如果照片裡看不出是食物（例如空盤子、包裝袋、不相關的東西），"
-    "food_detected 設 false，items 給空陣列，其他數值/陣列欄位給 0 或空"
+    "在你判斷 food_detected 是 true 還是 false 之前，如果照片中的物體形狀"
+    "不常見（例如寵物潔牙骨、造型零食、壓製成特殊形狀的肉乾）、外表印有"
+    "品牌名稱、包裝上有文字或商標、或是你單靠訓練知識無法確定這是什麼、"
+    "是不是能吃的東西，請先使用網路搜尋工具查詢確認（例如搜尋你在照片上"
+    "看到的品牌名稱、包裝文字），不要只因為形狀或顏色看起來不像傳統食物"
+    "就直接判定 food_detected 是 false——寵物的潔牙骨、咬骨、零食棒等"
+    "外觀往往跟人類食物差很多，但仍然是要餵給寵物吃的東西，算 food_detected"
+    "是 true。只有真的是空盤子、包裝袋本身、玩具、餐具、或其他明顯不是"
+    "食物/零食的東西，才設 food_detected 為 false。\n"
+    "food_detected 是 false 時，items 給空陣列，其他數值/陣列欄位給 0 或空"
     "陣列，不要瞎猜。份量估計不用非常精確，合理的目測範圍即可，但一定要"
     "直接給重量/熱量的範圍，不要用每 100g 密度回答。如果食物對狗或貓有毒/"
     "危險，safety_level 要低（1-2）、is_safe 設 false，suggestions 要清楚"
     "警告危險性。\n"
-    "如果照片中的食物是有品牌包裝、餐廳特定料理名稱、或其他你單靠訓練知識"
-    "無法確定名稱與成分的東西，請使用網路搜尋工具查詢確認（例如包裝上的"
-    "文字、商標、菜色特徵），不要因為認不出來就直接放棄或亂猜——先查證"
-    "過後再回答，這樣營養/安全性的判斷才會準確。\n"
     "無論有沒有使用搜尋工具，你最後回覆使用者的訊息都必須「只有」那個 JSON "
     "物件本身：不要加 ```json 或 ``` 這種 markdown 程式碼區塊包住它，"
     "前後也不要有任何說明文字、引言或搜尋結果摘要，就算你查了資料，也只"
@@ -294,9 +298,11 @@ def analyze_food(
         #   這個巢狀物件）
         # - max_completion_tokens 改用 max_output_tokens；reasoning_effort
         #   改用巢狀的 reasoning={"effort": ...}——都是 reasoning 模型的
-        #   隱藏思考 token 也算在這個上限裡，effort 選 low 是因為這支主要是
-        #   目測估重量/熱量，不需要深度推理，太高只會浪費思考 token、拖慢
-        #   回應（加上網路搜尋后，時間本來就會比純視覺分析久)
+        #   隱藏思考 token 也算在這個上限裡。原本設 low，但實測發現遇到
+        #   造型潔牙骨/零食這種需要「先看到包裝上的字→決定要不要搜尋→查
+        #   完再回答」的多步驟情境，low 幾乎不會觸發搜尋，直接回報看不出
+        #   是食物——effort 太低，agentic search 的深度不夠。改成 medium，
+        #   讓模型更願意在不確定時真的去查，換取多花一點思考 token 跟時間
         # - 拿最終文字用 response.output_text（SDK 幫忙處理掉 reasoning/
         #   web_search_call 這些中間步驟的 output item，跟 chat completions
         #   的 completion.choices[0].message.content 是對應角色)
@@ -311,8 +317,11 @@ def analyze_food(
             model=settings.openai_food_scan_model,
             instructions=SYSTEM_PROMPT,
             tools=[{"type": "web_search"}],
-            reasoning={"effort": "low"},
-            max_output_tokens=2000,
+            reasoning={"effort": "medium"},
+            # medium effort 會用掉更多隱藏思考 token，2000 的舊上限留給
+            # 實際 JSON 輸出的空間會被壓縮，容易又出現 items 陣列被截斷的
+            # 問題（之前遇過一次），所以上限也一併調高
+            max_output_tokens=3000,
             input=[
                 {
                     "role": "user",

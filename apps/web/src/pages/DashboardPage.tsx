@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Bone,
   Camera,
@@ -15,6 +16,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
 import { calculateDailyCalories, calculateMacros } from "../lib/calorie";
+import { apiFetch } from "../lib/api";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
@@ -105,13 +107,97 @@ function Metric({
 //   );
 // }
 
+type FoodRecordItem = {
+  id: number;
+  pet_id: number;
+  food_name: string;
+  image_url: string | null;
+  portion_grams: number;
+  calories: number;
+  meal_type: "breakfast" | "lunch" | "dinner" | "snack";
+  fed_at: string;
+  note: string | null;
+};
+
+const mealTypeOrder: {
+  value: FoodRecordItem["meal_type"];
+  label: string;
+  icon: string;
+}[] = [
+  { value: "breakfast", label: "早餐", icon: "🌅" },
+  { value: "lunch", label: "午餐", icon: "☀️" },
+  { value: "dinner", label: "晚餐", icon: "🌙" },
+  { value: "snack", label: "點心", icon: "🍪" },
+];
+
+// 只取「本地時區的年/月/日」來比對是不是同一天，不要直接比字串化的完整
+// ISO 時間戳——fed_at 帶時區資訊，直接切字串在跨時區/跨日界線時會比錯
+function toDateKey(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function addDays(d: Date, delta: number) {
+  const next = new Date(d);
+  next.setDate(next.getDate() + delta);
+  return next;
+}
+
+function formatDateHeader(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()} / ${pad(d.getMonth() + 1)} / ${pad(d.getDate())}`;
+}
+
+function startOfToday() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return now;
+}
+
 function FoodCard({ onAddFood }: { onAddFood: () => void }) {
-  const meals = [
-    ["早餐", "雞胸肉 Chicken Breast", "120 g / 198 kcal", "🍗"],
-    ["午餐", "Royal Canin 飼料", "100 g / 380 kcal", "🥣"],
-    ["晚餐", "鮭魚 Salmon", "150 g / 285 kcal", "🍣"],
-    ["點心", "蘋果 Apple", "50 g / 26 kcal", "🍏"],
-  ];
+  const selectedPet = usePetStore((s) => s.selectedPet);
+  const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
+  const [selectedDate, setSelectedDate] = useState(startOfToday);
+  const [records, setRecords] = useState<FoodRecordItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 一次抓這隻寵物「所有」飲食記錄，切換日期時在前端過濾——後端
+  // /food/food-records/{pet_id} 目前沒有日期區間參數，量體小、簡單優先
+  useEffect(() => {
+    const petId = selectedPet?.id;
+    if (!petId) {
+      setRecords([]);
+      return;
+    }
+    setLoading(true);
+    apiFetch<FoodRecordItem[]>(`/food/food-records/${petId}`, {
+      method: "GET",
+    })
+      .then(setRecords)
+      .catch((error) => console.error(error))
+      .finally(() => setLoading(false));
+  }, [selectedPet?.id, foodRecordRefreshKey]);
+
+  // 切換寵物時把日期重置回今天，避免看著上一隻寵物選到的舊日期卻顯示
+  // 這一隻寵物的記錄，容易誤會成「這隻今天沒吃東西」
+  useEffect(() => {
+    setSelectedDate(startOfToday());
+  }, [selectedPet?.id]);
+
+  const dateKey = toDateKey(selectedDate);
+  const isToday = dateKey === toDateKey(new Date());
+  const recordsForDate = records.filter(
+    (r) => toDateKey(new Date(r.fed_at)) === dateKey,
+  );
+  const totalCalories = recordsForDate.reduce((sum, r) => sum + r.calories, 0);
+  const dailyCalories = selectedPet ? calculateDailyCalories(selectedPet) : null;
+
+  const groups = mealTypeOrder
+    .map((meal) => ({
+      ...meal,
+      items: recordsForDate.filter((r) => r.meal_type === meal.value),
+    }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <section className="card p-4">
@@ -119,40 +205,78 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
         <h2 className="section-title">飲食記錄 / Food Record</h2>
       </div>
       <div className="mb-3 flex items-center justify-between text-[12px]">
-        <span>‹</span>
-        <strong>2025 / 05 / 20</strong>
-        <span>›</span>
+        <button
+          type="button"
+          onClick={() => setSelectedDate((d) => addDays(d, -1))}
+          aria-label="前一天"
+          className="grid h-6 w-6 place-items-center rounded-full text-ink/60 transition hover:bg-cream"
+        >
+          ‹
+        </button>
+        <strong>
+          {formatDateHeader(selectedDate)}
+          {isToday && <span className="ml-1 font-normal text-ink/40">（今天）</span>}
+        </strong>
+        <button
+          type="button"
+          onClick={() => setSelectedDate((d) => addDays(d, 1))}
+          disabled={isToday}
+          aria-label="後一天"
+          className="grid h-6 w-6 place-items-center rounded-full text-ink/60 transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          ›
+        </button>
       </div>
       <div className="space-y-2">
-        {meals.map((m) => (
-          <div key={m[0]}>
-            <div className="mb-1 text-[9px] font-medium">{m[0]}</div>
-            <div className="flex items-center gap-2 rounded-xl bg-[#fbf7f1] p-2">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white">
-                {m[3]}
-              </span>
-              <div>
-                <div className="text-[12px] font-medium">{m[1]}</div>
-                <div className="text-[9px] text-ink/45">{m[2]}</div>
+        {loading ? (
+          <p className="py-6 text-center text-[11px] text-ink/40">載入中…</p>
+        ) : groups.length === 0 ? (
+          <p className="py-6 text-center text-[11px] text-ink/40">
+            這天還沒有飲食記錄
+          </p>
+        ) : (
+          groups.map((g) => (
+            <div key={g.value}>
+              <div className="mb-1 text-[9px] font-medium">{g.label}</div>
+              <div className="space-y-1.5">
+                {g.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 rounded-xl bg-[#fbf7f1] p-2"
+                  >
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-white">
+                      {g.icon}
+                    </span>
+                    <div>
+                      <div className="text-[12px] font-medium">
+                        {item.food_name}
+                      </div>
+                      <div className="text-[9px] text-ink/45">
+                        {item.portion_grams} g / {Math.round(item.calories)}{" "}
+                        kcal
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
       <div className="mt-3 rounded-xl bg-[#fbf7f1] p-3">
-        <div className="mb-2 text-[9px] font-medium">營養總計</div>
-        <div className="grid grid-cols-4 text-center text-[9px]">
-          {[
-            ["熱量", "889 kcal"],
-            ["蛋白質", "66 g"],
-            ["脂肪", "32 g"],
-            ["碳水", "80 g"],
-          ].map((x) => (
-            <div key={x[0]}>
-              <div>{x[0]}</div>
-              <b>{x[1]}</b>
-            </div>
-          ))}
+        <div className="mb-1 flex items-center justify-between text-[9px] font-medium">
+          <span>這天攝取熱量</span>
+          {dailyCalories != null && (
+            <span className="font-normal text-ink/45">
+              建議 {dailyCalories} kcal
+            </span>
+          )}
+        </div>
+        <div className="text-center text-lg font-semibold">
+          {Math.round(totalCalories)}
+          <span className="ml-1 text-[10px] font-normal text-ink/45">
+            kcal
+          </span>
         </div>
       </div>
       <button

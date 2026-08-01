@@ -43,6 +43,11 @@ type AppState = {
   // 上傳到 Cloudinary 後拿到的網址，AddFoodRecordDrawer 存飲食紀錄時要一起帶入
   foodScanImageUrl: string | null;
   setFoodScanImageUrl: (v: string | null) => void;
+  // 跟 vaccineRefreshKey 同樣的道理：Dashboard 的飲食記錄卡片只在自己
+  // mount/切換寵物時打一次 API，AddFoodRecordDrawer 新增成功關掉不會觸發
+  // 它重新 mount，所以用這個數字當訊號，新增成功就 +1，讓卡片重新抓一次
+  foodRecordRefreshKey: number;
+  bumpFoodRecordRefreshKey: () => void;
   addVaccineOpen: boolean;
   setAddVaccineOpen: (v: boolean) => void;
   addVaccineFormOpen: boolean;
@@ -102,6 +107,9 @@ export const useAppStore = create<AppState>((set) => ({
   setFoodScanResult: (foodScanResult) => set({ foodScanResult }),
   foodScanImageUrl: null,
   setFoodScanImageUrl: (foodScanImageUrl) => set({ foodScanImageUrl }),
+  foodRecordRefreshKey: 0,
+  bumpFoodRecordRefreshKey: () =>
+    set((s) => ({ foodRecordRefreshKey: s.foodRecordRefreshKey + 1 })),
   addVaccineOpen: false,
   setAddVaccineOpen: (addVaccineOpen) => set({ addVaccineOpen }),
   addVaccineFormOpen: false,

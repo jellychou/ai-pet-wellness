@@ -72,6 +72,9 @@ export function AddFoodRecordDrawer() {
   const result = useAppStore((s) => s.foodScanResult);
   const setResult = useAppStore((s) => s.setFoodScanResult);
   const imageUrl = useAppStore((s) => s.foodScanImageUrl);
+  const bumpFoodRecordRefreshKey = useAppStore(
+    (s) => s.bumpFoodRecordRefreshKey,
+  );
   const pets = usePetStore((s) => s.pets);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const { showSuccess, showError } = useAlert();
@@ -148,6 +151,9 @@ export function AddFoodRecordDrawer() {
       // 記完就整套關掉、回首頁，跟 AiScanDrawer 流程完成後一樣不用留在原地
       setAddFoodOpen(false);
       setResult(null);
+      // Dashboard 的飲食記錄卡片不會因為這個 drawer 關掉而重新 mount，
+      // 用這個訊號讓它知道要重新抓一次，新記錄才會馬上出現
+      bumpFoodRecordRefreshKey();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "飲食記錄儲存失敗，請稍後再試",

@@ -153,7 +153,12 @@ def analyze_image(
         completion = client.chat.completions.create(
             model=settings.openai_model,
             response_format={"type": "json_object"},
-            max_tokens=500,
+            # gpt-5.6-terra 是推理模型，max_tokens 已被 max_completion_tokens
+            # 取代（隱藏的思考 token 也算在這個上限裡，同 food_scan.py 的說明）。
+            # reasoning_effort 設 low：症狀初步判斷不需要深度推理，且上限
+            # 從 500 調高到 900，避免思考 token 把實際 JSON 輸出擠爆截斷
+            max_completion_tokens=900,
+            reasoning_effort="low",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {

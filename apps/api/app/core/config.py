@@ -49,11 +49,15 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     # 症狀診斷（ai_scan）用的模型。原本用 gpt-4o-mini 省成本，後來食物辨識
     # 實測發現 mini 版估出來的熱量常常比 ChatGPT 網頁版（用完整版模型）
-    # 低將近一半，判斷症狀圖片準確度應該也有類似落差，所以一併換成 gpt-4o
-    openai_model: str = "gpt-4o"
-    # 食物辨識（food_scan）用的模型，理由同上，換成 gpt-4o；保留獨立設定
-    # 是為了以後想個別調整（例如其中一支想換更便宜/更貴的模型）不用動到另一支
-    openai_food_scan_model: str = "gpt-4o"
+    # 低將近一半，判斷症狀圖片準確度應該也有類似落差。gpt-5.6-terra 是
+    # GPT-5.6 的中階款（Sol/Terra/Luna 三檔中的中間），視覺辨識準確度比
+    # 輕量版 Luna 高（實測 76% vs 70%），價格卻只比 gpt-4o 略高一點，
+    # 是準確度/成本的折衷選擇
+    openai_model: str = "gpt-5.6-terra"
+    # 食物辨識（food_scan）用的模型，理由同上，換成 gpt-5.6-terra；保留獨立
+    # 設定是為了以後想個別調整（例如其中一支想換更便宜/更貴的模型）不用動到
+    # 另一支
+    openai_food_scan_model: str = "gpt-5.6-terra"
 
     @property
     def cors_origin_list(self) -> list[str]:

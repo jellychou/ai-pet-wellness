@@ -238,9 +238,15 @@ def analyze_food(
         completion = client.chat.completions.create(
             model=settings.openai_food_scan_model,
             response_format={"type": "json_object"},
-            # 逐項分解後回應變大很多（最多 8 個品項，每項好幾個欄位），
-            # 500 tokens 的舊上限會把 items 陣列截斷成壞掉的 JSON
-            max_tokens=1200,
+            # gpt-5.6-terra 是有推理能力的模型，max_tokens 已經被
+            # max_completion_tokens 取代（reasoning 模型的隱藏思考 token
+            # 也算在這個上限裡）。reasoning_effort 設 low：這支只是目測
+            # 估重量/熱量，不需要深度推理，effort 太高既浪費思考 token
+            # （會擠壓到實際 JSON 輸出的空間）也拖慢回應速度。
+            # 上限從 1200 調高到 2000，留更多空間給思考 token，避免逐項
+            # 分解的 JSON 又被截斷
+            max_completion_tokens=2000,
+            reasoning_effort="low",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {

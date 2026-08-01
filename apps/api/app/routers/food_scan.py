@@ -92,7 +92,11 @@ SYSTEM_PROMPT = (
     "如果照片中的食物是有品牌包裝、餐廳特定料理名稱、或其他你單靠訓練知識"
     "無法確定名稱與成分的東西，請使用網路搜尋工具查詢確認（例如包裝上的"
     "文字、商標、菜色特徵），不要因為認不出來就直接放棄或亂猜——先查證"
-    "過後再回答，這樣營養/安全性的判斷才會準確。"
+    "過後再回答，這樣營養/安全性的判斷才會準確。\n"
+    "無論有沒有使用搜尋工具，你最後回覆使用者的訊息都必須「只有」那個 JSON "
+    "物件本身：不要加 ```json 或 ``` 這種 markdown 程式碼區塊包住它，"
+    "前後也不要有任何說明文字、引言或搜尋結果摘要，就算你查了資料，也只"
+    "把查到的結論整理進 JSON 欄位裡，不要另外用文字描述查證過程。"
 )
 
 
@@ -133,6 +137,41 @@ def _build_usage(db: Session, user: User) -> FoodScanUsageOut:
 
 def _clamp(value: int, lo: int, hi: int) -> int:
     return max(lo, min(hi, value))
+
+
+# 沒有 JSON mode 強制保證格式了（跟 web_search 工具衝突，見上面 analyze_food
+# 裡的說明），模型偶爾還是會夾雜 ```json ... ``` 這種 markdown code fence，
+# 或在 JSON 前後加幾句話——直接 json.loads 原始字串常常會失敗。這裡先試著
+# 剝掉常見的 code fence 包裝，再不行就抓字串裡第一個 "{" 到最後一個 "}"
+# 之間的內容再試一次，兩種都失敗才真的當作格式錯誤放棄
+def _extract_json(raw: str) -> dict:
+    text = raw.strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    if text.startswith("```"):
+        # 去掉開頭的 ``` 或 ```json，跟結尾的 ```
+        text = text.split("\n", 1)[1] if "\n" in text else text
+        if text.endswith("```"):
+            text = text[: -len("```")]
+        text = text.strip()
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        try:
+            return json.loads(text[start : end + 1])
+        except json.JSONDecodeError:
+            pass
+
+    raise json.JSONDecodeError("no valid JSON object found", raw, 0)
 
 
 # OpenAI 回傳的 JSON 是不可信輸入，items 陣列裡任何一項格式不對都不該讓整支
@@ -253,7 +292,6 @@ def analyze_food(
         #   {"role": "system"}
         # - 圖片改用 input_image + 純網址字串（不是 image_url: {"url": ...}
         #   這個巢狀物件）
-        # - response_format 改用 text.format
         # - max_completion_tokens 改用 max_output_tokens；reasoning_effort
         #   改用巢狀的 reasoning={"effort": ...}——都是 reasoning 模型的
         #   隱藏思考 token 也算在這個上限裡，effort 選 low 是因為這支主要是
@@ -262,12 +300,18 @@ def analyze_food(
         # - 拿最終文字用 response.output_text（SDK 幫忙處理掉 reasoning/
         #   web_search_call 這些中間步驟的 output item，跟 chat completions
         #   的 completion.choices[0].message.content 是對應角色)
+        #
+        # 這裡刻意不帶 text={"format": {"type": "json_object"}}——實測發現
+        # OpenAI 不允許 web_search 工具跟 JSON mode 同時使用（400 "Web
+        # Search cannot be used with JSON mode"）。改成純靠 SYSTEM_PROMPT
+        # 的文字指示要求輸出 JSON，parse 那段也跟著加防呆（見下面
+        # _extract_json），沒有 JSON mode 強制保證格式，模型偶爾夾雜
+        # markdown code fence 或前後贅字的機率變高
         response = client.responses.create(
             model=settings.openai_food_scan_model,
             instructions=SYSTEM_PROMPT,
             tools=[{"type": "web_search"}],
             reasoning={"effort": "low"},
-            text={"format": {"type": "json_object"}},
             max_output_tokens=2000,
             input=[
                 {
@@ -297,7 +341,7 @@ def analyze_food(
 
     raw = response.output_text
     try:
-        parsed = json.loads(raw or "")
+        parsed = _extract_json(raw or "")
     except json.JSONDecodeError as exc:
         logger.error("OpenAI 回傳非預期格式：%s", raw)
         raise HTTPException(

@@ -15,7 +15,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
-import { calculateDailyCalories, calculateMacros } from "../lib/calorie";
+import { calculateDailyCalories, calculateMacros, sumCalories } from "../lib/calorie";
 import { apiFetch } from "../lib/api";
 
 const defaultPetPhoto =
@@ -189,7 +189,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
   const recordsForDate = records.filter(
     (r) => toDateKey(new Date(r.fed_at)) === dateKey,
   );
-  const totalCalories = recordsForDate.reduce((sum, r) => sum + r.calories, 0);
+  const totalCalories = sumCalories(recordsForDate);
   const dailyCalories = selectedPet ? calculateDailyCalories(selectedPet) : null;
 
   const groups = mealTypeOrder

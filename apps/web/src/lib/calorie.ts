@@ -103,3 +103,11 @@ export function calculateMacros(pet: Pet): MacroGrams | null {
     carb: Math.round((dailyCalories * ratio.carb) / KCAL_PER_GRAM.carb),
   };
 }
+
+// 加總一組飲食紀錄的熱量。抽成共用函式而不是每個要用到的地方各自寫一次
+// reduce——參數只要求有 calories 欄位，不綁死 FoodRecordOut 那個完整型別，
+// 所以 Dashboard 的飲食記錄卡片、之後如果要做的統計頁/歷史紀錄頁都能直接
+// 拿來用，不用重複定義同一段加總邏輯
+export function sumCalories(records: { calories: number }[]): number {
+  return records.reduce((sum, r) => sum + r.calories, 0);
+}

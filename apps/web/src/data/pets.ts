@@ -52,11 +52,15 @@ export type HealthRecord = {
   report_files: string[];
 };
 
-export enum ReportTypeEnum {
-  "1" = "年度健康檢查",
-  "2" = "血液檢查",
-  "3" = "糞便檢查",
-  "4" = "心臟檢查",
-  "5" = "超音波檢查",
-  "6" = "其他檢查",
-}
+// 用純物件（不是 TS enum）：enum 的 key 不能是數字字串（"1".."6"）在
+// isolatedModules 開著的情況下會直接編譯失敗（TS2452），plain object
+// 用起來（ReportTypeEnum[key as keyof typeof ReportTypeEnum]）跟 enum
+// 一樣，改成這樣就不會踩到這個限制
+export const ReportTypeEnum = {
+  "1": "年度健康檢查",
+  "2": "血液檢查",
+  "3": "糞便檢查",
+  "4": "心臟檢查",
+  "5": "超音波檢查",
+  "6": "其他檢查",
+} as const;

@@ -32,6 +32,9 @@ class AiScanUsageOut(BaseModel):
 class AnalyzeImageResponse(BaseModel):
     summary: str
     findings: list[AiScanFinding]
+    # 具體可執行的建議/注意事項，最多 3 條——跟 food_scan 的 suggestions
+    # 是同樣的概念
+    suggestions: list[str]
     # 固定會帶這句提醒，前端一定要顯示，不能只顯示 findings——避免使用者
     # 把 AI 的初步推測當成真的診斷結果
     disclaimer: str

@@ -36,6 +36,9 @@ class AiScanLog(Base):
     # AiScanFinding 陣列的原始 JSON（condition/confidence/description），
     # 不特別開 schema 綁死結構，反正只是拿來顯示，不會再被程式邏輯拿去運算
     findings: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    # 具體建議/注意事項的字串陣列，最多 3 條——跟 food_scan_logs 的
+    # suggestions 是同樣的概念與用法
+    suggestions: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

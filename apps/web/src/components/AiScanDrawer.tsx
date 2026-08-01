@@ -22,6 +22,7 @@ type AiScanUsage = {
 type AnalyzeImageResponse = {
   summary: string;
   findings: AiScanFinding[];
+  suggestions: string[];
   disclaimer: string;
   usage: AiScanUsage;
 };
@@ -234,6 +235,23 @@ export function AiScanDrawer() {
                   </p>
                 )}
               </div>
+
+              {result.suggestions.length > 0 && (
+                <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
+                  <div className="text-xs text-ink/45">建議</div>
+                  <ul className="mt-2 space-y-1.5">
+                    {result.suggestions.map((suggestion, i) => (
+                      <li
+                        key={i}
+                        className="flex gap-1.5 text-sm text-ink/70"
+                      >
+                        <span className="text-mist">•</span>
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="rounded-2xl bg-[#fff3e5] p-4 text-xs leading-5">
                 <span className="font-semibold text-[#d9834f]">

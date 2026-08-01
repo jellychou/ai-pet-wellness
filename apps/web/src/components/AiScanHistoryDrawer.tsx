@@ -16,6 +16,7 @@ type AiScanHistoryItem = {
   image_url: string;
   summary: string;
   findings: AiScanFinding[] | null;
+  suggestions: string[] | null;
   created_at: string;
 };
 
@@ -102,6 +103,19 @@ export function AiScanHistoryDrawer() {
                           </span>
                         ))}
                       </div>
+                    )}
+                    {item.suggestions && item.suggestions.length > 0 && (
+                      <ul className="mt-1.5 space-y-0.5">
+                        {item.suggestions.map((s, i) => (
+                          <li
+                            key={i}
+                            className="flex gap-1 text-[11px] text-ink/45"
+                          >
+                            <span className="text-mist">•</span>
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 </div>

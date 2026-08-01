@@ -33,19 +33,28 @@ DAILY_LIMIT = 5
 
 # 明確要求模型只回傳固定格式的 JSON，才能穩定 parse；同時把「不是獸醫、
 # 不能下確定診斷」寫進 system prompt，降低模型自己講得太篤定的機率
+#
+# 這段之前被手動改壞過一次：JSON 範本裡漏了一個引號、大括號沒配對、
+# suggestions/disclaimer 被寫在物件外面——模型收到這種自相矛盾的格式範例，
+# 很容易回傳同樣壞掉的 JSON，導致 json.loads 直接丟 JSONDecodeError，
+# 前端看到的就是分析失敗（502），感覺像「API 沒有回應」。這裡重寫成一個
+# 完整、大括號有配對好的單一 JSON 物件範本。disclaimer 不需要模型自己生成
+# （router 用固定的 DISCLAIMER 常數回傳，見下面 AnalyzeImageResponse），
+# 所以範本裡不放這個欄位，避免模型自己編一個跟固定文案不一致的版本
 SYSTEM_PROMPT = (
     "你是協助寵物照護的助理，會根據使用者上傳的寵物照片（例如皮膚、耳朵、眼睛、"
     "傷口等部位），描述你觀察到的異常特徵，並推測「可能」的健康狀況，附上大略的"
     "信心程度（0-100 的整數，不是精確機率）。你不是獸醫，不能做出確定診斷，只能"
     "提供初步觀察與推測。請只回傳一個 JSON 物件，格式如下，不要有其他文字：\n"
-    '{"summary": 兩到三句話的整體觀察摘要", '
+    '{"summary": "兩到三句話的整體觀察摘要", '
     '"findings": [{"condition": "可能的狀況名稱", "confidence": 0-100 整數, '
-    '"description": "簡短說明你為什麼這樣推測"}]}\n'
-    '"suggestions": ["建議或注意事項", ...]，最多 3 條，簡短的中文句子，並分析實質建議，例如建議先觀察一天先給少量水或可以留意精神問題，如果沒有不舒服可以先採取什麼行動}\n'
+    '"description": "簡短說明你為什麼這樣推測"}], '
+    '"suggestions": ["具體可執行的建議或注意事項", ...]}\n'
     "findings 最多列出 3 個最相關的可能狀況，依信心程度高到低排序；如果照片看起來"
     "沒有明顯異常，findings 可以是空陣列，summary 誠實說明看起來正常即可，不要為了"
-    "有內容而硬掰。suggestions 最多列出 3 條，簡短的中文句子，並分析實質建議，例如建議先觀察一天先給少量水或可以留意精神問題，如果沒有不舒服可以先採取什麼行動"
-    '"disclaimer": "這分析僅供參考，非醫療診斷，正式判斷請以獸醫實際檢查為準。"'
+    "有內容而硬掰。suggestions 最多列出 3 條簡短的中文句子，給實質可執行的建議"
+    "（例如「先觀察一天，留意食慾和精神狀況」「可以先給予少量飲水，避免刺激患部」"
+    "「若 24 小時內沒有改善或有惡化，建議儘快就醫」），不要只是空泛地說「請注意」。"
 )
 
 
@@ -209,6 +218,14 @@ def analyze_image(
         )
         for f in parsed.get("findings", [])
     ]
+    # 跟 food_scan.py 的 suggestions 一樣防呆：不是 list 就當空陣列，
+    # 每一條轉成字串，最多留 3 條（跟 SYSTEM_PROMPT 裡要求的上限一致）
+    raw_suggestions = parsed.get("suggestions")
+    suggestions = (
+        [str(s) for s in raw_suggestions][:3]
+        if isinstance(raw_suggestions, list)
+        else []
+    )
 
     # 分析成功才算一次額度、也才存進紀錄——OpenAI 報錯、JSON parse 失敗這些
     # 情況都在上面提早 raise 掉了，不會走到這裡，使用者不會因為失敗的請求
@@ -220,6 +237,7 @@ def analyze_image(
             image_url=payload.image_url,
             summary=str(parsed.get("summary", "")),
             findings=[f.model_dump() for f in findings],
+            suggestions=suggestions,
         )
     )
     db.commit()
@@ -227,6 +245,7 @@ def analyze_image(
     return AnalyzeImageResponse(
         summary=str(parsed.get("summary", "")),
         findings=findings,
+        suggestions=suggestions,
         disclaimer=DISCLAIMER,
         usage=_build_usage(db, current_user),
     )

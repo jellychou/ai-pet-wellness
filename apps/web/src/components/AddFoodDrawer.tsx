@@ -1,5 +1,15 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft, Check, Clock, Info, Star, TriangleAlert } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+  ArrowLeft,
+  Bookmark,
+  Check,
+  Clock,
+  Info,
+  Pencil,
+  RotateCcw,
+  Star,
+  TriangleAlert,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore, type FoodScanResult } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
@@ -144,6 +154,47 @@ function ResultCard({ result }: { result: FoodScanResult }) {
   );
 }
 
+// 底部次要動作用的小按鈕：圖示在上、文字在下，寬度平均分配在 grid-cols-3
+// 裡，不會像純文字按鈕那樣因為字數不同（「修改結果」4字 vs 之前「儲存到
+// 我的常用食物」8字）而看起來一邊擠一邊鬆。badge 用來誠實標示「還沒做好」
+// ——之前用很淡的文字顏色偽裝成 disabled，但按鈕其實還是能點、點下去只是
+// 跳一個「敬請期待」的 toast，使用者容易誤會是壞掉了；現在直接用原生
+// disabled + 右上角小標籤說清楚，不騙使用者
+function ActionIconButton({
+  icon,
+  label,
+  onClick,
+  disabled,
+  badge,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  badge?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative flex flex-col items-center gap-1 rounded-xl border py-2.5 text-[11px] font-medium transition ${
+        disabled
+          ? "cursor-not-allowed border-dashed border-[#ece4dc] text-ink/30"
+          : "border-[#ece4dc] text-ink/70 hover:bg-cream"
+      }`}
+    >
+      {badge && (
+        <span className="absolute -top-2 right-1 whitespace-nowrap rounded-full bg-[#f1e6d8] px-1.5 py-[1px] text-[9px] font-semibold text-[#b98a5c]">
+          {badge}
+        </span>
+      )}
+      {icon}
+      {label}
+    </button>
+  );
+}
+
 export function AddFoodDrawer() {
   const open = useAppStore((s) => s.addFoodOpen);
   const setOpen = useAppStore((s) => s.setAddFoodOpen);
@@ -211,10 +262,6 @@ export function AddFoodDrawer() {
   function handleAddToLog() {
     if (!result || !result.food_detected) return;
     setAddFoodRecordOpen(true);
-  }
-
-  function handleSaveToFavorites() {
-    showError("此功能即將推出，敬請期待！");
   }
 
   async function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {
@@ -387,41 +434,44 @@ export function AddFoodDrawer() {
 
       <div className="space-y-2 border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
         <div className="mx-auto max-w-md space-y-2">
-          <div className="grid grid-cols-2 gap-3">
+          {result && result.food_detected ? (
+            <>
+              <button
+                type="button"
+                onClick={handleAddToLog}
+                className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
+              >
+                加入飲食記錄
+              </button>
+              <div className="grid grid-cols-3 gap-2">
+                <ActionIconButton
+                  icon={<RotateCcw size={16} />}
+                  label="重新拍攝"
+                  onClick={handleRetake}
+                  disabled={limitReached || analyzing}
+                />
+                <ActionIconButton
+                  icon={<Pencil size={16} />}
+                  label="修改結果"
+                  onClick={handleEditResult}
+                />
+                <ActionIconButton
+                  icon={<Bookmark size={16} />}
+                  label="常用食物"
+                  disabled
+                  badge="敬請期待"
+                />
+              </div>
+            </>
+          ) : (
             <button
               type="button"
               onClick={handleRetake}
               disabled={limitReached || analyzing}
-              className="rounded-2xl bg-[#f1e6d8] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#ecdcc9] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#f1e6d8]"
+              className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
-              {result ? "重新拍攝" : "拍照辨識"}
+              {result ? "重新拍攝" : "拍照辨識食物"}
             </button>
-            <button
-              type="button"
-              onClick={handleAddToLog}
-              disabled={!result || !result.food_detected}
-              className="rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-            >
-              加入飲食記錄
-            </button>
-          </div>
-          {result && result.food_detected && (
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleEditResult}
-                className="rounded-2xl border border-[#ece4dc] py-3 text-sm font-semibold text-ink/70 transition hover:bg-cream"
-              >
-                修改結果
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveToFavorites}
-                className="rounded-2xl border border-[#ece4dc] py-3 text-sm font-semibold text-ink/40 transition hover:bg-cream"
-              >
-                儲存到我的常用食物
-              </button>
-            </div>
           )}
         </div>
       </div>

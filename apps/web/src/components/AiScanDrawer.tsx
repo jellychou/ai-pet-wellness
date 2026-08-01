@@ -49,7 +49,10 @@ export function AiScanDrawer() {
       .catch((error) => console.error(error));
   }, [open]);
 
-  const limitReached = usage !== null && usage.used >= usage.limit;
+  // 用 != 而不是 !==：後端如果剛好回傳一個沒有 usage 欄位的舊版回應
+  // （例如部署還沒更新到最新版本），response.usage 會是 undefined 而不是
+  // null，用 !== null 判斷不出來，讀 usage.used 就會直接炸掉
+  const limitReached = usage != null && usage.used >= usage.limit;
 
   function handleBack() {
     setOpen(false);
@@ -98,7 +101,12 @@ export function AiScanDrawer() {
         },
       );
       setResult(response);
-      setUsage(response.usage);
+      // response.usage 理論上一定會有，但如果打到還沒更新的舊版後端，
+      // 這欄可能不存在——寧可保留原本的用量顯示，也不要整個設成 undefined
+      // 讓畫面之後一讀到 usage.used 就炸掉
+      if (response.usage) {
+        setUsage(response.usage);
+      }
     } catch (error) {
       showError(
         error instanceof Error ? error.message : "AI 分析失敗，請稍後再試",

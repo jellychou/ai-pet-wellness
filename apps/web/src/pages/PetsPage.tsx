@@ -28,7 +28,21 @@ const petFieldDefs: PetFieldDef[] = [
     format: (value) => (value === "cat" ? "貓" : "狗"),
   },
   { label: "品種", key: "breed" },
-  { label: "性別", key: "gender" },
+  {
+    label: "性別",
+    key: "gender",
+    format: (value) => (value === "male" ? "男生" : "女生"),
+  },
+  {
+    label: "年紀",
+    key: "birthday",
+    format: (value) => {
+      const now = new Date();
+      const birth = new Date(String(value ?? ""));
+      const age = now.getFullYear() - birth.getFullYear();
+      return `${age} 歲`;
+    },
+  },
   { label: "生日", key: "birthday" },
   { label: "體重", key: "weight" },
   { label: "毛色", key: "coatColor" },
@@ -65,7 +79,7 @@ function PetAvatarSwitcher({
           <span
             className={`grid h-14 w-14 place-items-center rounded-full p-0.5 transition ${
               selected === pet.id
-                ? "ring-2 ring-[#caa06f]"
+                ? "ring-2 ring-[#8ca4b3]"
                 : "ring-2 ring-transparent"
             }`}
           >
@@ -78,7 +92,7 @@ function PetAvatarSwitcher({
           <span
             className={`text-[11px] ${
               selected === pet.id
-                ? "font-semibold text-[#c9784a]"
+                ? "font-semibold text-[#8ca4b3]"
                 : "text-ink/50"
             }`}
           >

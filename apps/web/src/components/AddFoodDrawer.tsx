@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import {
   ArrowLeft,
   Bookmark,
@@ -29,7 +35,12 @@ const speciesLabel: Record<string, string> = { dog: "狗狗", cat: "貓咪" };
 
 // 分析 loading 畫面用的假進度清單，純粹是 UI 上讓等待感覺有在動——
 // 實際分析是一次 API call 打完，不是真的分這幾步驟執行
-const LOADING_STEPS = ["辨讀食物種類", "分析營養成分", "評估安全性", "生成建議"];
+const LOADING_STEPS = [
+  "辨讀食物種類",
+  "分析營養成分",
+  "評估安全性",
+  "生成建議",
+];
 
 type FoodScanUsage = {
   used: number;
@@ -151,9 +162,7 @@ function ResultCard({ result }: { result: FoodScanResult }) {
 
       <div className="mt-3">
         <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-bold text-ink">
-            {result.calories}
-          </span>
+          <span className="text-4xl font-bold text-ink">{result.calories}</span>
           <span className="text-sm text-ink/50">kcal（最佳估計）</span>
         </div>
         {(result.calories_low > 0 || result.calories_high > 0) && (
@@ -201,10 +210,7 @@ function ResultCard({ result }: { result: FoodScanResult }) {
             <span className="text-ink/40">無</span>
           ) : (
             result.suitable_species.map((s) => (
-              <span
-                key={s}
-                className="flex items-center gap-1 text-ink/80"
-              >
+              <span key={s} className="flex items-center gap-1 text-ink/80">
                 <Check size={14} className="text-[#3fa88f]" />
                 {speciesLabel[s] ?? s}
               </span>
@@ -493,7 +499,9 @@ export function AddFoodDrawer() {
                 <p className="text-sm font-medium text-ink/70">
                   AI 正在分析食物…
                 </p>
-                <p className="mt-0.5 text-xs text-ink/40">請稍候 10~20 秒</p>
+                <p className="mt-0.5 text-xs text-ink/40">
+                  請稍候，遇到不確定的食物 AI 會上網查證，約 10~30 秒
+                </p>
               </div>
               <ul className="w-full max-w-[220px] space-y-2">
                 {LOADING_STEPS.map((step, i) => (
@@ -596,7 +604,7 @@ export function AddFoodDrawer() {
               <button
                 type="button"
                 onClick={handleAddToLog}
-                className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
+                className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
               >
                 加入飲食記錄
               </button>
@@ -625,7 +633,7 @@ export function AddFoodDrawer() {
               type="button"
               onClick={handleRetake}
               disabled={limitReached || analyzing}
-              className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
               {result ? "重新拍攝" : "拍照辨識食物"}
             </button>

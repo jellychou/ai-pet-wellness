@@ -88,7 +88,11 @@ SYSTEM_PROMPT = (
     "陣列，不要瞎猜。份量估計不用非常精確，合理的目測範圍即可，但一定要"
     "直接給重量/熱量的範圍，不要用每 100g 密度回答。如果食物對狗或貓有毒/"
     "危險，safety_level 要低（1-2）、is_safe 設 false，suggestions 要清楚"
-    "警告危險性。"
+    "警告危險性。\n"
+    "如果照片中的食物是有品牌包裝、餐廳特定料理名稱、或其他你單靠訓練知識"
+    "無法確定名稱與成分的東西，請使用網路搜尋工具查詢確認（例如包裝上的"
+    "文字、商標、菜色特徵），不要因為認不出來就直接放棄或亂猜——先查證"
+    "過後再回答，這樣營養/安全性的判斷才會準確。"
 )
 
 
@@ -235,27 +239,44 @@ def analyze_food(
     client = OpenAI(api_key=settings.openai_api_key)
 
     try:
-        completion = client.chat.completions.create(
+        # 改用 Responses API（不是 Chat Completions）——原因是使用者反映
+        # 比較少見/有品牌包裝的食物我們認不出來，但直接問 ChatGPT 網頁版
+        # 卻可以，因為網頁版會上網搜尋。Chat Completions API 沒有內建工具，
+        # 純粹只能靠模型自己的訓練知識目測猜；Responses API 可以掛
+        # web_search 工具，讓模型「邊看照片邊視需要上網查」，跟 ChatGPT
+        # 網頁版是同一套機制。tools 只是給模型「可以用」，實際會不會觸發
+        # 搜尋由模型自己判斷（tool_choice 預設 auto），不是每次都會查、
+        # 也不會每次都變慢。
+        #
+        # 對應的介面差異：
+        # - system prompt 改用頂層 instructions，不是 messages 裡的
+        #   {"role": "system"}
+        # - 圖片改用 input_image + 純網址字串（不是 image_url: {"url": ...}
+        #   這個巢狀物件）
+        # - response_format 改用 text.format
+        # - max_completion_tokens 改用 max_output_tokens；reasoning_effort
+        #   改用巢狀的 reasoning={"effort": ...}——都是 reasoning 模型的
+        #   隱藏思考 token 也算在這個上限裡，effort 選 low 是因為這支主要是
+        #   目測估重量/熱量，不需要深度推理，太高只會浪費思考 token、拖慢
+        #   回應（加上網路搜尋后，時間本來就會比純視覺分析久)
+        # - 拿最終文字用 response.output_text（SDK 幫忙處理掉 reasoning/
+        #   web_search_call 這些中間步驟的 output item，跟 chat completions
+        #   的 completion.choices[0].message.content 是對應角色)
+        response = client.responses.create(
             model=settings.openai_food_scan_model,
-            response_format={"type": "json_object"},
-            # gpt-5.6-terra 是有推理能力的模型，max_tokens 已經被
-            # max_completion_tokens 取代（reasoning 模型的隱藏思考 token
-            # 也算在這個上限裡）。reasoning_effort 設 low：這支只是目測
-            # 估重量/熱量，不需要深度推理，effort 太高既浪費思考 token
-            # （會擠壓到實際 JSON 輸出的空間）也拖慢回應速度。
-            # 上限從 1200 調高到 2000，留更多空間給思考 token，避免逐項
-            # 分解的 JSON 又被截斷
-            max_completion_tokens=2000,
-            reasoning_effort="low",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+            instructions=SYSTEM_PROMPT,
+            tools=[{"type": "web_search"}],
+            reasoning={"effort": "low"},
+            text={"format": {"type": "json_object"}},
+            max_output_tokens=2000,
+            input=[
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "請分析這張食物照片。"},
+                        {"type": "input_text", "text": "請分析這張食物照片。"},
                         {
-                            "type": "image_url",
-                            "image_url": {"url": payload.image_url},
+                            "type": "input_image",
+                            "image_url": payload.image_url,
                         },
                     ],
                 },
@@ -274,7 +295,7 @@ def analyze_food(
             status_code=502, detail=f"AI 分析失敗：{exc}"
         ) from exc
 
-    raw = completion.choices[0].message.content
+    raw = response.output_text
     try:
         parsed = json.loads(raw or "")
     except json.JSONDecodeError as exc:

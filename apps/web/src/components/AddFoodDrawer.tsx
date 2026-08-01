@@ -2,12 +2,14 @@ import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "r
 import {
   ArrowLeft,
   Bookmark,
+  Bot,
   Camera,
   Check,
   Clock,
   Info,
   Pencil,
   RotateCcw,
+  Search,
   Star,
   TriangleAlert,
   UtensilsCrossed,
@@ -24,6 +26,10 @@ import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
 
 const speciesLabel: Record<string, string> = { dog: "狗狗", cat: "貓咪" };
+
+// 分析 loading 畫面用的假進度清單，純粹是 UI 上讓等待感覺有在動——
+// 實際分析是一次 API call 打完，不是真的分這幾步驟執行
+const LOADING_STEPS = ["辨讀食物種類", "分析營養成分", "評估安全性", "生成建議"];
 
 type FoodScanUsage = {
   used: number;
@@ -295,6 +301,10 @@ export function AddFoodDrawer() {
   // 使用者常常會誤以為那就是「已經上傳的照片」
   const [photo, setPhoto] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  // 分析其實是一次打完的單一 API call，不是真的分階段回報進度——這個
+  // loadingStep 只是照時間軸假裝逐步完成，讓等待的 10~20 秒感覺不是卡住，
+  // 不代表後端真的在做這幾個獨立步驟
+  const [loadingStep, setLoadingStep] = useState(0);
   const [usage, setUsage] = useState<FoodScanUsage | null>(null);
 
   // 一打開就先問今天用了幾次，跟 AiScanDrawer 同樣的理由：還沒選照片就能先
@@ -314,6 +324,20 @@ export function AddFoodDrawer() {
     setImageUrl(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // 開始分析就從第一步跑起，每 4 秒跳下一步，跑到最後一步就停在那裡等真正
+  // 的 API 回應——真實分析大約 10~20 秒，4 步跑完大概 12 秒，稍微留一點
+  // buffer，避免進度條比實際回應快太多看起來像卡住
+  useEffect(() => {
+    if (!analyzing) {
+      setLoadingStep(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setLoadingStep((step) => Math.min(step + 1, LOADING_STEPS.length - 1));
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [analyzing]);
 
   // 用 != 而不是 !==，理由跟 AiScanDrawer 一樣：避免舊版後端回應缺欄位時
   // usage 變成 undefined，用 !== null 判斷不出來就直接讀 .used 炸掉
@@ -456,32 +480,67 @@ export function AddFoodDrawer() {
             className="hidden"
             onChange={handlePhotoPick}
           />
-          <div className="relative">
-            {photo ? (
-              <img
-                src={photo}
-                alt="掃描食物照片"
-                className="h-56 w-full rounded-2xl object-contain"
-              />
-            ) : (
-              <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1e6d8] text-[#b98a5c]">
-                  <UtensilsCrossed size={22} />
+          {analyzing ? (
+            <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-[#eee5da] bg-[#fffdfa] px-6 py-8">
+              <p className="text-base font-semibold text-ink">食物辨識中…</p>
+              <div className="relative grid h-20 w-20 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                <Bot size={40} />
+                <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-white text-[#b98a5c] shadow-[0_2px_8px_rgba(0,0,0,.12)]">
+                  <Search size={16} />
                 </span>
-                <p className="text-sm font-medium text-ink/50">
-                  尚未上傳照片
-                </p>
-                <p className="text-xs text-ink/35">
-                  點擊下方「拍照辨識食物」開始
-                </p>
               </div>
-            )}
-            {analyzing && (
-              <div className="absolute inset-0 grid place-items-center rounded-2xl bg-black/40 text-sm font-medium text-white">
-                AI 辨識中…
+              <div className="text-center">
+                <p className="text-sm font-medium text-ink/70">
+                  AI 正在分析食物…
+                </p>
+                <p className="mt-0.5 text-xs text-ink/40">請稍候 10~20 秒</p>
               </div>
-            )}
-          </div>
+              <ul className="w-full max-w-[220px] space-y-2">
+                {LOADING_STEPS.map((step, i) => (
+                  <li key={step} className="flex items-center gap-2 text-xs">
+                    <span
+                      className={`grid h-4 w-4 shrink-0 place-items-center rounded-full transition-colors ${
+                        i <= loadingStep
+                          ? "bg-[#3fa88f] text-white"
+                          : "bg-[#eee5da] text-transparent"
+                      }`}
+                    >
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                    <span
+                      className={
+                        i <= loadingStep ? "text-ink/70" : "text-ink/30"
+                      }
+                    >
+                      {step}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="relative">
+              {photo ? (
+                <img
+                  src={photo}
+                  alt="掃描食物照片"
+                  className="h-56 w-full rounded-2xl object-contain"
+                />
+              ) : (
+                <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1e6d8] text-[#b98a5c]">
+                    <UtensilsCrossed size={22} />
+                  </span>
+                  <p className="text-sm font-medium text-ink/50">
+                    尚未上傳照片
+                  </p>
+                  <p className="text-xs text-ink/35">
+                    點擊下方「拍照辨識食物」開始
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {variant === "uncertain" && (
             <div className="flex items-start gap-2 rounded-2xl bg-[#fff3e5] p-4 text-xs leading-5">

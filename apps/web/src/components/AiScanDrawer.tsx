@@ -240,7 +240,7 @@ export function AiScanDrawer() {
             disabled={limitReached || analyzing}
             className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
           >
-            重新上傳
+            拍照AI診斷
           </button>
           <button
             type="button"

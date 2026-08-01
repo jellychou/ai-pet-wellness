@@ -60,6 +60,8 @@ export function AiScanDrawer() {
 
   function handleBack() {
     setOpen(false);
+    setEarPhoto(null);
+    setResult(null);
     navigate("/");
   }
 
@@ -180,9 +182,7 @@ export function AiScanDrawer() {
                 <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
                   <Camera size={22} />
                 </span>
-                <p className="text-sm font-medium text-ink/50">
-                  尚未上傳照片
-                </p>
+                <p className="text-sm font-medium text-ink/50">尚未上傳照片</p>
                 <p className="text-xs text-ink/35">
                   點擊下方「拍照AI診斷」開始
                 </p>

@@ -174,7 +174,7 @@ export function AiScanDrawer() {
             <img
               src={earPhoto}
               alt="寵物拍照診斷照片"
-              className="h-56 w-full rounded-2xl object-cover"
+              className="h-56 w-full rounded-2xl object-contain"
             />
             {analyzing && (
               <div className="absolute inset-0 grid place-items-center rounded-2xl bg-black/40 text-sm font-medium text-white">

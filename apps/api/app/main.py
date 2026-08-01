@@ -5,7 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.routers import auth, health, user, pet, vaccine, report, timeline, ai_scan
+from app.routers import (
+    auth,
+    health,
+    user,
+    pet,
+    vaccine,
+    report,
+    timeline,
+    ai_scan,
+    food_scan,
+    food_record,
+)
 
 settings = get_settings()
 logger = logging.getLogger("uvicorn.error")
@@ -54,3 +65,5 @@ app.include_router(vaccine.router)
 app.include_router(report.router)
 app.include_router(timeline.router)
 app.include_router(ai_scan.router)
+app.include_router(food_scan.router)
+app.include_router(food_record.router)

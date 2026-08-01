@@ -4,5 +4,15 @@ from app.models.pet import Pet
 from app.models.vaccine import VaccineRecord
 from app.models.report import ReportRecord
 from app.models.ai_scan import AiScanLog
+from app.models.food_scan import FoodScanLog
+from app.models.food_record import FoodRecord
 
-__all__ = ["User", "Pet", "VaccineRecord", "ReportRecord", "AiScanLog"]
+__all__ = [
+    "User",
+    "Pet",
+    "VaccineRecord",
+    "ReportRecord",
+    "AiScanLog",
+    "FoodScanLog",
+    "FoodRecord",
+]

@@ -2,7 +2,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from openai import OpenAI, OpenAIError
+from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -90,10 +90,22 @@ def analyze_image(
                 },
             ],
         )
+    except RateLimitError as exc:
+        # 最常見原因不是真的「太多請求」，而是這組 API key 所屬帳號沒有可用額度
+        # （insufficient_quota）——新申請的 OpenAI 帳號即使 key 是對的，沒去
+        # platform.openai.com 加 billing / 加值，一樣打不動任何請求
+        logger.exception("OpenAI 額度不足或超過速率限制")
+        raise HTTPException(
+            status_code=502,
+            detail="OpenAI 帳號額度不足或已達速率限制，請至 "
+            "platform.openai.com 檢查帳單與額度設定",
+        ) from exc
     except OpenAIError as exc:
         logger.exception("OpenAI 圖片分析失敗")
+        # 把 OpenAI 回傳的錯誤原因一起帶出來方便排查（常見是 API key 無效、
+        # 或圖片網址抓不到）。OpenAI 的錯誤訊息本身不會外洩完整 API key。
         raise HTTPException(
-            status_code=502, detail="AI 分析失敗，請稍後再試"
+            status_code=502, detail=f"AI 分析失敗：{exc}"
         ) from exc
 
     raw = completion.choices[0].message.content

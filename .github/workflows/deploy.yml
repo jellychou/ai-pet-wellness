@@ -36,6 +36,8 @@ jobs:
           GITHUB_PAGES: "true"
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ vars.VITE_CLOUDINARY_CLOUD_NAME }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ vars.VITE_CLOUDINARY_UPLOAD_PRESET }}
 
       - name: SPA fallback (404.html) for client-side routing
         run: cp apps/web/dist/index.html apps/web/dist/404.html

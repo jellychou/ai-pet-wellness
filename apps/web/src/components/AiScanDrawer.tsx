@@ -1,24 +1,37 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { usePetStore } from "../store/usePetStore";
+import { apiFetch } from "../lib/api";
+import { uploadImageToCloudinary } from "../lib/cloudinary";
+import { useAlert } from "../hooks/useAlert";
 
 const defaultEarPhoto =
   "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=600&h=440&fit=crop";
 
-const results = [
-  ["80%", "耳道感染"],
-  ["15%", "正常耳垢"],
-  ["5%", "其他情況"],
-];
+type AiScanFinding = {
+  condition: string;
+  confidence: number;
+  description: string;
+};
+
+type AnalyzeImageResponse = {
+  summary: string;
+  findings: AiScanFinding[];
+  disclaimer: string;
+};
 
 export function AiScanDrawer() {
   const open = useAppStore((s) => s.aiScanOpen);
   const setOpen = useAppStore((s) => s.setAiScanOpen);
+  const selectedPet = usePetStore((s) => s.selectedPet);
+  const { showError } = useAlert();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [earPhoto, setEarPhoto] = useState(defaultEarPhoto);
   const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState<AnalyzeImageResponse | null>(null);
 
   function handleBack() {
     setOpen(false);
@@ -29,14 +42,40 @@ export function AiScanDrawer() {
     fileInputRef.current?.click();
   }
 
-  function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setEarPhoto(url);
-    setAnalyzing(true);
-    window.setTimeout(() => setAnalyzing(false), 900);
     e.target.value = "";
+    if (!file) return;
+    if (!selectedPet) {
+      showError("請先選擇寵物");
+      return;
+    }
+
+    // 先本地預覽，不用等上傳完成才看得到剛選的照片
+    const previewUrl = URL.createObjectURL(file);
+    setEarPhoto(previewUrl);
+    setResult(null);
+    setAnalyzing(true);
+    try {
+      const imageUrl = await uploadImageToCloudinary(file);
+      const response = await apiFetch<AnalyzeImageResponse>(
+        "/ai-scan/analyze-image",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            pet_id: selectedPet.id,
+            image_url: imageUrl,
+          }),
+        },
+      );
+      setResult(response);
+    } catch (error) {
+      showError(
+        error instanceof Error ? error.message : "AI 分析失敗，請稍後再試",
+      );
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
   return (
@@ -85,33 +124,51 @@ export function AiScanDrawer() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
-            <div className="text-xs text-ink/45">AI 判讀結果</div>
-            <div className="mt-3 space-y-3">
-              {results.map(([percent, label]) => (
-                <div key={label}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-ink/80">{label}</span>
-                    <span className="font-semibold text-ink">{percent}</span>
+          {result && (
+            <>
+              <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
+                <div className="text-xs text-ink/45">AI 判讀結果</div>
+                {result.summary && (
+                  <p className="mt-2 text-sm text-ink/80">{result.summary}</p>
+                )}
+                {result.findings.length > 0 ? (
+                  <div className="mt-3 space-y-3">
+                    {result.findings.map((finding) => (
+                      <div key={finding.condition}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-ink/80">
+                            {finding.condition}
+                          </span>
+                          <span className="font-semibold text-ink">
+                            {finding.confidence}%
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#eee5da]">
+                          <div
+                            className="h-full rounded-full bg-mist"
+                            style={{ width: `${finding.confidence}%` }}
+                          />
+                        </div>
+                        {finding.description && (
+                          <p className="mt-1 text-xs text-ink/50">
+                            {finding.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#eee5da]">
-                    <div
-                      className="h-full rounded-full bg-mist"
-                      style={{ width: percent }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ) : (
+                  <p className="mt-3 text-sm text-ink/60">
+                    沒有觀察到明顯異常。
+                  </p>
+                )}
+              </div>
 
-          <div className="rounded-2xl bg-[#fff3e5] p-4 text-xs leading-5">
-            <span className="font-semibold text-[#d9834f]">
-              ⚠ 本診斷僅供參考。
-            </span>
-            <br />
-            若持續惡化請尋求專業獸醫協助。
-          </div>
+              <div className="rounded-2xl bg-[#fff3e5] p-4 text-xs leading-5">
+                <span className="font-semibold text-[#d9834f]">⚠ {result.disclaimer}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

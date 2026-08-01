@@ -44,6 +44,13 @@ class Settings(BaseSettings):
     gmail_from_email: str = ""
     gmail_from_name: str = "Pet・Wellness"
 
+    # AI 拍照診斷用，去 https://platform.openai.com/api-keys 申請。沒設定的話
+    # /ai-scan/analyze-image 會回 500 並提示要補這個值，不會讓伺服器整個起不來
+    openai_api_key: str = ""
+    # gpt-4o-mini 有支援圖片輸入、價格便宜，適合這種初步推測用途；
+    # 想要更準的分析可以換成 gpt-4o
+    openai_model: str = "gpt-4o-mini"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

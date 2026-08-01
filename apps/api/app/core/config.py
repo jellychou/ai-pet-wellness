@@ -47,13 +47,12 @@ class Settings(BaseSettings):
     # AI 拍照診斷用，去 https://platform.openai.com/api-keys 申請。沒設定的話
     # /ai-scan/analyze-image 會回 500 並提示要補這個值，不會讓伺服器整個起不來
     openai_api_key: str = ""
-    # gpt-4o-mini 有支援圖片輸入、價格便宜，適合這種初步推測用途；
-    # 想要更準的分析可以換成 gpt-4o
-    openai_model: str = "gpt-4o-mini"
-    # 食物辨識份量/熱量估計對準確度比較敏感（使用者實測發現 mini 版估出來的
-    # 熱量常常比 ChatGPT 網頁版（用完整版模型）低將近一半），所以食物辨識
-    # 這支功能單獨用比較貴但比較準的 gpt-4o，症狀診斷（ai_scan）維持用
-    # openai_model（mini）不受影響——兩邊成本/準確度取捨不一樣，分開設定
+    # 症狀診斷（ai_scan）用的模型。原本用 gpt-4o-mini 省成本，後來食物辨識
+    # 實測發現 mini 版估出來的熱量常常比 ChatGPT 網頁版（用完整版模型）
+    # 低將近一半，判斷症狀圖片準確度應該也有類似落差，所以一併換成 gpt-4o
+    openai_model: str = "gpt-4o"
+    # 食物辨識（food_scan）用的模型，理由同上，換成 gpt-4o；保留獨立設定
+    # 是為了以後想個別調整（例如其中一支想換更便宜/更貴的模型）不用動到另一支
     openai_food_scan_model: str = "gpt-4o"
 
     @property

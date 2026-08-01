@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
-from pydantic import BaseModel
+
 
 if TYPE_CHECKING:
     from app.models.pet import Pet
@@ -75,6 +75,7 @@ class User(Base):
     active_pet_id: Mapped[int | None] = mapped_column(
         ForeignKey("pets.id", ondelete="SET NULL"), nullable=True
     )
+    permissions: Mapped[str] = mapped_column(String(255), nullable=False, default="user")
 
 
 

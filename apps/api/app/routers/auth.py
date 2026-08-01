@@ -95,6 +95,7 @@ def login_with_google(
             language='zh-TW',
             slogan=None,
             is_set_password=False,
+            permissions="user",
         )
         db.add(user)
     else:
@@ -131,6 +132,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         gender=payload.gender,
         language=payload.language,
         is_set_password=True,
+        permissions="user",
     )
     db.add(user)
     db.commit()

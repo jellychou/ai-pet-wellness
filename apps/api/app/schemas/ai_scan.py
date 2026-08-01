@@ -49,5 +49,6 @@ class AiScanHistoryItemOut(BaseModel):
     summary: str
     findings: list[AiScanFinding] | None = None
     created_at: datetime
+    suggestions: list[str] | None = None
 
     model_config = {"from_attributes": True}

@@ -161,6 +161,19 @@ export function PetsPage() {
     }
   };
 
+  useEffect(() => {
+    if (selectedPet) {
+      setRows(
+        petFieldDefs.map(({ label, key, format }) => ({
+          label,
+          value: format
+            ? format(selectedPet[key])
+            : String(selectedPet[key] ?? ""),
+        })),
+      );
+    }
+  }, [selectedPet]);
+
   return (
     <>
       <PetAvatarSwitcher

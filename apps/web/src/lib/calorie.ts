@@ -8,7 +8,13 @@ import type { Pet } from "../data/pets";
 // RER = 70 * 體重(kg)^0.75
 // MER = RER * 係數
 
-const PUPPY_OR_KITTEN_COEFFICIENT = 2.5; // 一歲以下，還在發育期
+const PUPPY_OR_KITTEN_COEFFICIENT = 2.5; // 半歲以下，還在快速發育期
+// 半歲到一歲之間，係數從 2.5 線性往成犬/成貓的係數靠攏（見 getBaseCoefficient）。
+// 沒有這段緩衝的話，滿 1 歲的前一天還是 2.5、滿 1 歲當天直接摔到 1.6/1.8，
+// 差距接近 1.5 倍，不管是真的快滿一歲的幼犬幼貓、還是生日資料剛好卡在
+// 邊界，都會算出一個誇張跳動的數字（之前 12kg、算成 1128 大卡的回報，
+// 換算回去剛好對到套了整段 2.5 沒有 taper 的結果）
+const GROWTH_TAPER_START_AGE = 0.5;
 const SENIOR_COEFFICIENT = 1.4; // 七歲以上，高齡代謝下降
 const NEUTERED_ADULT_COEFFICIENT = 1.6;
 const INTACT_ADULT_COEFFICIENT = 1.8;
@@ -26,15 +32,31 @@ function getAgeInYears(birthday: string): number | null {
   return ageMs / (1000 * 60 * 60 * 24 * 365.25);
 }
 
-function getBaseCoefficient(pet: Pet, ageInYears: number | null): number {
-  if (ageInYears !== null) {
-    if (ageInYears < 1) return PUPPY_OR_KITTEN_COEFFICIENT;
-    if (ageInYears >= 7) return SENIOR_COEFFICIENT;
-  }
-  // 沒有有效生日資料時，退回一般成年寵物的絕育/未絕育係數
+function getAdultCoefficient(pet: Pet): number {
   return pet.neutered === "1"
     ? NEUTERED_ADULT_COEFFICIENT
     : INTACT_ADULT_COEFFICIENT;
+}
+
+function getBaseCoefficient(pet: Pet, ageInYears: number | null): number {
+  // 沒有有效生日資料時，退回一般成年寵物的絕育/未絕育係數
+  if (ageInYears === null) return getAdultCoefficient(pet);
+
+  if (ageInYears >= 7) return SENIOR_COEFFICIENT;
+  if (ageInYears < GROWTH_TAPER_START_AGE) return PUPPY_OR_KITTEN_COEFFICIENT;
+
+  if (ageInYears < 1) {
+    // 半歲到一歲之間線性內插，見上面 GROWTH_TAPER_START_AGE 的說明
+    const adultCoefficient = getAdultCoefficient(pet);
+    const progress =
+      (ageInYears - GROWTH_TAPER_START_AGE) / (1 - GROWTH_TAPER_START_AGE);
+    return (
+      PUPPY_OR_KITTEN_COEFFICIENT -
+      (PUPPY_OR_KITTEN_COEFFICIENT - adultCoefficient) * progress
+    );
+  }
+
+  return getAdultCoefficient(pet);
 }
 
 // 算不出來（體重是 0 / 空）回傳 null，畫面上顯示 "--" 而不是硬算出一個

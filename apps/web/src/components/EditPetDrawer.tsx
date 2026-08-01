@@ -376,13 +376,10 @@ export function EditPetDrawer() {
             <Field label="生日" required>
               <div className="relative">
                 <input
+                  type="date"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
-                  className={`${inputClass} pr-9`}
-                />
-                <Calendar
-                  size={13}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
+                  className={`${inputClass} pr-9 [color-scheme:light]`}
                 />
               </div>
             </Field>

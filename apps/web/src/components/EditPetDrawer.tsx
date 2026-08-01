@@ -175,6 +175,24 @@ export function EditPetDrawer() {
   }
 
   async function handleSave() {
+    // 後端 UpdatePetRequest 的 birthday/weight 是嚴格的 date/float，空字串
+    // 或 NaN 送過去會被 Pydantic 擋成 422，且錯誤訊息對使用者來說完全看不懂
+    // 是哪個欄位有問題——送出前先在前端擋掉，訊息才會是使用者看得懂的中文
+    if (
+      !name.trim() ||
+      !breed.trim() ||
+      !gender ||
+      !birthday ||
+      !coatColor.trim()
+    ) {
+      showError("請完整填寫所有必填欄位");
+      return;
+    }
+    if (!weight || Number.isNaN(weight) || weight <= 0) {
+      showError("請輸入正確的體重");
+      return;
+    }
+
     try {
       await apiFetch<Pet>("/pet/update-pet", {
         method: "PUT",
@@ -388,7 +406,14 @@ export function EditPetDrawer() {
               <div className="relative">
                 <input
                   value={weight}
-                  onChange={(e) => setWeight(Number(e.target.value) ?? 0)}
+                  onChange={(e) => {
+                    // `??` 只擋 null/undefined，擋不住 NaN——輸入到一半是空字串
+                    // 或非數字時 Number(...) 會是 NaN，NaN ?? 0 還是 NaN，
+                    // 存進 state、送出時 JSON.stringify 會變成 null，後端
+                    // UpdatePetRequest.weight 是必填 float，null 就會 422
+                    const parsed = Number(e.target.value);
+                    setWeight(Number.isNaN(parsed) ? 0 : parsed);
+                  }}
                   inputMode="decimal"
                   className={`${inputClass} pr-9`}
                 />

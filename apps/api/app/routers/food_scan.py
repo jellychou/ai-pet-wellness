@@ -236,7 +236,7 @@ def analyze_food(
 
     try:
         completion = client.chat.completions.create(
-            model=settings.openai_model,
+            model=settings.openai_food_scan_model,
             response_format={"type": "json_object"},
             # 逐項分解後回應變大很多（最多 8 個品項，每項好幾個欄位），
             # 500 tokens 的舊上限會把 items 陣列截斷成壞掉的 JSON

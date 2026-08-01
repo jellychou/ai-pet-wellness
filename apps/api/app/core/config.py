@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     # gpt-4o-mini 有支援圖片輸入、價格便宜，適合這種初步推測用途；
     # 想要更準的分析可以換成 gpt-4o
     openai_model: str = "gpt-4o-mini"
+    # 食物辨識份量/熱量估計對準確度比較敏感（使用者實測發現 mini 版估出來的
+    # 熱量常常比 ChatGPT 網頁版（用完整版模型）低將近一半），所以食物辨識
+    # 這支功能單獨用比較貴但比較準的 gpt-4o，症狀診斷（ai_scan）維持用
+    # openai_model（mini）不受影響——兩邊成本/準確度取捨不一樣，分開設定
+    openai_food_scan_model: str = "gpt-4o"
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 
@@ -31,7 +32,15 @@ function formatDateTime(iso: string) {
 export function AiScanHistoryPage() {
   const selectedPet = usePetStore((s) => s.selectedPet);
   const navigate = useNavigate();
+  const setAiScanOpen = useAppStore((s) => s.setAiScanOpen);
   const [items, setItems] = useState<AiScanHistoryItem[]>([]);
+
+  // AiScanDrawer 不是路由頁面，是疊在畫面上的 drawer，「返回」要做的是
+  // 回首頁 + 重新打開那個 drawer，不是導去一個不存在的 /ai-scan 路由
+  function handleBack() {
+    setAiScanOpen(true);
+    navigate("/");
+  }
 
   useEffect(() => {
     const petId = selectedPet?.id;
@@ -48,7 +57,7 @@ export function AiScanHistoryPage() {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => navigate("/ai-scan")}
+          onClick={handleBack}
           aria-label="返回 AI 拍照診斷室"
           className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
         >

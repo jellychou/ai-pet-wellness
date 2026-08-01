@@ -10,7 +10,6 @@ import {
   Syringe,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePetStore } from "../store/usePetStore";
@@ -168,9 +167,9 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const setAddFoodOpen = useAppStore((s) => s.setAddFoodOpen);
   const setAddVaccineOpen = useAppStore((s) => s.setAddVaccineOpen);
+  const setAiScanOpen = useAppStore((s) => s.setAiScanOpen);
   const setEditHealthOpen = useAppStore((s) => s.setEditHealthOpen);
   const userInfo = useAuthStore((s) => s.userInfo);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -280,7 +279,7 @@ export function DashboardPage() {
                   onClick={() => {
                     if (x === "新增飲食") setAddFoodOpen(true);
                     if (x === "疫苗記錄") setAddVaccineOpen(true);
-                    if (x === "AI 拍照診斷") navigate("/ai-scan");
+                    if (x === "AI 拍照診斷") setAiScanOpen(true);
                     if (x === "健康檢查") setEditHealthOpen(true);
                   }}
                   className="soft-card p-2 text-center hover:-translate-y-0.5"

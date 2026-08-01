@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
 from app.db.session import get_db
+from app.models.ai_scan import AiScanLog
 from app.models.pet import Pet
 from app.models.report import ReportRecord
 from app.models.user import User
@@ -86,6 +87,25 @@ def get_timeline(
                 date=r.report_date,
                 title=_REPORT_TYPE_LABELS.get(r.report_type, "健康檢查紀錄"),
                 summary=r.report_result,
+            )
+        )
+
+    # 跟 vaccine/report 不一樣：不是每筆 AI 診斷紀錄都自動進時間軸，只挑
+    # 使用者按過「加入健康時間軸」的（見 app/routers/ai_scan.py 的
+    # add_to_timeline）——隨手拍的照片不一定值得留在時間軸上
+    ai_scan_logs = (
+        db.query(AiScanLog)
+        .filter(AiScanLog.pet_id == pet_id, AiScanLog.added_to_timeline.is_(True))
+        .all()
+    )
+    for a in ai_scan_logs:
+        items.append(
+            TimelineItemOut(
+                type="ai_scan",
+                id=a.id,
+                date=a.created_at.date(),
+                title=f"AI 影像分析：{a.body_part}" if a.body_part else "AI 影像分析",
+                summary=a.summary,
             )
         )
 

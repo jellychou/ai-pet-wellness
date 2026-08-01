@@ -9,6 +9,11 @@ from pydantic import BaseModel
 class AnalyzeImageRequest(BaseModel):
     pet_id: int
     image_url: str
+    # 使用者指定要分析的部位跟補充說明，都選填——router 會把有填的部分
+    # 加進送給 OpenAI 的訊息裡，讓分析更聚焦（例如指定「腳掌」就不會分析
+    # 整隻寵物全身）
+    body_part: str | None = None
+    description: str | None = None
 
 
 class AiScanFinding(BaseModel):
@@ -30,6 +35,10 @@ class AiScanUsageOut(BaseModel):
 
 
 class AnalyzeImageResponse(BaseModel):
+    # 這次分析在 ai_scan_logs 裡的 id——「加入健康時間軸」要靠這個 id
+    # 呼叫 /ai-scan/{id}/add-to-timeline，前端不用另外再打一次 API 才拿得到
+    id: int
+    body_part: str | None = None
     summary: str
     findings: list[AiScanFinding]
     # 具體可執行的建議/注意事項，最多 3 條——跟 food_scan 的 suggestions
@@ -49,9 +58,18 @@ class AiScanHistoryItemOut(BaseModel):
     id: int
     pet_id: int
     image_url: str
+    body_part: str | None = None
     summary: str
     findings: list[AiScanFinding] | None = None
     created_at: datetime
     suggestions: list[str] | None = None
+    added_to_timeline: bool = False
 
     model_config = {"from_attributes": True}
+
+
+# POST /ai-scan/{id}/add-to-timeline 沒有 request body，pet_id 從路徑上的
+# scan id 反查（同時做擁有權檢查），回傳更新後的狀態讓前端能直接切換按鈕文字
+class AddToTimelineResponse(BaseModel):
+    id: int
+    added_to_timeline: bool

@@ -46,6 +46,16 @@ export type FoodScanResult = {
   disclaimer: string;
 };
 
+// 從 AiScanDrawer 帶去 AICenterPage（AI 心靈導師）的分析結果摘要，讓那頁
+// 一開始就能顯示「已引用今日影像分析」——目前 AICenterPage 還是純前端假
+// 資料（罐頭回覆），這裡只是把 context 遞過去顯示，還沒接真的後端對話
+export type AiScanReferenceForMentor = {
+  summary: string;
+  bodyPart: string | null;
+  suggestions: string[];
+  imageUrl: string;
+};
+
 type AppState = {
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
@@ -90,6 +100,11 @@ type AppState = {
   // EditHealthDrawer 上面是同一個模式，各自獨立開關
   aiScanHistoryOpen: boolean;
   setAiScanHistoryOpen: (v: boolean) => void;
+  // AiScanDrawer 按「詢問 AI 心靈導師」時把這次分析結果存進來，帶去 /ai
+  // 頁面顯示「已引用今日影像分析」——AICenterPage 讀到之後就會清掉，
+  // 只消費一次，不是永久跟著使用者的全域狀態
+  aiScanReferenceForMentor: AiScanReferenceForMentor | null;
+  setAiScanReferenceForMentor: (v: AiScanReferenceForMentor | null) => void;
   editHealthOpen: boolean;
   setEditHealthOpen: (v: boolean) => void;
   // 存整筆紀錄，不是只存 id——後端沒有「用 record id 查單筆健康檢查紀錄」的
@@ -149,6 +164,9 @@ export const useAppStore = create<AppState>((set) => ({
   setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
   aiScanHistoryOpen: false,
   setAiScanHistoryOpen: (aiScanHistoryOpen) => set({ aiScanHistoryOpen }),
+  aiScanReferenceForMentor: null,
+  setAiScanReferenceForMentor: (aiScanReferenceForMentor) =>
+    set({ aiScanReferenceForMentor }),
   editHealthOpen: false,
   setEditHealthOpen: (editHealthOpen) => set({ editHealthOpen }),
   healthDetailRecord: null,

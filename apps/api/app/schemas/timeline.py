@@ -3,9 +3,11 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-# 目前只有疫苗紀錄跟健康檢查紀錄是真的有後端資料，飲食/心情/AI 診斷等
-# 之後有真的資料表了，再把對應的 type 加進來、query 裡一併撈就好
-TimelineItemType = Literal["vaccine", "report"]
+# 飲食/心情之後有真的資料表了，再把對應的 type 加進來、query 裡一併撈就好。
+# ai_scan 現在已經有資料表了（ai_scan_logs），但不是每筆分析都自動算一筆
+# 時間軸事件——只有使用者按過「加入健康時間軸」（added_to_timeline=True）
+# 的才會被 timeline.py 撈進來，這點跟 vaccine/report 無條件全撈不一樣
+TimelineItemType = Literal["vaccine", "report", "ai_scan"]
 
 
 # 時間軸上的一筆項目——把不同來源的資料表（vaccine_records / report_records）

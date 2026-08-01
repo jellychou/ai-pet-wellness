@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { Image as ImageIcon, Send } from "lucide-react";
+import { useAppStore } from "../store/useAppStore";
 
 const petAvatar =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop";
@@ -36,21 +37,52 @@ function now() {
 
 let nextId = 100;
 
+const DEFAULT_MESSAGES: Message[] = [
+  {
+    id: 1,
+    from: "user",
+    text: "Coco，我家狗狗最近常常在晚上叫，看起來有點焦躁，該怎麼辦？",
+    time: "09:42",
+  },
+  {
+    id: 2,
+    from: "ai",
+    text: "謝謝你願意觀察並在意牠的情緒 🐾\n晚上叫可能是因為…\n1. 環境變化或不安全感\n2. 精力沒被消耗完\n3. 分離焦慮或想引起注意\n\n你可以先試試這些方法：\n・晚上散步或增加活動量\n・提供安靜、舒適的睡覺環境\n・睡前進行放鬆儀式（如輕柔按摩）\n\n你覺得哪一個方法最適合你們呢？我可以陪你一起試試看 🧡",
+    time: "09:44",
+  },
+];
+
 export function AICenterPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      from: "user",
-      text: "Coco，我家狗狗最近常常在晚上叫，看起來有點焦躁，該怎麼辦？",
-      time: "09:42",
-    },
-    {
-      id: 2,
-      from: "ai",
-      text: "謝謝你願意觀察並在意牠的情緒 🐾\n晚上叫可能是因為…\n1. 環境變化或不安全感\n2. 精力沒被消耗完\n3. 分離焦慮或想引起注意\n\n你可以先試試這些方法：\n・晚上散步或增加活動量\n・提供安靜、舒適的睡覺環境\n・睡前進行放鬆儀式（如輕柔按摩）\n\n你覺得哪一個方法最適合你們呢？我可以陪你一起試試看 🧡",
-      time: "09:44",
-    },
-  ]);
+  // AiScanDrawer 按「詢問 AI 心靈導師」時會把這次分析結果存進來——這裡還是
+  // 純前端假資料的聊天室（沒有真的後端對話），只是把這段 context 拿來組成
+  // 開場白，讓使用者感覺得到「有把剛剛的分析結果帶過來」。只消費一次：
+  // 讀到之後就從 store 清掉，重新整理/再逛回這頁不會一直重複帶入舊資料
+  const aiScanReference = useAppStore((s) => s.aiScanReferenceForMentor);
+  const setAiScanReferenceForMentor = useAppStore(
+    (s) => s.setAiScanReferenceForMentor,
+  );
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (!aiScanReference) return DEFAULT_MESSAGES;
+    const parts = [
+      "已引用今日影像分析 🐾",
+      aiScanReference.bodyPart
+        ? `部位：${aiScanReference.bodyPart}`
+        : null,
+      aiScanReference.summary,
+      aiScanReference.suggestions.length > 0
+        ? `目前的建議：\n${aiScanReference.suggestions.map((s) => `・${s}`).join("\n")}`
+        : null,
+      "想多聊聊這件事，或是有其他觀察到的行為/情緒變化，都可以直接跟我說喔！",
+    ].filter((p): p is string => Boolean(p));
+    return [
+      {
+        id: 1,
+        from: "ai",
+        text: parts.join("\n\n"),
+        time: now(),
+      },
+    ];
+  });
   const [input, setInput] = useState("");
   const [aiTyping, setAiTyping] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +91,14 @@ export function AICenterPage() {
   useEffect(() => {
     listEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, aiTyping]);
+
+  // 只消費一次：畫面顯示完就把 store 裡的 reference 清掉
+  useEffect(() => {
+    if (aiScanReference) {
+      setAiScanReferenceForMentor(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function replyFromAi() {
     setAiTyping(true);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarCheck } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
@@ -14,10 +14,12 @@ type AiScanHistoryItem = {
   id: number;
   pet_id: number;
   image_url: string;
+  body_part: string | null;
   summary: string;
   findings: AiScanFinding[] | null;
   suggestions: string[] | null;
   created_at: string;
+  added_to_timeline: boolean;
 };
 
 function formatDateTime(iso: string) {
@@ -88,8 +90,19 @@ export function AiScanHistoryDrawer() {
                     className="h-20 w-20 shrink-0 rounded-xl object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs text-ink/40">
+                    <div className="flex items-center gap-1.5 text-xs text-ink/40">
                       {formatDateTime(item.created_at)}
+                      {item.body_part && (
+                        <span className="rounded-full bg-[#f1e6d8] px-1.5 py-0.5 text-[10px] font-medium text-[#b98a5c]">
+                          {item.body_part}
+                        </span>
+                      )}
+                      {item.added_to_timeline && (
+                        <span className="flex items-center gap-0.5 text-[10px] text-[#3fa88f]">
+                          <CalendarCheck size={10} />
+                          已加入時間軸
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-ink/80">{item.summary}</p>
                     {item.findings && item.findings.length > 0 && (

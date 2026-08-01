@@ -13,6 +13,7 @@ from app.models.ai_scan import AiScanLog
 from app.models.pet import Pet
 from app.models.user import User
 from app.schemas.ai_scan import (
+    AddToTimelineResponse,
     AiScanFinding,
     AiScanHistoryItemOut,
     AiScanUsageOut,
@@ -159,6 +160,17 @@ def analyze_image(
 
     client = OpenAI(api_key=settings.openai_api_key)
 
+    # 使用者選了部位/填了補充說明的話，一起附進送給 AI 的文字裡，讓分析更
+    # 聚焦（例如指定「腳掌」，AI 就不會把整張照片其他地方的雜訊也當成觀察
+    # 對象）。兩個都是選填，都沒填就維持原本單純「請分析這張寵物照片」的文字
+    body_part = (payload.body_part or "").strip()
+    description = (payload.description or "").strip()
+    prompt_text = "請分析這張寵物照片。"
+    if body_part:
+        prompt_text += f" 使用者指定要分析的部位：{body_part}。"
+    if description:
+        prompt_text += f" 使用者補充說明：{description}"
+
     try:
         completion = client.chat.completions.create(
             model=settings.openai_model,
@@ -174,7 +186,7 @@ def analyze_image(
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "請分析這張寵物照片。"},
+                        {"type": "text", "text": prompt_text},
                         {
                             "type": "image_url",
                             "image_url": {"url": payload.image_url},
@@ -230,22 +242,61 @@ def analyze_image(
     # 分析成功才算一次額度、也才存進紀錄——OpenAI 報錯、JSON parse 失敗這些
     # 情況都在上面提早 raise 掉了，不會走到這裡，使用者不會因為失敗的請求
     # 被扣次數、也不會留下一筆沒有內容的紀錄
-    db.add(
-        AiScanLog(
-            user_id=current_user.id,
-            pet_id=payload.pet_id,
-            image_url=payload.image_url,
-            summary=str(parsed.get("summary", "")),
-            findings=[f.model_dump() for f in findings],
-            suggestions=suggestions,
-        )
+    log = AiScanLog(
+        user_id=current_user.id,
+        pet_id=payload.pet_id,
+        image_url=payload.image_url,
+        body_part=body_part or None,
+        user_note=description or None,
+        summary=str(parsed.get("summary", "")),
+        findings=[f.model_dump() for f in findings],
+        suggestions=suggestions,
+        # 明確傳 False，不要只靠 server_default——跟 food_scan.py 的
+        # is_safe/food_detected 是同樣的做法。server_default 只是給既有
+        # 資料/未來手動 insert 的保底值，程式碼路徑上該明確給值就不要偷懶
+        added_to_timeline=False,
     )
+    db.add(log)
     db.commit()
+    db.refresh(log)
 
     return AnalyzeImageResponse(
+        id=log.id,
+        body_part=log.body_part,
         summary=str(parsed.get("summary", "")),
         findings=findings,
         suggestions=suggestions,
         disclaimer=DISCLAIMER,
         usage=_build_usage(db, current_user),
     )
+
+
+# 「加入健康時間軸」——不是每次分析都自動變成時間軸事件，使用者按了才算數。
+# 沒有 request body：只認路徑上的 scan id，pet_id 從這筆紀錄反查，同時當作
+# 擁有權檢查（跟 _get_owned_pet 一樣的防線，只是反過來從 log 找 pet）。
+# 用 PUT 不用 POST 是因為這是「把某個資源的狀態改成 true」的語意，且重複呼叫
+# 結果一樣（idempotent），已經加過的話直接回傳現況，不當成錯誤
+@router.put(
+    "/{scan_id}/add-to-timeline",
+    response_model=AddToTimelineResponse,
+    status_code=status.HTTP_200_OK,
+)
+def add_to_timeline(
+    scan_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    log = (
+        db.query(AiScanLog)
+        .filter(AiScanLog.id == scan_id, AiScanLog.user_id == current_user.id)
+        .first()
+    )
+    if log is None:
+        raise HTTPException(status_code=404, detail="找不到這筆分析紀錄")
+
+    if not log.added_to_timeline:
+        log.added_to_timeline = True
+        db.commit()
+        db.refresh(log)
+
+    return AddToTimelineResponse(id=log.id, added_to_timeline=log.added_to_timeline)

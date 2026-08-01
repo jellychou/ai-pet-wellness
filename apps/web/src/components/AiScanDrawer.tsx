@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft, Bot, Camera, Check, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  Bot,
+  CalendarPlus,
+  Camera,
+  Check,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
@@ -17,6 +25,20 @@ type AiScanFinding = {
 // 是一次 API call 打完，不是真的分這幾步驟執行，純粹讓等待感覺有在動
 const LOADING_STEPS = ["辨識症狀特徵", "比對可能狀況", "評估緊急程度", "生成建議"];
 
+// 上傳照片時可以指定要分析的部位，單選——選了會附進送給 AI 的 prompt裡，
+// 讓分析更聚焦。純前端定義的選項清單，後端 body_part 欄位是自由文字，
+// 不是綁死的 enum，之後要加選項只要改這裡就好，不用動後端
+const BODY_PART_OPTIONS = [
+  "皮膚",
+  "耳朵",
+  "眼睛",
+  "牙齒",
+  "腳掌",
+  "排泄物",
+  "嘔吐物",
+  "其他",
+];
+
 type AiScanUsage = {
   used: number;
   limit: number;
@@ -24,6 +46,8 @@ type AiScanUsage = {
 };
 
 type AnalyzeImageResponse = {
+  id: number;
+  body_part: string | null;
   summary: string;
   findings: AiScanFinding[];
   suggestions: string[];
@@ -35,6 +59,9 @@ export function AiScanDrawer() {
   const open = useAppStore((s) => s.aiScanOpen);
   const setOpen = useAppStore((s) => s.setAiScanOpen);
   const setHistoryOpen = useAppStore((s) => s.setAiScanHistoryOpen);
+  const setAiScanReferenceForMentor = useAppStore(
+    (s) => s.setAiScanReferenceForMentor,
+  );
   const selectedPet = usePetStore((s) => s.selectedPet);
   const { showError } = useAlert();
   const navigate = useNavigate();
@@ -42,11 +69,20 @@ export function AiScanDrawer() {
   // 一開始不放真實照片，改用下面的圖示佔位——之前放的是網路上抓的示意照，
   // 使用者常常會誤以為那就是「已經上傳的照片」
   const [earPhoto, setEarPhoto] = useState<string | null>(null);
+  // 選好照片先不急著上傳分析，等使用者選完部位/填完補充說明按「開始分析」
+  // 才真的打 API——原本是選完照片就立刻自動分析，沒有機會讓使用者先講清楚
+  // 是哪個部位、發生什麼狀況
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [bodyPart, setBodyPart] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   // 跟 AddFoodDrawer 同樣的道理：純粹照時間軸假裝逐步完成，不代表後端真的
   // 在做這幾個獨立步驟
   const [loadingStep, setLoadingStep] = useState(0);
   const [result, setResult] = useState<AnalyzeImageResponse | null>(null);
+  // 「加入健康時間軸」按下去之後的本地確認狀態，純 UI 用——避免同一筆
+  // 重複打 API（雖然後端本來就 idempotent），也讓按鈕能顯示「已加入」
+  const [addedToTimeline, setAddedToTimeline] = useState(false);
   const [usage, setUsage] = useState<AiScanUsage | null>(null);
 
   // 一打開就先問今天用了幾次，這樣按「重新上傳」之前就能看到標語、
@@ -81,9 +117,17 @@ export function AiScanDrawer() {
 
   function handleBack() {
     setOpen(false);
-    setEarPhoto(null);
-    setResult(null);
+    resetAll();
     navigate("/");
+  }
+
+  function resetAll() {
+    setEarPhoto(null);
+    setSelectedFile(null);
+    setBodyPart(null);
+    setDescription("");
+    setResult(null);
+    setAddedToTimeline(false);
   }
 
   function handleReupload() {
@@ -102,7 +146,9 @@ export function AiScanDrawer() {
     setHistoryOpen(true);
   }
 
-  async function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {
+  // 選完照片先只做本地預覽 + 記住 File，不立刻上傳分析——讓使用者有機會
+  // 先選部位、填補充說明，按「開始分析」才真的打 API（見 handleStartAnalysis）
+  function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -110,14 +156,17 @@ export function AiScanDrawer() {
       showError("請先選擇寵物");
       return;
     }
-
-    // 先本地預覽，不用等上傳完成才看得到剛選的照片
+    resetAll();
     const previewUrl = URL.createObjectURL(file);
     setEarPhoto(previewUrl);
-    setResult(null);
+    setSelectedFile(file);
+  }
+
+  async function handleStartAnalysis() {
+    if (!selectedFile || !selectedPet) return;
     setAnalyzing(true);
     try {
-      const imageUrl = await uploadImageToCloudinary(file);
+      const imageUrl = await uploadImageToCloudinary(selectedFile);
       const response = await apiFetch<AnalyzeImageResponse>(
         "/ai-scan/analyze-image",
         {
@@ -125,6 +174,8 @@ export function AiScanDrawer() {
           body: JSON.stringify({
             pet_id: selectedPet.id,
             image_url: imageUrl,
+            body_part: bodyPart,
+            description: description.trim() || null,
           }),
         },
       );
@@ -142,6 +193,34 @@ export function AiScanDrawer() {
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  async function handleAddToTimeline() {
+    if (!result || addedToTimeline) return;
+    try {
+      await apiFetch(`/ai-scan/${result.id}/add-to-timeline`, {
+        method: "PUT",
+      });
+      setAddedToTimeline(true);
+    } catch (error) {
+      showError(
+        error instanceof Error ? error.message : "加入時間軸失敗，請稍後再試",
+      );
+    }
+  }
+
+  // 目前 AI 心靈導師（AICenterPage）還是純前端假資料，這裡只把這次分析的
+  // 摘要存進 store 帶過去顯示「已引用今日影像分析」，不是真的串接對話後端
+  function handleAskMentor() {
+    if (!result) return;
+    setAiScanReferenceForMentor({
+      summary: result.summary,
+      bodyPart: result.body_part,
+      suggestions: result.suggestions,
+      imageUrl: earPhoto ?? "",
+    });
+    setOpen(false);
+    navigate("/ai");
   }
 
   return (
@@ -253,6 +332,50 @@ export function AiScanDrawer() {
             </div>
           )}
 
+          {/* 選好照片、還沒送出分析——讓使用者先指定部位/補充說明，
+              按下面「開始分析」才真的打 API */}
+          {earPhoto && !result && !analyzing && (
+            <div className="space-y-3 rounded-2xl border border-[#eee5da] bg-[#fffdfa] p-4">
+              <div>
+                <div className="text-xs font-medium text-ink/50">
+                  請選擇要分析的部位（選填）
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {BODY_PART_OPTIONS.map((part) => (
+                    <button
+                      key={part}
+                      type="button"
+                      onClick={() =>
+                        setBodyPart((current) =>
+                          current === part ? null : part,
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                        bodyPart === part
+                          ? "border-mist bg-mist text-white"
+                          : "border-[#eee5da] bg-white text-ink/60 hover:bg-[#f7f2ea]"
+                      }`}
+                    >
+                      {part}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium text-ink/50">
+                  補充說明（選填）
+                </div>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={2}
+                  placeholder="例如：最近一直舔腳，皮膚有點紅腫…"
+                  className="mt-2 w-full resize-none rounded-xl border border-[#eee5da] bg-white px-3 py-2 text-sm outline-none placeholder:text-ink/30"
+                />
+              </div>
+            </div>
+          )}
+
           {result && (
             <>
               <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
@@ -315,6 +438,35 @@ export function AiScanDrawer() {
                   ⚠ {result.disclaimer}
                 </span>
               </div>
+
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handleAddToTimeline}
+                  disabled={addedToTimeline}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:bg-[#3fa88f] disabled:shadow-none"
+                >
+                  {addedToTimeline ? (
+                    <>
+                      <Check size={16} strokeWidth={3} />
+                      已加入健康時間軸
+                    </>
+                  ) : (
+                    <>
+                      <CalendarPlus size={16} />
+                      加入健康時間軸
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAskMentor}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10"
+                >
+                  <Sparkles size={16} />
+                  詢問 AI 心靈導師
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -322,21 +474,44 @@ export function AiScanDrawer() {
 
       <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
         <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={handleReupload}
-            disabled={limitReached || analyzing}
-            className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-          >
-            拍照AI診斷
-          </button>
-          <button
-            type="button"
-            onClick={handleViewHistory}
-            className="rounded-2xl bg-mist py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(120,150,166,.35)] transition hover:opacity-90"
-          >
-            檢視記錄
-          </button>
+          {earPhoto && !result ? (
+            <>
+              <button
+                type="button"
+                onClick={handleReupload}
+                disabled={limitReached || analyzing}
+                className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                重新選擇照片
+              </button>
+              <button
+                type="button"
+                onClick={handleStartAnalysis}
+                disabled={limitReached || analyzing}
+                className="rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              >
+                開始分析
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleReupload}
+                disabled={limitReached || analyzing}
+                className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                拍照AI診斷
+              </button>
+              <button
+                type="button"
+                onClick={handleViewHistory}
+                className="rounded-2xl bg-mist py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(120,150,166,.35)] transition hover:opacity-90"
+              >
+                檢視記錄
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

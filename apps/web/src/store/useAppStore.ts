@@ -21,6 +21,10 @@ type AppState = {
   bumpVaccineRefreshKey: () => void;
   aiScanOpen: boolean;
   setAiScanOpen: (v: boolean) => void;
+  // 疊在 AiScanDrawer 上面的第二層 drawer，跟 HealthDetailDrawer 疊在
+  // EditHealthDrawer 上面是同一個模式，各自獨立開關
+  aiScanHistoryOpen: boolean;
+  setAiScanHistoryOpen: (v: boolean) => void;
   editHealthOpen: boolean;
   setEditHealthOpen: (v: boolean) => void;
   // 存整筆紀錄，不是只存 id——後端沒有「用 record id 查單筆健康檢查紀錄」的
@@ -65,6 +69,8 @@ export const useAppStore = create<AppState>((set) => ({
     set((s) => ({ vaccineRefreshKey: s.vaccineRefreshKey + 1 })),
   aiScanOpen: false,
   setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
+  aiScanHistoryOpen: false,
+  setAiScanHistoryOpen: (aiScanHistoryOpen) => set({ aiScanHistoryOpen }),
   editHealthOpen: false,
   setEditHealthOpen: (editHealthOpen) => set({ editHealthOpen }),
   healthDetailRecord: null,

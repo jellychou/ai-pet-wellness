@@ -7,6 +7,7 @@ import { AddVaccineDrawer } from "../components/AddVaccineDrawer";
 import { AddVaccineFormDrawer } from "../components/AddVaccineFormDrawer";
 import { AddPendingVaccineDrawer } from "../components/AddPendingVaccineDrawer";
 import { AiScanDrawer } from "../components/AiScanDrawer";
+import { AiScanHistoryDrawer } from "../components/AiScanHistoryDrawer";
 import { EditHealthDrawer } from "../components/EditHealthDrawer";
 import { HealthDetailDrawer } from "../components/HealthDetailDrawer";
 import { EditPetDrawer } from "../components/EditPetDrawer";
@@ -26,7 +27,6 @@ const pageTitleKeys: Record<string, string> = {
   "/stats": "stats",
   "/settings": "settings",
   "/records": "records",
-  "/ai-scan/history": "aiScan",
 };
 
 export function AppLayout() {
@@ -53,6 +53,7 @@ export function AppLayout() {
       <AddVaccineFormDrawer />
       <AddPendingVaccineDrawer />
       <AiScanDrawer />
+      <AiScanHistoryDrawer />
       <EditHealthDrawer />
       <HealthDetailDrawer />
       <EditPetDrawer />

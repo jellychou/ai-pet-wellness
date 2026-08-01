@@ -31,6 +31,7 @@ type AnalyzeImageResponse = {
 export function AiScanDrawer() {
   const open = useAppStore((s) => s.aiScanOpen);
   const setOpen = useAppStore((s) => s.setAiScanOpen);
+  const setHistoryOpen = useAppStore((s) => s.setAiScanHistoryOpen);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const { showError } = useAlert();
   const navigate = useNavigate();
@@ -70,8 +71,9 @@ export function AiScanDrawer() {
   }
 
   function handleViewHistory() {
-    setOpen(false);
-    navigate("/ai-scan/history");
+    // 疊在這個 drawer 上面開第二層，跟 HealthDetailDrawer 疊在
+    // EditHealthDrawer 上面同一個模式，不用把自己關掉、也不用換路由
+    setHistoryOpen(true);
   }
 
   async function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {

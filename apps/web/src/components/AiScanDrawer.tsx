@@ -7,6 +7,7 @@ import {
   Check,
   Search,
   Sparkles,
+  Clock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
@@ -23,7 +24,12 @@ type AiScanFinding = {
 
 // 分析 loading 畫面用的假進度清單，跟 AddFoodDrawer 同一套做法——實際分析
 // 是一次 API call 打完，不是真的分這幾步驟執行，純粹讓等待感覺有在動
-const LOADING_STEPS = ["辨識症狀特徵", "比對可能狀況", "評估緊急程度", "生成建議"];
+const LOADING_STEPS = [
+  "辨識症狀特徵",
+  "比對可能狀況",
+  "評估緊急程度",
+  "生成建議",
+];
 
 // 上傳照片時可以指定要分析的部位，單選——選了會附進送給 AI 的 prompt裡，
 // 讓分析更聚焦。純前端定義的選項清單，後端 body_part 欄位是自由文字，
@@ -246,7 +252,14 @@ export function AiScanDrawer() {
             <h1 className="text-base font-semibold text-ink">
               AI 拍照診斷室 / AI Diagnosis
             </h1>
-            <span className="w-9" />
+            <button
+              type="button"
+              onClick={handleViewHistory}
+              aria-label="檢視辨識記錄"
+              className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
+            >
+              <Clock size={19} />
+            </button>
           </div>
 
           {usage && (
@@ -421,10 +434,7 @@ export function AiScanDrawer() {
                   <div className="text-xs text-ink/45">建議</div>
                   <ul className="mt-2 space-y-1.5">
                     {result.suggestions.map((suggestion, i) => (
-                      <li
-                        key={i}
-                        className="flex gap-1.5 text-sm text-ink/70"
-                      >
+                      <li key={i} className="flex gap-1.5 text-sm text-ink/70">
                         <span className="text-mist">•</span>
                         {suggestion}
                       </li>
@@ -472,48 +482,41 @@ export function AiScanDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
-        <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
-          {earPhoto && !result ? (
-            <>
+      {!result && (
+        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+          <div className="mx-auto grid max-w-md  gap-3">
+            {earPhoto && !result ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleReupload}
+                  disabled={limitReached || analyzing}
+                  className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  重新選擇照片
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartAnalysis}
+                  disabled={limitReached || analyzing}
+                  className="rounded-2xl bg-[#] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                >
+                  開始分析
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
                 onClick={handleReupload}
                 disabled={limitReached || analyzing}
-                className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-              >
-                重新選擇照片
-              </button>
-              <button
-                type="button"
-                onClick={handleStartAnalysis}
-                disabled={limitReached || analyzing}
-                className="rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-              >
-                開始分析
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={handleReupload}
-                disabled={limitReached || analyzing}
-                className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                className="w-full rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 拍照AI診斷
               </button>
-              <button
-                type="button"
-                onClick={handleViewHistory}
-                className="rounded-2xl bg-mist py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(120,150,166,.35)] transition hover:opacity-90"
-              >
-                檢視記錄
-              </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

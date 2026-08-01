@@ -13,6 +13,7 @@ type FoodScanHistoryItem = {
   food_detected: boolean;
   food_name: string;
   confidence: number;
+  estimated_grams: number;
   calories: number;
   protein: number;
   fat: number;
@@ -102,7 +103,7 @@ export function FoodScanHistoryDrawer() {
                             {item.food_name}
                           </p>
                           <span className="flex items-center gap-1 text-[11px] text-ink/40">
-                            {item.calories} kcal/100g
+                            約 {item.estimated_grams}g / {item.calories} kcal
                           </span>
                         </div>
                         <div className="mt-1 flex items-center gap-2">

@@ -209,6 +209,7 @@ export function AddPetPage() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
                 aria-label="更換頭像"
                 className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85]"
               >

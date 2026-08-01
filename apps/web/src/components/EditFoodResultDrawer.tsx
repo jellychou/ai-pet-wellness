@@ -83,9 +83,11 @@ const inputClass =
 // 疊在 AddFoodDrawer 上面的第二層 drawer，跟 AiScanHistoryDrawer/AddFoodDrawer
 // 是同一個模式。這裡是純本地修正：food_category / cooking_method 兩個欄位
 // 後端 food_scan_logs 表沒有對應欄位，純粹給使用者自己標注，不會送到後端；
-// 真正會影響後續流程（加入飲食記錄時算總熱量）的只有 food_name 跟 calories，
-// 這兩個改完直接寫回 store 裡的 foodScanResult，AddFoodDrawer/AddFoodRecordDrawer
-// 立刻就會看到更新後的值
+// 真正會影響後續流程（加入飲食記錄時算總熱量）的是 food_name / estimated_grams
+// / calories，這三個改完直接寫回 store 裡的 foodScanResult，
+// AddFoodDrawer/AddFoodRecordDrawer 立刻就會看到更新後的值。estimated_grams
+// 跟 calories 現在都是「這一份」的總量，不是每 100g 密度——使用者身邊通常
+// 沒有秤，AI 目測估重難免會估不準，這裡讓使用者可以自己校正
 export function EditFoodResultDrawer() {
   const open = useAppStore((s) => s.editFoodResultOpen);
   const setOpen = useAppStore((s) => s.setEditFoodResultOpen);
@@ -95,6 +97,7 @@ export function EditFoodResultDrawer() {
   const [foodName, setFoodName] = useState("");
   const [category, setCategory] = useState("");
   const [cookingMethod, setCookingMethod] = useState("");
+  const [estimatedGrams, setEstimatedGrams] = useState(0);
   const [calories, setCalories] = useState(0);
 
   useEffect(() => {
@@ -102,11 +105,16 @@ export function EditFoodResultDrawer() {
     setFoodName(result.food_name);
     setCategory("");
     setCookingMethod("");
+    setEstimatedGrams(result.estimated_grams);
     setCalories(result.calories);
   }, [open, result]);
 
   function handleClose() {
     setOpen(false);
+  }
+
+  function adjustEstimatedGrams(delta: number) {
+    setEstimatedGrams((v) => Math.max(0, Math.round(v + delta)));
   }
 
   function adjustCalories(delta: number) {
@@ -121,6 +129,7 @@ export function EditFoodResultDrawer() {
     setResult({
       ...result,
       food_name: foodName.trim() || result.food_name,
+      estimated_grams: estimatedGrams,
       calories,
     });
     setOpen(false);
@@ -177,7 +186,30 @@ export function EditFoodResultDrawer() {
             />
           </Field>
 
-          <Field label="熱量（每 100g）">
+          <Field label="估計份量">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => adjustEstimatedGrams(-10)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#ece4dc] text-ink/60 transition hover:bg-cream"
+              >
+                −
+              </button>
+              <div className="flex-1 text-center text-base font-semibold text-ink">
+                {estimatedGrams}
+                <span className="ml-1 text-xs font-normal text-ink/40">g</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => adjustEstimatedGrams(10)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#ece4dc] text-ink/60 transition hover:bg-cream"
+              >
+                +
+              </button>
+            </div>
+          </Field>
+
+          <Field label="這份的總熱量">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -204,7 +236,8 @@ export function EditFoodResultDrawer() {
 
           <p className="text-[11px] leading-5 text-ink/40">
             食物類別與烹調方式只是方便你自己備註，不會影響 AI 辨識結果；
-            食物名稱與熱量修改後會套用到這次的辨識結果與後續的飲食記錄。
+            食物名稱、估計份量與總熱量修改後會套用到這次的辨識結果與後續的
+            飲食記錄——AI 是目測估重，覺得估太多或太少都可以在這裡校正。
           </p>
         </div>
       </div>

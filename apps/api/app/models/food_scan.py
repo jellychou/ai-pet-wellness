@@ -41,7 +41,14 @@ class FoodScanLog(Base):
     food_name: Mapped[str] = mapped_column(String(255), nullable=False)
     # 0-100，AI 自己估的信心程度，不是統計上嚴謹的機率
     confidence: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    # 以下營養資訊都是「每 100g」的估計值，跟畫面上「營養資訊（每 100g）」對齊
+    # AI 直接目測估計「照片裡這一份」食物的總重量（公克）——使用者身上通常
+    # 沒有秤，沒辦法回報實際重量，所以改成請 AI 直接估重，下面 calories/
+    # protein/fat/carb/fiber 都是對應這個總重量的「這一份」總量，不是密度
+    estimated_grams: Mapped[float] = mapped_column(
+        Float, nullable=False, server_default="0"
+    )
+    # 以下營養資訊都是「這一份」（對應 estimated_grams）的總量估計，
+    # 不是每 100g 的密度
     calories: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     protein: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     fat: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")

@@ -9,7 +9,11 @@ export type FoodScanResult = {
   food_detected: boolean;
   food_name: string;
   confidence: number;
-  calories: number; // 每 100g
+  // AI 直接目測估計「照片裡這一份」食物的總重量（公克）——使用者身邊通常
+  // 沒有秤，所以下面 calories/protein/fat/carb/fiber 都是對應這個總重量
+  // 的「這一份」總量估計，不是每 100g 的密度
+  estimated_grams: number;
+  calories: number;
   protein: number;
   fat: number;
   carb: number;

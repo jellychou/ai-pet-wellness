@@ -29,7 +29,11 @@ class AnalyzeFoodResponse(BaseModel):
     food_name: str
     # 0-100，AI 自己估的信心程度，不是統計上嚴謹的機率
     confidence: int
-    # 以下都是「每 100g」的估計值
+    # AI 直接目測估計「照片裡這一份」食物的總重量（公克）——使用者身邊通常
+    # 沒有秤，沒辦法先秤重再回報，所以不用每 100g 密度、改成直接估這一份
+    # 有多重。food_detected 是 false 時這裡是 0
+    estimated_grams: float
+    # 以下都是對應 estimated_grams「這一份」的總量估計，不是每 100g 密度
     calories: float
     protein: float
     fat: float
@@ -56,6 +60,7 @@ class FoodScanHistoryItemOut(BaseModel):
     food_detected: bool
     food_name: str
     confidence: int
+    estimated_grams: float
     calories: float
     protein: float
     fat: float

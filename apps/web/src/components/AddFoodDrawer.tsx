@@ -54,9 +54,9 @@ function NutritionGrid({ result }: { result: FoodScanResult }) {
   );
 }
 
-// 每 100g 的營養資訊卡，success/uncertain/danger 三種變化都共用同一張卡，
-// 只是外面包的提示 banner 不同——undetected 那種完全沒有食物資料可以顯示，
-// 不會走到這裡
+// 「這一份」（AI 估計的 estimated_grams）的營養資訊卡，success/uncertain/
+// danger 三種變化都共用同一張卡，只是外面包的提示 banner 不同——undetected
+// 那種完全沒有食物資料可以顯示，不會走到這裡
 function ResultCard({ result }: { result: FoodScanResult }) {
   return (
     <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
@@ -69,10 +69,13 @@ function ResultCard({ result }: { result: FoodScanResult }) {
       <div className="mt-1 text-base font-semibold text-ink">
         {result.food_name}
       </div>
+      <div className="text-xs text-ink/40">
+        AI 估計這份大約 {result.estimated_grams} g
+      </div>
 
       <div className="mt-3 flex items-baseline gap-1">
         <span className="text-4xl font-bold text-ink">{result.calories}</span>
-        <span className="text-sm text-ink/50">kcal / 100g</span>
+        <span className="text-sm text-ink/50">kcal（這份總量）</span>
       </div>
 
       <div className="my-4 h-px bg-[#eee5da]" />
@@ -128,7 +131,9 @@ function ResultCard({ result }: { result: FoodScanResult }) {
       <div className="my-4 h-px bg-[#eee5da]" />
 
       <div>
-        <div className="text-xs text-ink/50">每 100g 營養資訊</div>
+        <div className="text-xs text-ink/50">
+          這份（約 {result.estimated_grams}g）的營養資訊
+        </div>
         <div className="mt-2">
           <NutritionGrid result={result} />
         </div>

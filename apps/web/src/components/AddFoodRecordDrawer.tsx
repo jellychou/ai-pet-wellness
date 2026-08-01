@@ -88,12 +88,15 @@ export function AddFoodRecordDrawer() {
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // 每次打開都是全新填寫一筆飲食記錄
+  // 每次打開都是全新填寫一筆飲食記錄。份量預設用 AI 估計的 estimated_grams
+  // ——使用者身邊通常沒有秤，直接沿用 AI 估的份量，不用再手動輸入一次；
+  // 如果實際餵的比照片裡少（例如只餵一半），使用者還是可以用下面的份量
+  // 加減鈕自己調整
   useEffect(() => {
     if (!open) return;
     setTargetPet(selectedPet);
     setPetPickerOpen(false);
-    setPortionGrams(100);
+    setPortionGrams(Math.round(result?.estimated_grams ?? 0));
     setMealType("snack");
     setFedAt(toDateTimeLocal(new Date()));
     setNote("");
@@ -101,9 +104,15 @@ export function AddFoodRecordDrawer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const caloriesPer100g = result?.calories ?? 0;
-  const totalCalories =
-    Math.round(((caloriesPer100g * portionGrams) / 100) * 10) / 10;
+  // AI 現在直接給「這一份」的總熱量/總重量，不是每 100g 密度，所以份量
+  // 沒被調整過的話，總熱量就直接等於 AI 估的 calories；使用者調整份量
+  // （例如寵物只吃了一半）時，用 AI 估出來的「這一份總熱量 ÷ 這一份總重量」
+  // 反推每公克熱量密度，再乘上調整後的份量，維持跟原始估計一致的比例
+  const caloriesPerGram =
+    result && result.estimated_grams > 0
+      ? result.calories / result.estimated_grams
+      : 0;
+  const totalCalories = Math.round(caloriesPerGram * portionGrams * 10) / 10;
 
   function handleClose() {
     setOpen(false);
@@ -241,12 +250,12 @@ export function AddFoodRecordDrawer() {
               {result?.food_name ?? "尚未辨識食物"}
             </div>
             <div className="mt-1 text-[11px] text-ink/45">
-              每 100g {caloriesPer100g} kcal
+              AI 估計整份約 {result?.estimated_grams ?? 0}g / {result?.calories ?? 0} kcal
             </div>
 
             <div className="mt-4">
               <label className="mb-1 block text-[12px] font-medium text-ink/70">
-                份量（g）
+                實際餵食份量（g）
               </label>
               <div className="flex items-center gap-3">
                 <button

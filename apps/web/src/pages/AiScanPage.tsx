@@ -95,12 +95,6 @@ export function AiScanPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-ink">
-          AI 拍照診斷室 / AI Diagnosis
-        </h1>
-      </div>
-
       {usage && (
         <div
           className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${
@@ -190,10 +184,10 @@ export function AiScanPage() {
         </button>
         <button
           type="button"
-          onClick={() => navigate("/ai")}
+          onClick={() => navigate("/ai-scan/history")}
           className="rounded-2xl bg-mist py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(120,150,166,.35)] transition hover:opacity-90"
         >
-          詢問 AI 助理
+          檢視記錄
         </button>
       </div>
     </div>

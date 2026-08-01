@@ -26,6 +26,7 @@ const pageTitleKeys: Record<string, string> = {
   "/settings": "settings",
   "/records": "records",
   "/ai-scan": "aiScan",
+  "/ai-scan/history": "aiScan",
 };
 
 export function AppLayout() {

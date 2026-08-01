@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -14,9 +15,11 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-# 每打一次 OpenAI 圖片分析就記一筆，只用來算「這個使用者今天已經用了幾次」，
-# 不是完整的分析結果紀錄（分析結果本身沒有另外存，跟之前的決定一致）。
-# 用 user_id 算額度（不是 pet_id）——這是帳號層級的花費控管，不是某隻寵物的資料
+# 每打一次成功的 OpenAI 圖片分析就記一筆。一開始只是用來算「今天用了幾次」
+# 的計數器，後來加上「檢視記錄」功能後，同一張表也順便存分析結果本身，
+# 不用另外開一張歷史紀錄表——反正每次成功呼叫本來就要寫一筆，資料筆數是一樣的。
+# 用 user_id 算每日額度（不是 pet_id）——這是帳號層級的花費控管，不是某隻寵物的資料，
+# 但 pet_id 還是留著，「檢視記錄」要能依寵物篩選
 class AiScanLog(Base):
     __tablename__ = "ai_scan_logs"
 
@@ -27,6 +30,12 @@ class AiScanLog(Base):
     pet_id: Mapped[int] = mapped_column(
         ForeignKey("pets.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    # 上傳去分析的那張照片網址（Cloudinary），檢視記錄時當縮圖用
+    image_url: Mapped[str] = mapped_column(Text, nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    # AiScanFinding 陣列的原始 JSON（condition/confidence/description），
+    # 不特別開 schema 綁死結構，反正只是拿來顯示，不會再被程式邏輯拿去運算
+    findings: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

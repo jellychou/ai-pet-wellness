@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AppLayout } from "./layouts/AppLayout";
 import { AICenterPage } from "./pages/AICenterPage";
 import { AiScanPage } from "./pages/AiScanPage";
+import { AiScanHistoryPage } from "./pages/AiScanHistoryPage";
 import { AddPetPage } from "./pages/AddPetPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -110,6 +111,7 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           <Route path="ai" element={<AICenterPage />} />
           <Route path="ai-scan" element={<AiScanPage />} />
+          <Route path="ai-scan/history" element={<AiScanHistoryPage />} />
           <Route path="pets" element={<PetsPage />} />
           <Route path="food" element={<FoodPage />} />
           <Route path="health" element={<HealthPage />} />

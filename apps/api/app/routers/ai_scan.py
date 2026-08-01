@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.models.pet import Pet
 from app.models.user import User
 from app.schemas.ai_scan import (
     AiScanFinding,
+    AiScanHistoryItemOut,
     AiScanUsageOut,
     AnalyzeImageRequest,
     AnalyzeImageResponse,
@@ -85,6 +86,29 @@ def get_usage_today(
 ):
     used = _count_today(db, current_user.id)
     return AiScanUsageOut(used=used, limit=DAILY_LIMIT)
+
+
+# 「檢視記錄」列表：某隻寵物過去的 AI 診斷紀錄，最新的排前面。跟其他
+# xxx-records/{pet_id} 的寫法一致，一樣要先確認寵物屬於目前登入的使用者
+@router.get(
+    "/history/{pet_id}",
+    response_model=list[AiScanHistoryItemOut],
+    status_code=status.HTTP_200_OK,
+)
+def get_history(
+    pet_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _get_owned_pet(db, current_user, pet_id)
+    return (
+        db.query(AiScanLog)
+        .filter(AiScanLog.pet_id == pet_id)
+        # created_at 精度不夠時（同一秒內連續呼叫兩次）光排這欄會不穩定，
+        # id 是嚴格遞增的，加進來當第二排序鍵才能保證新的一定排前面
+        .order_by(AiScanLog.created_at.desc(), AiScanLog.id.desc())
+        .all()
+    )
 
 
 @router.post(
@@ -169,9 +193,18 @@ def analyze_image(
         for f in parsed.get("findings", [])
     ]
 
-    # 分析成功才算一次額度——OpenAI 報錯、JSON parse 失敗這些情況都在上面
-    # 提早 raise 掉了，不會走到這裡，使用者不會因為失敗的請求被扣次數
-    db.add(AiScanLog(user_id=current_user.id, pet_id=payload.pet_id))
+    # 分析成功才算一次額度、也才存進紀錄——OpenAI 報錯、JSON parse 失敗這些
+    # 情況都在上面提早 raise 掉了，不會走到這裡，使用者不會因為失敗的請求
+    # 被扣次數、也不會留下一筆沒有內容的紀錄
+    db.add(
+        AiScanLog(
+            user_id=current_user.id,
+            pet_id=payload.pet_id,
+            image_url=payload.image_url,
+            summary=str(parsed.get("summary", "")),
+            findings=[f.model_dump() for f in findings],
+        )
+    )
     db.commit()
     used_after = _count_today(db, current_user.id)
 

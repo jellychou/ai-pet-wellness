@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -32,3 +34,16 @@ class AnalyzeImageResponse(BaseModel):
     # 分析成功後，這次呼叫也算進當天次數了，直接把最新用量一起回傳，
     # 前端不用為了更新標語再多打一次 /usage-today
     usage: AiScanUsageOut
+
+
+# 「檢視記錄」列表用的一筆歷史紀錄，直接從 ai_scan_logs 讀出來，
+# findings 存的是原始 JSON，用 from_attributes 直接吃 ORM 物件
+class AiScanHistoryItemOut(BaseModel):
+    id: int
+    pet_id: int
+    image_url: str
+    summary: str
+    findings: list[AiScanFinding] | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

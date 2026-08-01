@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "r
 import {
   ArrowLeft,
   Bookmark,
+  Camera,
   Check,
   Clock,
   Info,
@@ -9,6 +10,7 @@ import {
   RotateCcw,
   Star,
   TriangleAlert,
+  UtensilsCrossed,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore, type FoodScanResult } from "../store/useAppStore";
@@ -16,9 +18,6 @@ import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
-
-const defaultScanPhoto =
-  "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&h=500&fit=crop";
 
 const speciesLabel: Record<string, string> = { dog: "狗狗", cat: "貓咪" };
 
@@ -208,7 +207,9 @@ export function AddFoodDrawer() {
   const { showError } = useAlert();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photo, setPhoto] = useState(defaultScanPhoto);
+  // 一開始不放真實照片，改用下面的圖示佔位——之前放的是網路上抓的示意照，
+  // 使用者常常會誤以為那就是「已經上傳的照片」
+  const [photo, setPhoto] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [usage, setUsage] = useState<FoodScanUsage | null>(null);
 
@@ -224,7 +225,7 @@ export function AddFoodDrawer() {
   // 每次重新打開都是全新一輪辨識，上一次的結果留著只會誤導使用者
   useEffect(() => {
     if (!open) return;
-    setPhoto(defaultScanPhoto);
+    setPhoto(null);
     setResult(null);
     setImageUrl(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -372,11 +373,25 @@ export function AddFoodDrawer() {
             onChange={handlePhotoPick}
           />
           <div className="relative">
-            <img
-              src={photo}
-              alt="掃描食物照片"
-              className="h-56 w-full rounded-2xl object-contain"
-            />
+            {photo ? (
+              <img
+                src={photo}
+                alt="掃描食物照片"
+                className="h-56 w-full rounded-2xl object-contain"
+              />
+            ) : (
+              <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1e6d8] text-[#b98a5c]">
+                  <UtensilsCrossed size={22} />
+                </span>
+                <p className="text-sm font-medium text-ink/50">
+                  尚未上傳照片
+                </p>
+                <p className="text-xs text-ink/35">
+                  點擊下方「拍照辨識食物」開始
+                </p>
+              </div>
+            )}
             {analyzing && (
               <div className="absolute inset-0 grid place-items-center rounded-2xl bg-black/40 text-sm font-medium text-white">
                 AI 辨識中…

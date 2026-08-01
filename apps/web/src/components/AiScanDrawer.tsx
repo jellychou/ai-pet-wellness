@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
-
-const defaultEarPhoto =
-  "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=600&h=440&fit=crop";
 
 type AiScanFinding = {
   condition: string;
@@ -37,7 +34,9 @@ export function AiScanDrawer() {
   const { showError } = useAlert();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [earPhoto, setEarPhoto] = useState(defaultEarPhoto);
+  // 一開始不放真實照片，改用下面的圖示佔位——之前放的是網路上抓的示意照，
+  // 使用者常常會誤以為那就是「已經上傳的照片」
+  const [earPhoto, setEarPhoto] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalyzeImageResponse | null>(null);
   const [usage, setUsage] = useState<AiScanUsage | null>(null);
@@ -170,11 +169,25 @@ export function AiScanDrawer() {
             onChange={handlePhotoPick}
           />
           <div className="relative">
-            <img
-              src={earPhoto}
-              alt="寵物拍照診斷照片"
-              className="h-56 w-full rounded-2xl object-contain"
-            />
+            {earPhoto ? (
+              <img
+                src={earPhoto}
+                alt="寵物拍照診斷照片"
+                className="h-56 w-full rounded-2xl object-contain"
+              />
+            ) : (
+              <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                  <Camera size={22} />
+                </span>
+                <p className="text-sm font-medium text-ink/50">
+                  尚未上傳照片
+                </p>
+                <p className="text-xs text-ink/35">
+                  點擊下方「拍照AI診斷」開始
+                </p>
+              </div>
+            )}
             {analyzing && (
               <div className="absolute inset-0 grid place-items-center rounded-2xl bg-black/40 text-sm font-medium text-white">
                 AI 判讀中…

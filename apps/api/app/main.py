@@ -16,6 +16,7 @@ from app.routers import (
     ai_scan,
     food_scan,
     food_record,
+    health_journal,
 )
 
 settings = get_settings()
@@ -67,3 +68,4 @@ app.include_router(timeline.router)
 app.include_router(ai_scan.router)
 app.include_router(food_scan.router)
 app.include_router(food_record.router)
+app.include_router(health_journal.router)

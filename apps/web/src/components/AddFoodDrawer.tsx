@@ -320,9 +320,7 @@ function ResultsRow({
           約 {item.portion_grams}g・約 {item.calories} kcal
         </div>
       </button>
-      {clickable && (
-        <ChevronRight size={16} className="shrink-0 text-ink/30" />
-      )}
+      {clickable && <ChevronRight size={16} className="shrink-0 text-ink/30" />}
       <button
         type="button"
         onClick={onRemove}
@@ -420,9 +418,9 @@ export function AddFoodDrawer() {
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const [historyItems, setHistoryItems] = useState<HistoryFoodItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [selectedHistoryNames, setSelectedHistoryNames] = useState<
-    Set<string>
-  >(new Set());
+  const [selectedHistoryNames, setSelectedHistoryNames] = useState<Set<string>>(
+    new Set(),
+  );
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState({
     current: 0,
@@ -747,7 +745,10 @@ export function AddFoodDrawer() {
     { protein: 0, fat: 0, carb: 0, fiber: 0 },
   );
   const macroGramSum =
-    macroTotals.protein + macroTotals.fat + macroTotals.carb + macroTotals.fiber;
+    macroTotals.protein +
+    macroTotals.fat +
+    macroTotals.carb +
+    macroTotals.fiber;
   const macroPercents =
     macroGramSum > 0
       ? [
@@ -828,9 +829,7 @@ export function AddFoodDrawer() {
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-base font-semibold text-ink">
-              {headerTitle}
-            </h1>
+            <h1 className="text-base font-semibold text-ink">{headerTitle}</h1>
             {step === "choose" ? (
               <button
                 type="button"
@@ -953,8 +952,8 @@ export function AddFoodDrawer() {
                       </span>
                     </div>
                     <p className="text-sm font-medium text-ink/70">
-                      正在辨識第 {analyzeProgress.current} / {analyzeProgress.total}{" "}
-                      張照片…
+                      正在辨識第 {analyzeProgress.current} /{" "}
+                      {analyzeProgress.total} 張照片…
                     </p>
                     <p className="text-xs text-ink/40">
                       每張約 10~30 秒，請稍候

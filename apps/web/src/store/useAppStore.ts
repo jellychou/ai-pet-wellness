@@ -164,6 +164,18 @@ type AppState = {
   setSetPasswordOpen: (v: boolean) => void;
   addPetOpen: boolean;
   setAddPetOpen: (v: boolean) => void;
+  // 「健康日誌」是獨立新功能，比照 AiScanDrawer 的模式：主 drawer 負責記錄
+  // 表單＋AI 分析結果，歷史記錄是疊在上面的第二層 drawer
+  healthJournalOpen: boolean;
+  setHealthJournalOpen: (v: boolean) => void;
+  healthJournalHistoryOpen: boolean;
+  setHealthJournalHistoryOpen: (v: boolean) => void;
+  // RecordsPage（現在改成健康日誌主頁）只在自己 mount/切換寵物時打一次
+  // API，HealthJournalDrawer 新增/分析成功關掉不會觸發它重新 mount，
+  // 所以用這個數字當訊號，成功就 +1，讓列表重新抓一次——跟
+  // foodRecordRefreshKey/vaccineRefreshKey 同樣的道理
+  healthJournalRefreshKey: number;
+  bumpHealthJournalRefreshKey: () => void;
 };
 export const useAppStore = create<AppState>((set) => ({
   sidebarOpen: false,
@@ -247,4 +259,12 @@ export const useAppStore = create<AppState>((set) => ({
   setSetPasswordOpen: (setPasswordOpen) => set({ setPasswordOpen }),
   addPetOpen: false,
   setAddPetOpen: (addPetOpen) => set({ addPetOpen }),
+  healthJournalOpen: false,
+  setHealthJournalOpen: (healthJournalOpen) => set({ healthJournalOpen }),
+  healthJournalHistoryOpen: false,
+  setHealthJournalHistoryOpen: (healthJournalHistoryOpen) =>
+    set({ healthJournalHistoryOpen }),
+  healthJournalRefreshKey: 0,
+  bumpHealthJournalRefreshKey: () =>
+    set((s) => ({ healthJournalRefreshKey: s.healthJournalRefreshKey + 1 })),
 }));

@@ -65,9 +65,7 @@ export function AICenterPage() {
     if (!aiScanReference) return DEFAULT_MESSAGES;
     const parts = [
       "已引用今日影像分析 🐾",
-      aiScanReference.bodyPart
-        ? `部位：${aiScanReference.bodyPart}`
-        : null,
+      aiScanReference.bodyPart ? `部位：${aiScanReference.bodyPart}` : null,
       aiScanReference.summary,
       aiScanReference.suggestions.length > 0
         ? `目前的建議：\n${aiScanReference.suggestions.map((s) => `・${s}`).join("\n")}`
@@ -145,8 +143,8 @@ export function AICenterPage() {
   }
 
   return (
-    <div className="mx-auto flex max-h-[calc(100dvh-140px)] max-w-md flex-col">
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-2">
+    <div className="mx-auto max-w-md flex-col h-[calc(100dvh-178px)] overflow-y-auto">
+      <div className="min-h-[calc(100dvh-191px)] flex-1 space-y-4 overflow-y-auto pb-2">
         {messages.map((m) =>
           m.from === "user" ? (
             <div key={m.id} className="flex items-end justify-end gap-2">
@@ -236,7 +234,7 @@ export function AICenterPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="flex shrink-0 items-center gap-2 pt-2"
+        className="flex shrink-0 items-center gap-2 pt-2 fixed left-[6px] right-[6px] bottom-[70px]"
       >
         <input
           ref={fileInputRef}

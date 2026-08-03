@@ -13,7 +13,7 @@ const resources = {
         timeline: "歷史日誌",
         stats: "統計分析",
         settings: "設定",
-        records: "日誌記錄",
+        records: "健康日誌",
         aiScan: "AI 拍照診斷",
       },
       common: {
@@ -64,6 +64,7 @@ const resources = {
         stats: "Analytics",
         settings: "Settings",
         notifications: "Notifications",
+        records: "Health Journal",
         aiScan: "AI Diagnosis",
       },
       common: {

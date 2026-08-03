@@ -9,6 +9,8 @@ import { AddVaccineFormDrawer } from "../components/AddVaccineFormDrawer";
 import { AddPendingVaccineDrawer } from "../components/AddPendingVaccineDrawer";
 import { AiScanDrawer } from "../components/AiScanDrawer";
 import { AiScanHistoryDrawer } from "../components/AiScanHistoryDrawer";
+import { HealthJournalDrawer } from "../components/HealthJournalDrawer";
+import { HealthJournalHistoryDrawer } from "../components/HealthJournalHistoryDrawer";
 import { EditHealthDrawer } from "../components/EditHealthDrawer";
 import { HealthDetailDrawer } from "../components/HealthDetailDrawer";
 import { EditPetDrawer } from "../components/EditPetDrawer";
@@ -56,6 +58,8 @@ export function AppLayout() {
       <AddPendingVaccineDrawer />
       <AiScanDrawer />
       <AiScanHistoryDrawer />
+      <HealthJournalDrawer />
+      <HealthJournalHistoryDrawer />
       <EditHealthDrawer />
       <HealthDetailDrawer />
       <EditPetDrawer />

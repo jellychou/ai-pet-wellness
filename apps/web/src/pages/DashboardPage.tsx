@@ -8,6 +8,7 @@ import {
   Heart,
   HeartPulse,
   MessageCircleHeart,
+  NotebookPen,
   Syringe,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +16,11 @@ import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
-import { calculateDailyCalories, calculateMacros, sumCalories } from "../lib/calorie";
+import {
+  calculateDailyCalories,
+  calculateMacros,
+  sumCalories,
+} from "../lib/calorie";
 import { apiFetch } from "../lib/api";
 
 const defaultPetPhoto =
@@ -206,7 +211,9 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
   const totalCalories = sumCalories(
     recordsForDate.map((r) => ({ calories: r.total_calories })),
   );
-  const dailyCalories = selectedPet ? calculateDailyCalories(selectedPet) : null;
+  const dailyCalories = selectedPet
+    ? calculateDailyCalories(selectedPet)
+    : null;
 
   // 一筆記錄可能混合多個食材，畫面上是「每個食材各自一行」，所以要把
   // recordsForDate 依 meal_type 分組後，再把每筆記錄底下的 items 展開成
@@ -244,7 +251,9 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
         </button>
         <strong>
           {formatDateHeader(selectedDate)}
-          {isToday && <span className="ml-1 font-normal text-ink/40">（今天）</span>}
+          {isToday && (
+            <span className="ml-1 font-normal text-ink/40">（今天）</span>
+          )}
         </strong>
         <button
           type="button"
@@ -294,26 +303,25 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
       </div>
       <div className="mt-3 rounded-xl bg-[#fbf7f1] p-3">
         <div className="mb-1 flex items-center justify-between text-[9px] font-medium">
-          <span>這天攝取熱量</span>
+          <div>
+            這天攝取熱量
+            {totalCalories > (dailyCalories ?? 0) && (
+              <span className="text-red-500"> 已超標！</span>
+            )}
+          </div>
           {dailyCalories != null && (
             <span className="font-normal text-ink/45">
               建議 {dailyCalories} kcal
             </span>
           )}
         </div>
-        <div className="text-center text-lg font-semibold">
+        <div
+          className={`text-center text-lg font-semibold ${totalCalories > (dailyCalories ?? 0) ? "text-red-500" : ""}`}
+        >
           {Math.round(totalCalories)}
-          <span className="ml-1 text-[10px] font-normal text-ink/45">
-            kcal
-          </span>
+          <span className="ml-1 text-[10px] font-normal text-ink/45">kcal</span>
         </div>
       </div>
-      <button
-        onClick={onAddFood}
-        className="mt-3 w-full rounded-xl bg-[#b88672] text-white py-2 text-xs"
-      >
-        ＋ 新增飲食
-      </button>
     </section>
   );
 }
@@ -324,6 +332,7 @@ export function DashboardPage() {
   const setAddVaccineOpen = useAppStore((s) => s.setAddVaccineOpen);
   const setAiScanOpen = useAppStore((s) => s.setAiScanOpen);
   const setEditHealthOpen = useAppStore((s) => s.setEditHealthOpen);
+  const setHealthJournalOpen = useAppStore((s) => s.setHealthJournalOpen);
   const userInfo = useAuthStore((s) => s.userInfo);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const dailyCalories = selectedPet
@@ -419,12 +428,13 @@ export function DashboardPage() {
           </div>
           <div className="mt-3">
             <div className="mb-2 text-[12px] font-medium">Quick Action</div>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
                 [Camera, "AI 拍照診斷"],
                 [Bone, "新增飲食"],
                 [Syringe, "疫苗記錄"],
                 [ClipboardPlus, "健康檢查"],
+                [NotebookPen, "健康日誌"],
                 [MessageCircleHeart, "AI 心靈導師"],
               ].map(([I, x]) => (
                 <button
@@ -434,6 +444,7 @@ export function DashboardPage() {
                     if (x === "疫苗記錄") setAddVaccineOpen(true);
                     if (x === "AI 拍照診斷") setAiScanOpen(true);
                     if (x === "健康檢查") setEditHealthOpen(true);
+                    if (x === "健康日誌") setHealthJournalOpen(true);
                   }}
                   className="soft-card p-2 text-center hover:-translate-y-0.5"
                 >
@@ -448,7 +459,7 @@ export function DashboardPage() {
         {/* <VaccineCard onAddVaccine={() => setAddVaccineOpen(true)} /> */}
         <FoodCard onAddFood={() => setAddFoodOpen(true)} />
       </section>
-      <footer className="flex items-center justify-between rounded-xl px-5 py-2 text-[12px] text-[#78A4CB]">
+      <footer className="flex items-center justify-between rounded-xl px-5 text-[12px] text-[#78A4CB]">
         <span>🐾 Food・Heart・Vaccine — 陪伴毛孩，也陪伴你 ♡</span>
         <span className="hidden sm:inline">
           React · TypeScript · Tailwind · Zustand · i18n

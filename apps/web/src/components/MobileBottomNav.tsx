@@ -1,4 +1,4 @@
-import { ScrollText, Bot, Home, PawPrint, Settings } from "lucide-react";
+import { NotebookPen, Bot, Home, PawPrint, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -6,7 +6,7 @@ const links = [
   ["/", Home, "home"],
   ["/pets", PawPrint, "pets"],
   ["/ai", Bot, "ai"],
-  ["/records", ScrollText, "records"],
+  ["/records", NotebookPen, "records"],
   ["/settings", Settings, "settings"],
 ] as const;
 

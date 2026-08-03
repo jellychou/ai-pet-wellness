@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # 設定是為了以後想個別調整（例如其中一支想換更便宜/更貴的模型）不用動到
     # 另一支
     openai_food_scan_model: str = "gpt-5.6-terra"
+    # 健康日誌（health_journal）用的模型，理由同上，保留獨立設定方便以後
+    # 個別調整
+    openai_health_journal_model: str = "gpt-5.6-terra"
 
     @property
     def cors_origin_list(self) -> list[str]:

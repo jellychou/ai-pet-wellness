@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.ai_scan import AiScanLog
+from app.models.health_journal import HealthJournalLog
 from app.models.pet import Pet
 from app.models.report import ReportRecord
 from app.models.user import User
@@ -106,6 +107,27 @@ def get_timeline(
                 date=a.created_at.date(),
                 title=f"AI 影像分析：{a.body_part}" if a.body_part else "AI 影像分析",
                 summary=a.summary,
+            )
+        )
+
+    # 跟 ai_scan 一樣：不是每篇健康日誌都自動進時間軸，只挑使用者按過
+    # 「加入健康日誌」的（見 app/routers/health_journal.py 的 add_to_timeline）
+    health_journal_logs = (
+        db.query(HealthJournalLog)
+        .filter(
+            HealthJournalLog.pet_id == pet_id,
+            HealthJournalLog.added_to_timeline.is_(True),
+        )
+        .all()
+    )
+    for h in health_journal_logs:
+        items.append(
+            TimelineItemOut(
+                type="health_journal",
+                id=h.id,
+                date=h.log_date,
+                title=f"健康日誌：健康評分 {h.health_score}",
+                summary=h.summary_points[0] if h.summary_points else None,
             )
         )
 

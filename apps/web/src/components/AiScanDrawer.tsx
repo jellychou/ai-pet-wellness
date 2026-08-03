@@ -5,9 +5,13 @@ import {
   CalendarPlus,
   Camera,
   Check,
-  Search,
-  Sparkles,
   Clock,
+  Flame,
+  Footprints,
+  Search,
+  Smile,
+  Sparkles,
+  Utensils,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
@@ -44,6 +48,24 @@ const BODY_PART_OPTIONS = [
   "嘔吐物",
   "其他",
 ];
+
+// 「已加入健康時間軸」確認畫面下方的「相關記錄」清單——目前只有飲食紀錄
+// 後端真的有資料，行為紀錄/活動量/心情日記都還沒做，所以這裡故意不做成
+// 可以點擊跳轉的連結（沒有對應頁面可以跳，做成假的可點擊反而誤導使用者），
+// 純粹是跟設計稿一致的靜態展示
+const RELATED_RECORDS = [
+  { icon: Utensils, label: "飲食紀錄" },
+  { icon: Footprints, label: "行為紀錄" },
+  { icon: Flame, label: "活動量" },
+  { icon: Smile, label: "心情日記" },
+];
+
+function formatTodayDate() {
+  const d = new Date();
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
+}
 
 type AiScanUsage = {
   used: number;
@@ -225,6 +247,7 @@ export function AiScanDrawer() {
       suggestions: result.suggestions,
       imageUrl: earPhoto ?? "",
     });
+    resetAll();
     setOpen(false);
     navigate("/ai");
   }
@@ -283,67 +306,70 @@ export function AiScanDrawer() {
             className="hidden"
             onChange={handlePhotoPick}
           />
-          {analyzing ? (
-            <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-[#eee5da] bg-[#fffdfa] px-6 py-8">
-              <p className="text-base font-semibold text-ink">AI 判讀中…</p>
-              <div className="relative grid h-20 w-20 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
-                <Bot size={40} />
-                <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-white text-[#688696] shadow-[0_2px_8px_rgba(0,0,0,.12)]">
-                  <Search size={16} />
-                </span>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-ink/70">
-                  AI 正在判讀照片…
-                </p>
-                <p className="mt-0.5 text-xs text-ink/40">請稍候 10~20 秒</p>
-              </div>
-              <ul className="w-full max-w-[220px] space-y-2">
-                {LOADING_STEPS.map((step, i) => (
-                  <li key={step} className="flex items-center gap-2 text-xs">
-                    <span
-                      className={`grid h-4 w-4 shrink-0 place-items-center rounded-full transition-colors ${
-                        i <= loadingStep
-                          ? "bg-[#3fa88f] text-white"
-                          : "bg-[#eee5da] text-transparent"
-                      }`}
-                    >
-                      <Check size={10} strokeWidth={3} />
-                    </span>
-                    <span
-                      className={
-                        i <= loadingStep ? "text-ink/70" : "text-ink/30"
-                      }
-                    >
-                      {step}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <div className="relative">
-              {earPhoto ? (
-                <img
-                  src={earPhoto}
-                  alt="寵物拍照診斷照片"
-                  className="h-56 w-full rounded-2xl object-contain"
-                />
-              ) : (
-                <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
-                    <Camera size={22} />
+          {/* 一旦加入健康時間軸，原始照片跟完整分析內容就不再顯示——
+              下面會換成精簡的確認卡片，跟設計稿一致 */}
+          {!addedToTimeline &&
+            (analyzing ? (
+              <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-[#eee5da] bg-[#fffdfa] px-6 py-8">
+                <p className="text-base font-semibold text-ink">AI 判讀中…</p>
+                <div className="relative grid h-20 w-20 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                  <Bot size={40} />
+                  <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-white text-[#688696] shadow-[0_2px_8px_rgba(0,0,0,.12)]">
+                    <Search size={16} />
                   </span>
-                  <p className="text-sm font-medium text-ink/50">
-                    尚未上傳照片
-                  </p>
-                  <p className="text-xs text-ink/35">
-                    點擊下方「拍照AI診斷」開始
-                  </p>
                 </div>
-              )}
-            </div>
-          )}
+                <div className="text-center">
+                  <p className="text-sm font-medium text-ink/70">
+                    AI 正在判讀照片…
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink/40">請稍候 10~20 秒</p>
+                </div>
+                <ul className="w-full max-w-[220px] space-y-2">
+                  {LOADING_STEPS.map((step, i) => (
+                    <li key={step} className="flex items-center gap-2 text-xs">
+                      <span
+                        className={`grid h-4 w-4 shrink-0 place-items-center rounded-full transition-colors ${
+                          i <= loadingStep
+                            ? "bg-[#3fa88f] text-white"
+                            : "bg-[#eee5da] text-transparent"
+                        }`}
+                      >
+                        <Check size={10} strokeWidth={3} />
+                      </span>
+                      <span
+                        className={
+                          i <= loadingStep ? "text-ink/70" : "text-ink/30"
+                        }
+                      >
+                        {step}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="relative">
+                {earPhoto ? (
+                  <img
+                    src={earPhoto}
+                    alt="寵物拍照診斷照片"
+                    className="h-56 w-full rounded-2xl object-contain"
+                  />
+                ) : (
+                  <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1]">
+                    <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                      <Camera size={22} />
+                    </span>
+                    <p className="text-sm font-medium text-ink/50">
+                      尚未上傳照片
+                    </p>
+                    <p className="text-xs text-ink/35">
+                      點擊下方「拍照AI診斷」開始
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
 
           {/* 選好照片、還沒送出分析——讓使用者先指定部位/補充說明，
               按下面「開始分析」才真的打 API */}
@@ -389,7 +415,7 @@ export function AiScanDrawer() {
             </div>
           )}
 
-          {result && (
+          {result && !addedToTimeline && (
             <>
               <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
                 <div className="text-xs text-ink/45">AI 判讀結果</div>
@@ -449,35 +475,107 @@ export function AiScanDrawer() {
                 </span>
               </div>
 
-              <div className="space-y-2.5">
-                <button
-                  type="button"
-                  onClick={handleAddToTimeline}
-                  disabled={addedToTimeline}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:bg-[#3fa88f] disabled:shadow-none"
-                >
-                  {addedToTimeline ? (
-                    <>
-                      <Check size={16} strokeWidth={3} />
-                      已加入健康時間軸
-                    </>
-                  ) : (
-                    <>
-                      <CalendarPlus size={16} />
-                      加入健康時間軸
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAskMentor}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10"
-                >
-                  <Sparkles size={16} />
-                  詢問 AI 心靈導師
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleAddToTimeline}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
+              >
+                <CalendarPlus size={16} />
+                加入健康時間軸
+              </button>
             </>
+          )}
+
+          {/* 加入時間軸後換成精簡確認畫面：原始照片跟完整判讀結果都收起來，
+              對應設計稿「4 加入時間軸」「5 諮詢選擇」畫面（中間的「資料選擇」
+              畫面確認過使用者要跳過，因為行為紀錄/活動量/心情日記都還沒有
+              真的資料，直接從確認頁跳到心靈導師） */}
+          {result && addedToTimeline && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 rounded-2xl bg-[#e8f5f0] px-4 py-3 text-sm font-semibold text-[#3fa88f]">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#3fa88f] text-white">
+                  <Check size={13} strokeWidth={3} />
+                </span>
+                已加入健康時間軸
+              </div>
+
+              <div className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-3 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
+                {earPhoto ? (
+                  <img
+                    src={earPhoto}
+                    alt="寵物拍照診斷照片"
+                    className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#eef4f6] text-[#688696]">
+                    <Camera size={20} />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink">
+                    {result.body_part
+                      ? `AI 影像分析：${result.body_part}`
+                      : "AI 影像分析"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink/45">
+                    {formatTodayDate()}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                    result.findings.length > 0
+                      ? "bg-[#fff3e5] text-[#d9834f]"
+                      : "bg-[#eef4f6] text-[#688696]"
+                  }`}
+                >
+                  {result.findings.length > 0 ? "需觀察" : "正常"}
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-[#eee5da] bg-[#fffdfa] p-4">
+                <p className="text-sm font-semibold text-ink">
+                  要進一步諮詢嗎？
+                </p>
+                <p className="mt-1 text-xs text-ink/50">
+                  可以直接詢問 AI
+                  心靈導師，帶入這次的判讀結果，取得更完整的照護建議
+                </p>
+                <div className="mt-3 space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAskMentor}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(104,134,150,.3)] transition hover:bg-[#5a7684]"
+                  >
+                    <Sparkles size={16} />
+                    詢問 AI 心靈導師
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetAll}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] py-3.5 text-sm font-semibold text-ink/60 transition hover:bg-[#f7f2ea]"
+                  >
+                    暫時不用
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-medium text-ink/45">相關記錄</div>
+                <div className="mt-2 space-y-2">
+                  {RELATED_RECORDS.map(({ icon: Icon, label }) => (
+                    <div
+                      key={label}
+                      className="flex items-center gap-3 rounded-xl border border-[#eee5da] bg-[#fffdfa] px-3 py-2.5 text-sm text-ink/60"
+                    >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
+                        <Icon size={15} />
+                      </span>
+                      {label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -499,7 +597,7 @@ export function AiScanDrawer() {
                   type="button"
                   onClick={handleStartAnalysis}
                   disabled={limitReached || analyzing}
-                  className="rounded-2xl bg-[#] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                  className="rounded-2xl  py-3.5 text-sm font-semibold bg-[#688696] text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 >
                   開始分析
                 </button>

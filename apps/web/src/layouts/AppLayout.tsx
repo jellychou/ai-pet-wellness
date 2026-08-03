@@ -3,8 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Sidebar } from "../components/Sidebar";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { AddFoodDrawer } from "../components/AddFoodDrawer";
-import { AddFoodRecordDrawer } from "../components/AddFoodRecordDrawer";
-import { EditFoodResultDrawer } from "../components/EditFoodResultDrawer";
 import { FoodScanHistoryDrawer } from "../components/FoodScanHistoryDrawer";
 import { AddVaccineDrawer } from "../components/AddVaccineDrawer";
 import { AddVaccineFormDrawer } from "../components/AddVaccineFormDrawer";
@@ -52,8 +50,6 @@ export function AppLayout() {
       </div>
       <MobileBottomNav />
       <AddFoodDrawer />
-      <AddFoodRecordDrawer />
-      <EditFoodResultDrawer />
       <FoodScanHistoryDrawer />
       <AddVaccineDrawer />
       <AddVaccineFormDrawer />

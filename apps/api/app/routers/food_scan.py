@@ -92,6 +92,15 @@ SYSTEM_PROMPT = (
     "外觀往往跟人類食物差很多，但仍然是要餵給寵物吃的東西，算 food_detected"
     "是 true。只有真的是空盤子、包裝袋本身、玩具、餐具、或其他明顯不是"
     "食物/零食的東西，才設 food_detected 為 false。\n"
+    "如果使用者在補充說明裡提供了品牌或產品名稱（例如「這是XX牌的潔牙骨」"
+    "「OO Natural 主食罐」），這代表食物的身分已經確定了，不需要再猶豫"
+    "food_detected 要不要設 true，但你「一定要」使用網路搜尋工具去查這個"
+    "指定產品的官方營養標示、包裝上的熱量/成分資訊或可靠的產品頁面，用查到"
+    "的實際數字來估計熱量與營養素，不要只憑你對這個產品名稱的既有印象或"
+    "對同類產品的一般常識去估——使用者特地打字告訴你產品名稱，就是希望你去"
+    "查證那個特定產品的真實數據，不是要你憑印象亂猜。如果搜尋不到這個確切"
+    "產品的資料，才退回用同類產品的一般估計，並在 estimate_note 裡誠實說明"
+    "查不到這個確切產品、是用同類食物的估計值代替。\n"
     "food_detected 是 false 時，items 給空陣列，其他數值/陣列欄位給 0 或空"
     "陣列，不要瞎猜。份量估計不用非常精確，合理的目測範圍即可，但一定要"
     "直接給重量/熱量的範圍，不要用每 100g 密度回答。如果食物對狗或貓有毒/"
@@ -281,6 +290,19 @@ def analyze_food(
 
     client = OpenAI(api_key=settings.openai_api_key)
 
+    # 使用者上傳照片後、按「開始分析」前可以先補充一段說明（例如「這是
+    # 剛買的潔牙骨，包裝上寫著XX品牌」）——跟 ai_scan.py 的 body_part/
+    # description 是同樣的道理，附進 prompt 讓 AI 判斷時多一個線索，不是
+    # 只能單靠照片本身猜
+    prompt_text = "請分析這張食物照片。"
+    if payload.description:
+        prompt_text += (
+            f"使用者補充說明：{payload.description}。"
+            "如果這段補充說明裡有提到品牌或產品名稱，請務必使用網路搜尋工具"
+            "查詢這個產品的官方營養標示或包裝資訊，用查到的實際數字回答，"
+            "不要只憑印象估計。"
+        )
+
     try:
         # 改用 Responses API（不是 Chat Completions）——原因是使用者反映
         # 比較少見/有品牌包裝的食物我們認不出來，但直接問 ChatGPT 網頁版
@@ -326,7 +348,7 @@ def analyze_food(
                 {
                     "role": "user",
                     "content": [
-                        {"type": "input_text", "text": "請分析這張食物照片。"},
+                        {"type": "input_text", "text": prompt_text},
                         {
                             "type": "input_image",
                             "image_url": payload.image_url,
@@ -392,6 +414,7 @@ def analyze_food(
             user_id=current_user.id,
             pet_id=payload.pet_id,
             image_url=payload.image_url,
+            user_note=payload.description,
             food_detected=food_detected,
             food_name=str(parsed.get("food_name", "")),
             confidence=confidence,

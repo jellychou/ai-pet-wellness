@@ -107,20 +107,32 @@ function Metric({
 //   );
 // }
 
-type FoodRecordItem = {
+// 一項食材（FoodRecordEntry.items 底下的一筆）——跟後端 FoodRecordItemOut
+// 對應，命名加 Entry 前綴避免跟 store 裡 AddFoodDrawer 用的 FoodDraftItem
+// 搞混，那個是「還沒送出」的暫存項目，這個是「已經存進資料庫」的
+type FoodRecordEntryItem = {
   id: number;
-  pet_id: number;
   food_name: string;
   image_url: string | null;
   portion_grams: number;
   calories: number;
+};
+
+// 一筆飲食記錄＝一餐，底下可能混合多個食材（見 apps/api 的
+// food_records + food_record_items 拆表設計），total_calories 是後端
+// 算好的加總，不用自己再 reduce items 一次
+type FoodRecordEntry = {
+  id: number;
+  pet_id: number;
+  items: FoodRecordEntryItem[];
+  total_calories: number;
   meal_type: "breakfast" | "lunch" | "dinner" | "snack";
   fed_at: string;
   note: string | null;
 };
 
 const mealTypeOrder: {
-  value: FoodRecordItem["meal_type"];
+  value: FoodRecordEntry["meal_type"];
   label: string;
   icon: string;
 }[] = [
@@ -158,7 +170,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
   const selectedPet = usePetStore((s) => s.selectedPet);
   const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
   const [selectedDate, setSelectedDate] = useState(startOfToday);
-  const [records, setRecords] = useState<FoodRecordItem[]>([]);
+  const [records, setRecords] = useState<FoodRecordEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 一次抓這隻寵物「所有」飲食記錄，切換日期時在前端過濾——後端
@@ -170,7 +182,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
       return;
     }
     setLoading(true);
-    apiFetch<FoodRecordItem[]>(`/food/food-records/${petId}`, {
+    apiFetch<FoodRecordEntry[]>(`/food/food-records/${petId}`, {
       method: "GET",
     })
       .then(setRecords)
@@ -189,13 +201,30 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
   const recordsForDate = records.filter(
     (r) => toDateKey(new Date(r.fed_at)) === dateKey,
   );
-  const totalCalories = sumCalories(recordsForDate);
+  // sumCalories 吃的是 { calories: number }[]，這裡拿每筆記錄後端算好的
+  // total_calories 加總，不用自己重新展開 items 再 reduce 一次
+  const totalCalories = sumCalories(
+    recordsForDate.map((r) => ({ calories: r.total_calories })),
+  );
   const dailyCalories = selectedPet ? calculateDailyCalories(selectedPet) : null;
 
+  // 一筆記錄可能混合多個食材，畫面上是「每個食材各自一行」，所以要把
+  // recordsForDate 依 meal_type 分組後，再把每筆記錄底下的 items 展開成
+  // 一行一行——key 用 `${record.id}-${item.id}`，同一個食材名稱在不同
+  // 記錄裡出現多次也不會撞 key
   const groups = mealTypeOrder
     .map((meal) => ({
       ...meal,
-      items: recordsForDate.filter((r) => r.meal_type === meal.value),
+      items: recordsForDate
+        .filter((r) => r.meal_type === meal.value)
+        .flatMap((r) =>
+          r.items.map((item) => ({
+            key: `${r.id}-${item.id}`,
+            food_name: item.food_name,
+            portion_grams: item.portion_grams,
+            calories: item.calories,
+          })),
+        ),
     }))
     .filter((g) => g.items.length > 0);
 
@@ -241,7 +270,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
               <div className="space-y-1.5">
                 {g.items.map((item) => (
                   <div
-                    key={item.id}
+                    key={item.key}
                     className="flex items-center gap-2 rounded-xl bg-[#fbf7f1] p-2"
                   >
                     <span className="grid h-7 w-7 place-items-center rounded-full bg-white">

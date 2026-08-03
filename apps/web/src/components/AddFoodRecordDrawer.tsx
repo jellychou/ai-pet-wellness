@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronLeft, UtensilsCrossed, X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
@@ -64,14 +64,20 @@ const inputClass =
 
 // 疊在 AddFoodDrawer 上面的第二層 drawer。跟 AddVaccineFormDrawer 共用同一套
 // 寵物選擇器 UI（petHeader），但這裡是獨立複製一份，不是共用元件——這個
-// session 建立的每個 xxxFormDrawer 都是各自獨立一份，方便各自演化
+// session 建立的每個 xxxFormDrawer 都是各自獨立一份，方便各自演化。
+// 這裡操作的是 AddFoodDrawer 已經彙整好的 foodDraftItems（可能混合拍照
+// 辨識跟從歷史選擇的多個食材），不是單一 foodScanResult——一筆飲食記錄
+// 現在可以混合多個食材，各自份量在這裡還能再調整一次
 export function AddFoodRecordDrawer() {
   const open = useAppStore((s) => s.addFoodRecordOpen);
   const setOpen = useAppStore((s) => s.setAddFoodRecordOpen);
   const setAddFoodOpen = useAppStore((s) => s.setAddFoodOpen);
-  const result = useAppStore((s) => s.foodScanResult);
-  const setResult = useAppStore((s) => s.setFoodScanResult);
-  const imageUrl = useAppStore((s) => s.foodScanImageUrl);
+  const draftItems = useAppStore((s) => s.foodDraftItems);
+  const updateFoodDraftItemPortion = useAppStore(
+    (s) => s.updateFoodDraftItemPortion,
+  );
+  const removeFoodDraftItem = useAppStore((s) => s.removeFoodDraftItem);
+  const clearFoodDraftItems = useAppStore((s) => s.clearFoodDraftItems);
   const bumpFoodRecordRefreshKey = useAppStore(
     (s) => s.bumpFoodRecordRefreshKey,
   );
@@ -81,58 +87,44 @@ export function AddFoodRecordDrawer() {
 
   const [targetPet, setTargetPet] = useState<Pet | null>(null);
   const [petPickerOpen, setPetPickerOpen] = useState(false);
-  const [portionGrams, setPortionGrams] = useState(100);
   const [mealType, setMealType] = useState<string>("snack");
   const [fedAt, setFedAt] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // 每次打開都是全新填寫一筆飲食記錄。份量預設用 AI 估計的 estimated_grams
-  // ——使用者身邊通常沒有秤，直接沿用 AI 估的份量，不用再手動輸入一次；
-  // 如果實際餵的比照片裡少（例如只餵一半），使用者還是可以用下面的份量
-  // 加減鈕自己調整
+  // 每次打開都是全新填寫一筆飲食記錄（食材清單本身在 AddFoodDrawer 就已經
+  // 彙整好了，這裡只重置餐別/時間/備註這幾個「這一餐」共同的欄位）
   useEffect(() => {
     if (!open) return;
     setTargetPet(selectedPet);
     setPetPickerOpen(false);
-    setPortionGrams(Math.round(result?.estimated_grams ?? 0));
     setMealType("snack");
     setFedAt(toDateTimeLocal(new Date()));
     setNote("");
     setError("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, selectedPet]);
 
-  // AI 現在直接給「這一份」的總熱量/總重量，不是每 100g 密度，所以份量
-  // 沒被調整過的話，總熱量就直接等於 AI 估的 calories；使用者調整份量
-  // （例如寵物只吃了一半）時，用 AI 估出來的「這一份總熱量 ÷ 這一份總重量」
-  // 反推每公克熱量密度，再乘上調整後的份量，維持跟原始估計一致的比例
-  const caloriesPerGram =
-    result && result.estimated_grams > 0
-      ? result.calories / result.estimated_grams
-      : 0;
-  const totalCalories = Math.round(caloriesPerGram * portionGrams * 10) / 10;
+  const totalCalories =
+    Math.round(
+      draftItems.reduce((sum, item) => sum + item.calories, 0) * 10,
+    ) / 10;
 
   function handleClose() {
     setOpen(false);
   }
 
-  function adjustPortion(delta: number) {
-    setPortionGrams((v) => Math.max(0, v + delta));
-  }
-
   async function handleSave() {
-    if (!result) {
-      setError("沒有辨識結果，請重新拍照辨識");
+    if (draftItems.length === 0) {
+      setError("沒有食材，請先在上一頁新增");
       return;
     }
     if (!targetPet) {
       setError("請選擇寵物");
       return;
     }
-    if (portionGrams <= 0) {
-      setError("請輸入正確的份量");
+    if (draftItems.some((item) => item.portion_grams <= 0)) {
+      setError("每項食材的份量都要大於 0");
       return;
     }
     if (!fedAt) {
@@ -146,10 +138,12 @@ export function AddFoodRecordDrawer() {
         method: "POST",
         body: JSON.stringify({
           pet_id: targetPet.id,
-          food_name: result.food_name,
-          image_url: imageUrl,
-          portion_grams: portionGrams,
-          calories: totalCalories,
+          items: draftItems.map((item) => ({
+            food_name: item.food_name,
+            image_url: item.image_url,
+            portion_grams: item.portion_grams,
+            calories: item.calories,
+          })),
           meal_type: mealType,
           fed_at: new Date(fedAt).toISOString(),
           note: note || null,
@@ -159,7 +153,7 @@ export function AddFoodRecordDrawer() {
       setOpen(false);
       // 記完就整套關掉、回首頁，跟 AiScanDrawer 流程完成後一樣不用留在原地
       setAddFoodOpen(false);
-      setResult(null);
+      clearFoodDraftItems();
       // Dashboard 的飲食記錄卡片不會因為這個 drawer 關掉而重新 mount，
       // 用這個訊號讓它知道要重新抓一次，新記錄才會馬上出現
       bumpFoodRecordRefreshKey();
@@ -245,52 +239,102 @@ export function AddFoodRecordDrawer() {
         <div className="mx-auto max-w-md space-y-4">
           {petHeader}
 
-          <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4">
-            <div className="text-sm font-semibold text-ink">
-              {result?.food_name ?? "尚未辨識食物"}
-            </div>
-            <div className="mt-1 text-[11px] text-ink/45">
-              AI 估計整份約 {result?.estimated_grams ?? 0}g / {result?.calories ?? 0} kcal
-            </div>
-
-            <div className="mt-4">
-              <label className="mb-1 block text-[12px] font-medium text-ink/70">
-                實際餵食份量（g）
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => adjustPortion(-10)}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#ece4dc] text-ink/60 transition hover:bg-cream"
-                >
-                  −
-                </button>
-                <div className="flex-1 text-center text-base font-semibold text-ink">
-                  {portionGrams}
-                  <span className="ml-1 text-xs font-normal text-ink/40">
-                    g
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => adjustPortion(10)}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#ece4dc] text-ink/60 transition hover:bg-cream"
-                >
-                  +
-                </button>
+          <div className="space-y-2.5">
+            {draftItems.length === 0 ? (
+              <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 text-center text-sm text-ink/40">
+                尚未新增食材，請回上一頁新增
               </div>
-            </div>
+            ) : (
+              draftItems.map((item) => (
+                <div
+                  key={item.localId}
+                  className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.food_name}
+                          className="h-10 w-10 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f1e6d8] text-[#b98a5c]">
+                          <UtensilsCrossed size={16} />
+                        </span>
+                      )}
+                      <div className="truncate text-sm font-semibold text-ink">
+                        {item.food_name}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFoodDraftItem(item.localId)}
+                      aria-label={`移除 ${item.food_name}`}
+                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink/35 transition hover:bg-cream hover:text-ink/60"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
 
-            <div className="my-4 h-px bg-[#eee5da]" />
+                  <div className="mt-3">
+                    <label className="mb-1 block text-[12px] font-medium text-ink/70">
+                      實際餵食份量（g）
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateFoodDraftItemPortion(
+                            item.localId,
+                            Math.max(0, item.portion_grams - 10),
+                          )
+                        }
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#ece4dc] text-ink/60 transition hover:bg-cream"
+                      >
+                        −
+                      </button>
+                      <div className="flex-1 text-center text-base font-semibold text-ink">
+                        {item.portion_grams}
+                        <span className="ml-1 text-xs font-normal text-ink/40">
+                          g
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateFoodDraftItemPortion(
+                            item.localId,
+                            item.portion_grams + 10,
+                          )
+                        }
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#ece4dc] text-ink/60 transition hover:bg-cream"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-ink/50">這次總熱量</span>
-              <span className="text-xl font-bold text-ink">
-                {totalCalories}
-                <span className="ml-1 text-xs font-normal text-ink/40">
-                  kcal
+                  <div className="mt-3 flex items-center justify-between text-xs text-ink/50">
+                    <span>這項熱量</span>
+                    <span className="font-semibold text-ink">
+                      {item.calories} kcal
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+
+            <div className="rounded-2xl bg-[#fbf7f1] p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink/50">這次總熱量</span>
+                <span className="text-xl font-bold text-ink">
+                  {totalCalories}
+                  <span className="ml-1 text-xs font-normal text-ink/40">
+                    kcal
+                  </span>
                 </span>
-              </span>
+              </div>
             </div>
           </div>
 
@@ -347,7 +391,7 @@ export function AddFoodRecordDrawer() {
           <button
             type="button"
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || draftItems.length === 0}
             className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? "儲存中…" : "加入飲食記錄"}

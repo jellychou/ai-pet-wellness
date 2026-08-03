@@ -5,7 +5,7 @@ from app.models.vaccine import VaccineRecord
 from app.models.report import ReportRecord
 from app.models.ai_scan import AiScanLog
 from app.models.food_scan import FoodScanLog
-from app.models.food_record import FoodRecord
+from app.models.food_record import FoodRecord, FoodRecordItem
 
 __all__ = [
     "User",
@@ -15,4 +15,5 @@ __all__ = [
     "AiScanLog",
     "FoodScanLog",
     "FoodRecord",
+    "FoodRecordItem",
 ]

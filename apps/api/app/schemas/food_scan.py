@@ -11,6 +11,9 @@ Species = Literal["dog", "cat"]
 class AnalyzeFoodRequest(BaseModel):
     pet_id: int
     image_url: str
+    # 使用者上傳照片後、按「開始分析」前自己補充的說明，選填。跟
+    # ai_scan.py 的 description 是同樣的概念，會附進送給 AI 的 prompt 裡
+    description: str | None = None
 
 
 # 每天可以打幾次 AI 食物辨識、目前用了幾次。跟 AiScanUsageOut 是同樣的概念，
@@ -81,6 +84,7 @@ class FoodScanHistoryItemOut(BaseModel):
     id: int
     pet_id: int
     image_url: str
+    user_note: str | None = None
     food_detected: bool
     food_name: str
     confidence: int

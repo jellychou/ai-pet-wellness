@@ -46,6 +46,28 @@ export type FoodScanResult = {
   disclaimer: string;
 };
 
+// AddFoodDrawer 這一輪要加入飲食記錄的暫存清單——一餐可能混合「拍照辨識」
+// 跟「從歷史選擇」兩種來源，加進來的每一項都還沒送到後端，使用者在
+// AddFoodRecordDrawer 調整完份量、選好餐別/時間才會一次性 POST 出去。
+// caloriesPerGram 是加入當下算好的熱量密度（來源可能是這次 AI 估計、也可能
+// 是歷史紀錄裡那筆的原始比例），調整份量時用它反推新的 calories，不用重新
+// 辨識或再打一次 API。localId 純前端用（uuid），跟後端 FoodRecordItem.id
+// 是兩件事——這一輪還沒存進去，本來就沒有後端 id
+export type FoodDraftItem = {
+  localId: string;
+  food_name: string;
+  image_url: string | null;
+  portion_grams: number;
+  calories: number;
+  caloriesPerGram: number;
+  source: "scan" | "history";
+  // 只有「拍照辨識」來源才有——完整的 AI 分析結果，保留起來是為了「AI 辨識
+  // 結果」畫面可以點進去看逐項食材/安全等級/建議等細節，也讓「營養概況」
+  // 可以用 protein/fat/carb/fiber 算百分比。從歷史選擇來的品項沒有這份
+  // 資料（後端沒存過營養素），這裡就是 undefined，畫面要對這種情況防呆
+  scanDetail?: FoodScanResult;
+};
+
 // 從 AiScanDrawer 帶去 AICenterPage（AI 心靈導師）的分析結果摘要，讓那頁
 // 一開始就能顯示「已引用今日影像分析」——目前 AICenterPage 還是純前端假
 // 資料（罐頭回覆），這裡只是把 context 遞過去顯示，還沒接真的後端對話
@@ -67,6 +89,11 @@ type AppState = {
   // AiScanDrawer 上面同一個模式，各自獨立開關
   foodScanHistoryOpen: boolean;
   setFoodScanHistoryOpen: (v: boolean) => void;
+  // 「從歷史選擇」picker，疊在 AddFoodDrawer 上面的另一個第二層 drawer，
+  // 跟 foodScanHistoryOpen 是不同畫面：那個是唯讀查看 AI 辨識記錄，這個是
+  // 可以多選、把選到的品項加進 foodDraftItems 的互動畫面
+  foodHistoryItemsOpen: boolean;
+  setFoodHistoryItemsOpen: (v: boolean) => void;
   addFoodRecordOpen: boolean;
   setAddFoodRecordOpen: (v: boolean) => void;
   editFoodResultOpen: boolean;
@@ -78,6 +105,14 @@ type AppState = {
   // 上傳到 Cloudinary 後拿到的網址，AddFoodRecordDrawer 存飲食紀錄時要一起帶入
   foodScanImageUrl: string | null;
   setFoodScanImageUrl: (v: string | null) => void;
+  // 這一輪「加入飲食記錄」暫存的多個食材/品項，AddFoodDrawer 負責新增
+  // （拍照辨識完按「加入清單」、或從歷史選擇 picker 多選加入）跟移除，
+  // AddFoodRecordDrawer 讀這份清單調整份量、送出後端
+  foodDraftItems: FoodDraftItem[];
+  addFoodDraftItem: (item: FoodDraftItem) => void;
+  updateFoodDraftItemPortion: (localId: string, portionGrams: number) => void;
+  removeFoodDraftItem: (localId: string) => void;
+  clearFoodDraftItems: () => void;
   // 跟 vaccineRefreshKey 同樣的道理：Dashboard 的飲食記錄卡片只在自己
   // mount/切換寵物時打一次 API，AddFoodRecordDrawer 新增成功關掉不會觸發
   // 它重新 mount，所以用這個數字當訊號，新增成功就 +1，讓卡片重新抓一次
@@ -139,6 +174,9 @@ export const useAppStore = create<AppState>((set) => ({
   setAddFoodOpen: (addFoodOpen) => set({ addFoodOpen }),
   foodScanHistoryOpen: false,
   setFoodScanHistoryOpen: (foodScanHistoryOpen) => set({ foodScanHistoryOpen }),
+  foodHistoryItemsOpen: false,
+  setFoodHistoryItemsOpen: (foodHistoryItemsOpen) =>
+    set({ foodHistoryItemsOpen }),
   addFoodRecordOpen: false,
   setAddFoodRecordOpen: (addFoodRecordOpen) => set({ addFoodRecordOpen }),
   editFoodResultOpen: false,
@@ -147,6 +185,29 @@ export const useAppStore = create<AppState>((set) => ({
   setFoodScanResult: (foodScanResult) => set({ foodScanResult }),
   foodScanImageUrl: null,
   setFoodScanImageUrl: (foodScanImageUrl) => set({ foodScanImageUrl }),
+  foodDraftItems: [],
+  addFoodDraftItem: (item) =>
+    set((s) => ({ foodDraftItems: [...s.foodDraftItems, item] })),
+  updateFoodDraftItemPortion: (localId, portionGrams) =>
+    set((s) => ({
+      foodDraftItems: s.foodDraftItems.map((item) =>
+        item.localId === localId
+          ? {
+              ...item,
+              portion_grams: portionGrams,
+              calories:
+                Math.round(item.caloriesPerGram * portionGrams * 10) / 10,
+            }
+          : item,
+      ),
+    })),
+  removeFoodDraftItem: (localId) =>
+    set((s) => ({
+      foodDraftItems: s.foodDraftItems.filter(
+        (item) => item.localId !== localId,
+      ),
+    })),
+  clearFoodDraftItems: () => set({ foodDraftItems: [] }),
   foodRecordRefreshKey: 0,
   bumpFoodRecordRefreshKey: () =>
     set((s) => ({ foodRecordRefreshKey: s.foodRecordRefreshKey + 1 })),

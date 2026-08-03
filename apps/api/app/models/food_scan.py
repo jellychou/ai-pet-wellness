@@ -32,6 +32,11 @@ class FoodScanLog(Base):
     )
     # 上傳去分析的那張照片網址（Cloudinary），檢視記錄時當縮圖用
     image_url: Mapped[str] = mapped_column(Text, nullable=False)
+    # 使用者上傳照片後、按「開始分析」前自己補充的說明（例如「這是剛買的
+    # 潔牙骨，包裝上寫著XX品牌」），選填。跟 ai_scan.py 的 user_note 是
+    # 同樣的概念——先讓使用者補充一段文字再送出分析，AI 判斷時可以參考，
+    # 不是只能單靠照片本身
+    user_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     # 照片裡有沒有真的辨識出食物——AI 有時候會拍到不是食物的東西（例如空盤子、
     # 包裝袋），這種情況下面的營養/安全欄位沒有意義，前端要照這個欄位顯示
     # 「無法辨識」的狀態，不要硬是顯示一堆假資料

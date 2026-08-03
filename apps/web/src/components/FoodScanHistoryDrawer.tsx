@@ -20,6 +20,7 @@ type FoodScanHistoryItem = {
   id: number;
   pet_id: number;
   image_url: string;
+  user_note: string | null;
   food_detected: boolean;
   food_name: string;
   confidence: number;
@@ -126,6 +127,11 @@ export function FoodScanHistoryDrawer() {
                               .filter((entry) => entry.included)
                               .map((entry) => entry.name)
                               .join("、")}
+                          </p>
+                        )}
+                        {item.user_note && (
+                          <p className="mt-0.5 truncate text-[11px] text-ink/35">
+                            補充說明：{item.user_note}
                           </p>
                         )}
                         {(item.calories_low > 0 || item.calories_high > 0) && (

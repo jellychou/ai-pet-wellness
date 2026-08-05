@@ -7,6 +7,10 @@ import {
 } from "react";
 import { Image as ImageIcon, Send } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { usePetStore } from "../store/usePetStore";
+import { apiFetch } from "../lib/api";
+import { uploadImageToCloudinary } from "../lib/cloudinary";
+import { useAlert } from "../hooks/useAlert";
 
 const petAvatar =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop";
@@ -19,14 +23,26 @@ type Message = {
   text?: string;
   imageUrl?: string;
   time: string;
+  // 只有 AI 訊息才有——每輪 AI 回應自己帶的快速回覆選項，不是前端寫死的，
+  // 對話收斂（is_finished）之後最後一則 AI 訊息不會有這個
+  quickReplies?: string[];
 };
 
-const aiReplies = [
-  "謝謝你願意觀察並在意牠的情緒 🐾 我幫你整理了幾個可能的原因，你可以先試試調整看看，有需要隨時再跟我說喔！",
-  "了解～這個狀況滿常見的，建議先觀察 2-3 天並記錄下來，如果持續沒有改善，會建議帶去給獸醫看看。",
-  "收到這張照片了！看起來狀況還算穩定，但如果有紅腫或持續搔癢，還是建議儘快就醫比較保險喔。",
-  "這是個很好的問題！我會建議從飲食和運動量兩個方向先調整，通常 1-2 週就會看到明顯改善。",
-];
+type MentorUsage = {
+  used: number;
+  limit: number;
+  unlimited: boolean;
+};
+
+type MentorChatResponse = {
+  id: number;
+  is_finished: boolean;
+  message: { role: string; content: string };
+  created_at: string;
+  summary_sections: string[] | null;
+  quick_replies: string[] | null;
+  usage: MentorUsage;
+};
 
 function now() {
   const d = new Date();
@@ -37,113 +53,180 @@ function now() {
 
 let nextId = 100;
 
-const DEFAULT_MESSAGES: Message[] = [
-  {
-    id: 1,
-    from: "user",
-    text: "Coco，我家狗狗最近常常在晚上叫，看起來有點焦躁，該怎麼辦？",
-    time: "09:42",
-  },
-  {
-    id: 2,
-    from: "ai",
-    text: "謝謝你願意觀察並在意牠的情緒 🐾\n晚上叫可能是因為…\n1. 環境變化或不安全感\n2. 精力沒被消耗完\n3. 分離焦慮或想引起注意\n\n你可以先試試這些方法：\n・晚上散步或增加活動量\n・提供安靜、舒適的睡覺環境\n・睡前進行放鬆儀式（如輕柔按摩）\n\n你覺得哪一個方法最適合你們呢？我可以陪你一起試試看 🧡",
-    time: "09:44",
-  },
-];
-
 export function AICenterPage() {
-  // AiScanDrawer 按「詢問 AI 心靈導師」時會把這次分析結果存進來——這裡還是
-  // 純前端假資料的聊天室（沒有真的後端對話），只是把這段 context 拿來組成
-  // 開場白，讓使用者感覺得到「有把剛剛的分析結果帶過來」。只消費一次：
-  // 讀到之後就從 store 清掉，重新整理/再逛回這頁不會一直重複帶入舊資料
+  // AiScanDrawer 按「詢問 AI 心靈導師」時會把這次分析結果存進來——這裡拿來
+  // 組成開場的背景資訊，讓後端 system prompt 可以直接引用，AI 的開場白就
+  // 會提到「今天影像分析」的內容。只消費一次：讀到之後就從 store 清掉，
+  // 重新整理/再逛回這頁不會一直重複帶入舊資料
   const aiScanReference = useAppStore((s) => s.aiScanReferenceForMentor);
   const setAiScanReferenceForMentor = useAppStore(
     (s) => s.setAiScanReferenceForMentor,
   );
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (!aiScanReference) return DEFAULT_MESSAGES;
-    const parts = [
-      "已引用今日影像分析 🐾",
-      aiScanReference.bodyPart ? `部位：${aiScanReference.bodyPart}` : null,
-      aiScanReference.summary,
-      aiScanReference.suggestions.length > 0
-        ? `目前的建議：\n${aiScanReference.suggestions.map((s) => `・${s}`).join("\n")}`
-        : null,
-      "想多聊聊這件事，或是有其他觀察到的行為/情緒變化，都可以直接跟我說喔！",
-    ].filter((p): p is string => Boolean(p));
-    return [
-      {
-        id: 1,
-        from: "ai",
-        text: parts.join("\n\n"),
-        time: now(),
-      },
-    ];
-  });
+  const selectedPet = usePetStore((s) => s.selectedPet);
+  const { showError } = useAlert();
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [isFinished, setIsFinished] = useState(false);
+  const [summarySections, setSummarySections] = useState<string[] | null>(
+    null,
+  );
+  const [usage, setUsage] = useState<MentorUsage | null>(null);
   const [input, setInput] = useState("");
   const [aiTyping, setAiTyping] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     listEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, aiTyping]);
 
-  // 只消費一次：畫面顯示完就把 store 裡的 reference 清掉
+  function applyResponse(res: MentorChatResponse) {
+    setSessionId(res.id);
+    setIsFinished(res.is_finished);
+    setSummarySections(res.summary_sections);
+    setUsage(res.usage);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId++,
+        from: "ai",
+        text: res.message.content,
+        time: now(),
+        quickReplies: res.quick_replies ?? undefined,
+      },
+    ]);
+  }
+
+  async function startConversation() {
+    if (!selectedPet) return;
+    setAiTyping(true);
+    try {
+      const context = aiScanReference
+        ? [
+            "已引用今日影像分析",
+            aiScanReference.bodyPart ? `部位：${aiScanReference.bodyPart}` : null,
+            aiScanReference.summary,
+            aiScanReference.suggestions.length > 0
+              ? `目前的建議：${aiScanReference.suggestions.join("；")}`
+              : null,
+          ]
+            .filter((p): p is string => Boolean(p))
+            .join("\n")
+        : undefined;
+      const res = await apiFetch<MentorChatResponse>("/mentor/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          pet_id: selectedPet.id,
+          mentor_session_id: null,
+          content: "",
+          context,
+        }),
+      });
+      applyResponse(res);
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "AI 心靈導師開場失敗，請稍後再試",
+      );
+    } finally {
+      setAiTyping(false);
+    }
+  }
+
+  // 只消費一次：畫面顯示完就把 store 裡的 reference 清掉，並在同一個時機
+  // 自動開一段新對話（對應 mockup 第一張圖：AI 主動開場，不是使用者先講話）
   useEffect(() => {
+    if (!selectedPet || startedRef.current) return;
+    startedRef.current = true;
+    startConversation();
     if (aiScanReference) {
       setAiScanReferenceForMentor(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedPet?.id]);
 
-  function replyFromAi() {
-    setAiTyping(true);
-    window.setTimeout(() => {
-      setAiTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: nextId++,
-          from: "ai",
-          text: aiReplies[Math.floor(Math.random() * aiReplies.length)],
-          time: now(),
-        },
-      ]);
-    }, 900);
-  }
-
-  function sendText(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+  async function sendMessage(content: string, imageUrl?: string) {
+    if (!selectedPet || isFinished) return;
+    if (!content.trim() && !imageUrl) return;
     setMessages((prev) => [
       ...prev,
-      { id: nextId++, from: "user", text: trimmed, time: now() },
+      {
+        id: nextId++,
+        from: "user",
+        text: content.trim() || undefined,
+        imageUrl,
+        time: now(),
+      },
     ]);
-    replyFromAi();
+    setAiTyping(true);
+    try {
+      const res = await apiFetch<MentorChatResponse>("/mentor/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          pet_id: selectedPet.id,
+          mentor_session_id: sessionId,
+          content,
+          image_url: imageUrl ?? null,
+        }),
+      });
+      applyResponse(res);
+    } catch (error) {
+      showError(
+        error instanceof Error ? error.message : "AI 回覆失敗，請稍後再試",
+      );
+    } finally {
+      setAiTyping(false);
+    }
   }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    sendText(input);
+    const text = input.trim();
+    if (!text) return;
     setInput("");
+    sendMessage(text);
   }
 
-  function handleImagePick(e: ChangeEvent<HTMLInputElement>) {
+  async function handleImagePick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setMessages((prev) => [
-      ...prev,
-      { id: nextId++, from: "user", imageUrl: url, time: now() },
-    ]);
-    replyFromAi();
     e.target.value = "";
+    if (!file) return;
+    try {
+      const url = await uploadImageToCloudinary(file);
+      await sendMessage("", url);
+    } catch (error) {
+      showError(
+        error instanceof Error ? error.message : "圖片上傳失敗，請稍後再試",
+      );
+    }
   }
+
+  function handleRestart() {
+    startedRef.current = false;
+    setMessages([]);
+    setSessionId(null);
+    setIsFinished(false);
+    setSummarySections(null);
+    startedRef.current = true;
+    startConversation();
+  }
+
+  const lastMessage = messages[messages.length - 1];
+  const activeQuickReplies =
+    !isFinished && lastMessage?.from === "ai" ? lastMessage.quickReplies : undefined;
 
   return (
     <div className="mx-auto max-w-md flex-col h-[calc(100dvh-178px)] overflow-y-auto">
+      {usage && (
+        <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[11px] font-medium text-[#688696]">
+          {usage.unlimited
+            ? `管理員帳號，今日已開啟 ${usage.used} 段對話，無次數限制`
+            : `今日已開啟 ${usage.used} / ${usage.limit} 段新對話`}
+        </div>
+      )}
       <div className="min-h-[calc(100dvh-191px)] flex-1 space-y-4 overflow-y-auto pb-2">
         {messages.map((m) =>
           m.from === "user" ? (
@@ -206,66 +289,84 @@ export function AICenterPage() {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 pl-10">
-          <button
-            type="button"
-            onClick={() => sendText("好有幫助！")}
-            className="rounded-full bg-[#fbe9d9] px-4 py-2 text-xs font-medium text-[#b9803f] transition hover:brightness-95"
-          >
-            好有幫助！
-          </button>
-          <button
-            type="button"
-            onClick={() => sendText("想知道更多")}
-            className="rounded-full bg-[#dcefe9] px-4 py-2 text-xs font-medium text-[#3f9c8a] transition hover:brightness-95"
-          >
-            想知道更多
-          </button>
-          <button
-            type="button"
-            onClick={() => sendText("謝謝你")}
-            className="rounded-full bg-[#dde6fb] px-4 py-2 text-xs font-medium text-[#5b6fce] transition hover:brightness-95"
-          >
-            謝謝你
-          </button>
-        </div>
+        {/* 分析結果卡片——is_finished=true 時後端回的重點整理，對應
+            mockup 第三張圖的分類條列，取代原本的聊天泡泡形式 */}
+        {isFinished && summarySections && summarySections.length > 0 && (
+          <div className="rounded-2xl border border-[#ece0d2] bg-[#fdf7ee] p-4">
+            <div className="text-xs font-semibold text-[#b9803f]">
+              這次對話的重點整理
+            </div>
+            <ul className="mt-2 space-y-1.5">
+              {summarySections.map((s, i) => (
+                <li key={i} className="flex gap-2 text-sm leading-5 text-ink/80">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#caa06f]" />
+                  {s}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={handleRestart}
+              className="mt-3 w-full rounded-full bg-[#e8a56b] py-2.5 text-xs font-semibold text-white transition hover:bg-[#dc9558]"
+            >
+              開始新的對話
+            </button>
+          </div>
+        )}
+
+        {activeQuickReplies && activeQuickReplies.length > 0 && (
+          <div className="flex flex-wrap gap-2 pl-10">
+            {activeQuickReplies.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => sendMessage(option)}
+                className="rounded-full bg-[#fbe9d9] px-4 py-2 text-xs font-medium text-[#b9803f] transition hover:brightness-95"
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
         <div ref={listEndRef} />
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex shrink-0 items-center gap-2 pt-2 fixed left-[6px] right-[6px] bottom-[70px]"
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleImagePick}
-        />
-        <button
-          type="button"
-          aria-label="上傳圖片"
-          onClick={() => fileInputRef.current?.click()}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f3ece2] text-ink/50 transition hover:bg-[#ecdfd0]"
+      {!isFinished && (
+        <form
+          onSubmit={handleSubmit}
+          className="flex shrink-0 items-center gap-2 pt-2 fixed left-[6px] right-[6px] bottom-[70px]"
         >
-          <ImageIcon size={18} />
-        </button>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="min-w-0 flex-1 rounded-full border border-[#eee5dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-ink/30"
-          placeholder="輸入訊息..."
-        />
-        <button
-          type="submit"
-          aria-label="送出訊息"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#e8a56b] text-white transition hover:bg-[#dc9558] disabled:opacity-40"
-          disabled={!input.trim()}
-        >
-          <Send size={16} />
-        </button>
-      </form>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImagePick}
+          />
+          <button
+            type="button"
+            aria-label="上傳圖片"
+            onClick={() => fileInputRef.current?.click()}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f3ece2] text-ink/50 transition hover:bg-[#ecdfd0]"
+          >
+            <ImageIcon size={18} />
+          </button>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="min-w-0 flex-1 rounded-full border border-[#eee5dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-ink/30"
+            placeholder="輸入訊息..."
+          />
+          <button
+            type="submit"
+            aria-label="送出訊息"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#e8a56b] text-white transition hover:bg-[#dc9558] disabled:opacity-40"
+            disabled={!input.trim()}
+          >
+            <Send size={16} />
+          </button>
+        </form>
+      )}
     </div>
   );
 }

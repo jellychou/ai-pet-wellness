@@ -17,6 +17,7 @@ from app.routers import (
     food_scan,
     food_record,
     health_journal,
+    mentor,
 )
 
 settings = get_settings()
@@ -69,3 +70,4 @@ app.include_router(ai_scan.router)
 app.include_router(food_scan.router)
 app.include_router(food_record.router)
 app.include_router(health_journal.router)
+app.include_router(mentor.router)

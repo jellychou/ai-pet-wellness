@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Cat, ChevronLeft, Dog, Heart, Mail, PawPrint } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import patternBg from "../assets/images/pattern-watermark.svg";
 import { ResetLinkSentSheet } from "./ResetLinkSentSheet";
 import { apiFetch, ApiError } from "../lib/api";
@@ -15,6 +16,7 @@ export function ForgotPasswordDrawer({
   open,
   onClose,
 }: ForgotPasswordDrawerProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -30,11 +32,11 @@ export function ForgotPasswordDrawer({
   async function handleSubmit() {
     setError("");
     if (!email) {
-      setError("請輸入您註冊的電子郵件");
+      setError(t("forgotPassword.emailRequiredError"));
       return;
     }
     if (!emailPattern.test(email)) {
-      setError("請輸入正確的電子郵件格式");
+      setError(t("forgotPassword.emailInvalidError"));
       return;
     }
 
@@ -47,9 +49,7 @@ export function ForgotPasswordDrawer({
       setSent(true);
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : "無法連上伺服器，請確認後端是否已啟動",
+        err instanceof ApiError ? err.message : t("login.serverError"),
       );
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export function ForgotPasswordDrawer({
         <button
           type="button"
           onClick={resetAndClose}
-          aria-label="返回"
+          aria-label={t("common.backAria")}
           className="grid h-9 w-9 place-items-center rounded-full text-ink/60 transition hover:bg-white/60"
         >
           <ChevronLeft size={20} />
@@ -86,13 +86,13 @@ export function ForgotPasswordDrawer({
         <div className="mx-auto w-full max-w-sm">
           <div className="mt-2 text-center">
             <h2 className="inline-flex items-center gap-1.5 text-xl font-bold text-ink">
-              忘記密碼？
+              {t("forgotPassword.title")}
               <PawPrint size={16} className="text-[#c9a06f]" />
             </h2>
             <p className="mt-2 text-sm leading-6 text-ink/60">
-              別擔心！輸入您的註冊信箱，
+              {t("forgotPassword.subtitleLine1")}
               <br />
-              我們將寄送重設密碼的連結給您。
+              {t("forgotPassword.subtitleLine2")}
             </p>
           </div>
 
@@ -102,12 +102,14 @@ export function ForgotPasswordDrawer({
                 <Mail size={16} />
               </span>
               <span className="flex-1">
-                <span className="block text-[11px] text-ink/45">電子郵件</span>
+                <span className="block text-[11px] text-ink/45">
+                  {t("register.emailLabel")}
+                </span>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="請輸入您註冊的電子郵件"
+                  placeholder={t("forgotPassword.emailPlaceholder")}
                   autoComplete="email"
                   className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink/30"
                 />
@@ -125,7 +127,7 @@ export function ForgotPasswordDrawer({
             disabled={loading}
             className="mt-5 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
           >
-            {loading ? "送出中…" : "送出重設連結"}
+            {loading ? t("forgotPassword.sending") : t("forgotPassword.submit")}
           </button>
 
           <div className="mt-4 text-center">
@@ -134,7 +136,7 @@ export function ForgotPasswordDrawer({
               onClick={resetAndClose}
               className="text-xs font-medium text-[#4a90d9] hover:underline"
             >
-              返回登入頁面
+              {t("resetPassword.backAria")}
             </button>
           </div>
 

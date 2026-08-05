@@ -12,11 +12,22 @@ import {
   Fish,
   Heart,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import patternBg from "../assets/images/pattern-watermark.svg";
 import { passwordRequirements, strengthOf } from "../lib/passwordStrength";
 import { apiFetch, ApiError } from "../lib/api";
 
+// strengthOf() 回傳的 label 是純中文字串（"弱"/"中"/"強"），跟共用的
+// lib/passwordStrength.ts 綁在一起，這裡不改那個共用檔（避免影響其他還
+// 沒改的呼叫端），只用這個小 map 把回傳的 label 轉成 i18n key 再顯示
+const STRENGTH_LABEL_KEY: Record<string, string> = {
+  弱: "password.strengthWeak",
+  中: "password.strengthMedium",
+  強: "password.strengthStrong",
+};
+
 export function ResetPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -38,15 +49,15 @@ export function ResetPasswordPage() {
     setError("");
 
     if (!password || !confirmPassword) {
-      setError("請完整填寫所有欄位");
+      setError(t("resetPassword.fieldsRequiredError"));
       return;
     }
     if (password.length < 8) {
-      setError("密碼至少需要 8 個字元");
+      setError(t("resetPassword.passwordTooShortError"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("兩次輸入的密碼不一致");
+      setError(t("resetPassword.passwordMismatchError"));
       return;
     }
 
@@ -61,7 +72,7 @@ export function ResetPasswordPage() {
       setError(
         err instanceof ApiError
           ? err.message
-          : "無法連上伺服器，請確認後端是否已啟動",
+          : t("login.serverError"),
       );
     } finally {
       setLoading(false);
@@ -82,7 +93,7 @@ export function ResetPasswordPage() {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="返回登入頁面"
+          aria-label={t("resetPassword.backAria")}
           className="grid h-9 w-9 place-items-center rounded-full text-ink/60 transition hover:bg-white/60"
         >
           <ChevronLeft size={20} />
@@ -90,29 +101,33 @@ export function ResetPasswordPage() {
 
         <div className="mt-2 flex items-center justify-center gap-3 text-center">
           <Heart size={18} className="fill-[#e8b9a8] text-[#e8b9a8]" />
-          <h2 className="text-xl font-bold text-ink">重設新密碼</h2>
+          <h2 className="text-xl font-bold text-ink">
+            {t("resetPassword.title")}
+          </h2>
           <Heart size={18} className="fill-[#a9c2da] text-[#a9c2da]" />
         </div>
-        <p className="mt-1 text-center text-sm text-ink/60">請輸入新的密碼</p>
+        <p className="mt-1 text-center text-sm text-ink/60">
+          {t("resetPassword.subtitle")}
+        </p>
 
         <div className="mt-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              新密碼
+              {t("password.newLabel")}
             </label>
             <div className="flex items-center rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-4 py-3">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="請輸入至少 8 個字元"
+                placeholder={t("resetPassword.newPasswordPlaceholder")}
                 autoComplete="new-password"
                 className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/30"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label="顯示或隱藏密碼"
+                aria-label={t("password.toggleVisibilityAria")}
                 className="text-ink/35 transition hover:text-ink/60"
               >
                 {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -122,21 +137,21 @@ export function ResetPasswordPage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              確認新密碼
+              {t("password.confirmLabel")}
             </label>
             <div className="flex items-center rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-4 py-3">
               <input
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="請再次輸入新密碼"
+                placeholder={t("password.confirmPlaceholder")}
                 autoComplete="new-password"
                 className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/30"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                aria-label="顯示或隱藏密碼"
+                aria-label={t("password.toggleVisibilityAria")}
                 className="text-ink/35 transition hover:text-ink/60"
               >
                 {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -146,11 +161,11 @@ export function ResetPasswordPage() {
 
           <div>
             <div className="mb-1.5 text-sm text-ink/70">
-              密碼強度：
+              {t("password.strengthLabel")}
               {password && (
                 <span className="font-semibold" style={{ color: strength.color }}>
                   {" "}
-                  {strength.label}
+                  {t(STRENGTH_LABEL_KEY[strength.label] ?? "password.strengthWeak")}
                 </span>
               )}
             </div>
@@ -166,7 +181,9 @@ export function ResetPasswordPage() {
           </div>
 
           <div className="rounded-2xl border border-[#ece0d2] bg-[#fbf8f4] p-4">
-            <div className="mb-2 text-sm text-ink/70">密碼需符合以下條件：</div>
+            <div className="mb-2 text-sm text-ink/70">
+              {t("resetPassword.requirementsTitle")}
+            </div>
             <div className="space-y-2">
               {passwordRequirements.map((r) => {
                 const passed = r.test(password);
@@ -182,7 +199,7 @@ export function ResetPasswordPage() {
                         passed ? "text-ink/80" : "text-ink/50"
                       }`}
                     >
-                      {r.label}
+                      {t(`resetPassword.requirement.${r.key}`)}
                     </span>
                   </div>
                 );
@@ -208,7 +225,7 @@ export function ResetPasswordPage() {
           disabled={loading}
           className="mt-4 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
         >
-          {loading ? "更新中…" : "更新密碼"}
+          {loading ? t("resetPassword.updating") : t("resetPassword.submit")}
         </button>
       </div>
     </div>

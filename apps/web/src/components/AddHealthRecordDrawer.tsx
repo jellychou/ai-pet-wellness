@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import dayjs from "dayjs";
@@ -36,32 +37,34 @@ import type { Pet } from "../data/pets";
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
 
+// label 改成 labelKey：跟 mealTypeOptions 同一個理由，顯示文字要跟著語言
+// 切換，value（"1"~"6"）跟後端 report_type 對應，不受語言影響
 const examTypes = [
-  { label: "年度健康檢查", icon: Stethoscope, value: "1" },
-  { label: "血液檢查", icon: Droplet, value: "2" },
-  { label: "糞便檢查", emoji: "💩", value: "3" },
-  { label: "心臟檢查", icon: Heart, value: "4" },
-  { label: "超音波檢查", icon: Radar, value: "5" },
-  { label: "其他檢查", icon: PlusCircle, value: "6" },
+  { labelKey: "health.reportType.1", icon: Stethoscope, value: "1" },
+  { labelKey: "health.reportType.2", icon: Droplet, value: "2" },
+  { labelKey: "health.reportType.3", emoji: "💩", value: "3" },
+  { labelKey: "health.reportType.4", icon: Heart, value: "4" },
+  { labelKey: "health.reportType.5", icon: Radar, value: "5" },
+  { labelKey: "health.reportType.6", icon: PlusCircle, value: "6" },
 ] as const;
 
 const summaries = [
   {
-    label: "正常",
+    labelKey: "health.summaryNormal",
     icon: CheckCircle2,
     color: "#3fa876",
     bg: "#dff3e6",
     value: "1",
   },
   {
-    label: "需追蹤",
+    labelKey: "health.summaryWatch",
     icon: AlertCircle,
     color: "#d9834f",
     bg: "#fbe9d9",
     value: "2",
   },
   {
-    label: "異常",
+    labelKey: "health.summaryAbnormal",
     icon: AlertTriangle,
     color: "#d9645a",
     bg: "#fdeceb",
@@ -70,6 +73,7 @@ const summaries = [
 ] as const;
 
 export function AddHealthRecordDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.addHealthRecordOpen);
   const setOpen = useAppStore((s) => s.setAddHealthRecordOpen);
   const navigate = useNavigate();
@@ -121,7 +125,7 @@ export function AddHealthRecordDrawer() {
 
   const handleSubmit = async () => {
     if (!targetPet) {
-      showError("請選擇寵物");
+      showError(t("food.selectPetError"));
       return;
     }
     const parsedWeight = Number(weight);
@@ -135,7 +139,7 @@ export function AddHealthRecordDrawer() {
       Number.isNaN(parsedTemp) ||
       Number.isNaN(parsedHeartRate)
     ) {
-      showError("請填寫正確的體重、體溫、心跳數值");
+      showError(t("health.validationVitalsError"));
       return;
     }
 
@@ -165,14 +169,12 @@ export function AddHealthRecordDrawer() {
           report_files: fileUrls,
         }),
       });
-      showSuccess("新增健康檢查紀錄成功");
+      showSuccess(t("health.addSuccess"));
       handleBack();
     } catch (error) {
       console.error(error);
       showError(
-        error instanceof Error
-          ? error.message
-          : "新增健康檢查紀錄失敗，請稍後再試",
+        error instanceof Error ? error.message : t("health.addFailed"),
       );
     } finally {
       setIsSubmitting(false);
@@ -195,11 +197,12 @@ export function AddHealthRecordDrawer() {
           onClick={() => setPetPickerOpen((v) => !v)}
           className="flex items-center gap-1 text-sm font-semibold text-ink"
         >
-          {targetPet?.name ?? "選擇寵物"}
+          {targetPet?.name ?? t("vaccine.selectPetFallback")}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
         <div className="truncate text-[11px] text-ink/45">
-          {targetPet?.birthday && `${calculateAge(targetPet.birthday)}歲 · `}
+          {targetPet?.birthday &&
+            t("vaccine.petAgePrefix", { age: calculateAge(targetPet.birthday) })}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>
       </div>
@@ -242,12 +245,14 @@ export function AddHealthRecordDrawer() {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="返回首頁"
+          aria-label={t("health.backHomeAria")}
           className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-base font-semibold text-ink">新增健康檢查紀錄</h1>
+        <h1 className="text-base font-semibold text-ink">
+          {t("health.addFormHeaderTitle")}
+        </h1>
         <span className="w-9" />
       </div>
 
@@ -258,29 +263,28 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                檢查日期 <span className="text-red-400">*</span>
+                {t("health.fieldExamDate")} <span className="text-red-400">*</span>
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                placeholder="請選擇檢查日期"
                 className={`${inputClass} pr-9 [color-scheme:light]`}
               />
             </div>
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                檢查類型 <span className="text-red-400">*</span>
+                {t("health.fieldExamType")} <span className="text-red-400">*</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {examTypes.map((t) => {
-                  const selected = examType === t.value;
+                {examTypes.map((et) => {
+                  const selected = examType === et.value;
                   return (
                     <button
-                      key={t.label}
+                      key={et.value}
                       type="button"
-                      onClick={() => setExamType(t.value)}
+                      onClick={() => setExamType(et.value)}
                       className={`flex flex-col items-center gap-2 rounded-2xl border p-3 transition ${
                         selected
                           ? "border-[#e8a56b] bg-[#fdf1e6]"
@@ -292,10 +296,10 @@ export function AddHealthRecordDrawer() {
                           selected ? "text-[#d9834f]" : "text-ink/40"
                         }`}
                       >
-                        {"icon" in t ? (
-                          <t.icon size={22} />
+                        {"icon" in et ? (
+                          <et.icon size={22} />
                         ) : (
-                          <span className="text-xl">{t.emoji}</span>
+                          <span className="text-xl">{et.emoji}</span>
                         )}
                       </span>
                       <span
@@ -303,7 +307,7 @@ export function AddHealthRecordDrawer() {
                           selected ? "text-[#c9784a]" : "text-ink/60"
                         }`}
                       >
-                        {t.label}
+                        {t(et.labelKey)}
                       </span>
                     </button>
                   );
@@ -313,14 +317,14 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                檢查結果摘要
+                {t("health.fieldSummary")}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {summaries.map((s) => {
                   const selected = summary === s.value;
                   return (
                     <button
-                      key={s.label}
+                      key={s.value}
                       type="button"
                       onClick={() => setSummary(s.value)}
                       className="flex items-center justify-center gap-1.5 rounded-2xl border py-3 text-sm font-medium transition"
@@ -339,7 +343,7 @@ export function AddHealthRecordDrawer() {
                       }
                     >
                       <s.icon size={16} />
-                      {s.label}
+                      {t(s.labelKey)}
                     </button>
                   );
                 })}
@@ -347,7 +351,9 @@ export function AddHealthRecordDrawer() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm text-ink/70">體重</label>
+              <label className="mb-1.5 block text-sm text-ink/70">
+                {t("health.fieldWeight")}
+              </label>
               <div className="relative">
                 <input
                   value={weight}
@@ -362,7 +368,9 @@ export function AddHealthRecordDrawer() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm text-ink/70">體溫</label>
+              <label className="mb-1.5 block text-sm text-ink/70">
+                {t("health.fieldTemperature")}
+              </label>
               <div className="relative">
                 <input
                   value={temp}
@@ -377,7 +385,9 @@ export function AddHealthRecordDrawer() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm text-ink/70">心跳</label>
+              <label className="mb-1.5 block text-sm text-ink/70">
+                {t("health.fieldHeartRate")}
+              </label>
               <div className="relative">
                 <input
                   value={heartRate}
@@ -393,7 +403,7 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                檢查醫院
+                {t("health.fieldExamHospital")}
               </label>
               <input
                 value={hospital}
@@ -404,7 +414,7 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                主治醫師
+                {t("health.fieldVetMain")}
               </label>
               <input
                 value={vet}
@@ -415,13 +425,13 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                檢查備註
+                {t("health.fieldExamNote")}
               </label>
               <div className="relative">
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value.slice(0, 200))}
-                  placeholder="輸入此次檢查的備註（選填）"
+                  placeholder={t("health.examNotePlaceholder")}
                   rows={4}
                   maxLength={200}
                   className={`${inputClass} resize-none placeholder:text-ink/30`}
@@ -434,10 +444,10 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <div className="text-sm font-semibold text-ink">
-                上傳檢查報告或圖片
+                {t("health.uploadSectionTitle")}
               </div>
               <p className="mt-1 text-xs text-ink/45">
-                可上傳檢查報告、血檢單、超音波等文件或圖片
+                {t("health.uploadSectionDesc")}
               </p>
               <input
                 ref={fileInputRef}
@@ -454,10 +464,10 @@ export function AddHealthRecordDrawer() {
               >
                 <UploadCloud size={24} className="text-ink/35" />
                 <span className="text-sm font-medium text-ink/70">
-                  點擊上傳或拖曳檔案到此處
+                  {t("health.uploadCta")}
                 </span>
                 <span className="text-xs text-ink/40">
-                  支援 JPG、PNG、PDF（單檔上限 10MB）
+                  {t("health.uploadHint")}
                 </span>
               </button>
 
@@ -487,7 +497,7 @@ export function AddHealthRecordDrawer() {
                       <button
                         type="button"
                         onClick={() => removeFile(i)}
-                        aria-label="移除檔案"
+                        aria-label={t("health.removeFileAria")}
                         className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-ink/40 transition hover:bg-cream hover:text-ink"
                       >
                         <X size={13} />
@@ -506,10 +516,10 @@ export function AddHealthRecordDrawer() {
               type="submit"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              aria-label="儲存"
+              aria-label={t("common.save")}
               className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? "儲存中…" : "儲存"}
+              {isSubmitting ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </div>

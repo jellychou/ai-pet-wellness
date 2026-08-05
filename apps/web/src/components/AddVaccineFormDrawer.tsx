@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CheckCircle2, ChevronDown, ChevronLeft, Syringe } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
@@ -30,11 +31,12 @@ const vaccineTypeOptions = [
 ];
 
 const steps = [
-  { n: 1, label: "基本資訊" },
-  { n: 2, label: "完成" },
+  { n: 1, labelKey: "vaccine.stepBasicInfo" },
+  { n: 2, labelKey: "vaccine.stepDone" },
 ] as const;
 
 function Stepper({ step }: { step: 1 | 2 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center py-4">
       {steps.map((item, i) => (
@@ -54,7 +56,7 @@ function Stepper({ step }: { step: 1 | 2 }) {
                 item.n === step ? "font-medium text-ink/80" : "text-ink/40"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </span>
           </div>
           {i < steps.length - 1 && (
@@ -172,6 +174,7 @@ const initialState = {
 };
 
 export function AddVaccineFormDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.addVaccineFormOpen);
   const setOpen = useAppStore((s) => s.setAddVaccineFormOpen);
   const bumpVaccineRefreshKey = useAppStore((s) => s.bumpVaccineRefreshKey);
@@ -225,11 +228,11 @@ export function AddVaccineFormDrawer() {
       !location ||
       (location === "hospital" && !hospital)
     ) {
-      setError("請完整填寫所有必填欄位");
+      setError(t("addPet.validationRequired"));
       return;
     }
     if (!targetPet) {
-      setError("請選擇寵物");
+      setError(t("food.selectPetError"));
       return;
     }
     setError("");
@@ -259,9 +262,7 @@ export function AddVaccineFormDrawer() {
       bumpVaccineRefreshKey();
       setStep(2);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "疫苗紀錄儲存失敗，請稍後再試",
-      );
+      setError(err instanceof Error ? err.message : t("vaccine.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -283,11 +284,12 @@ export function AddVaccineFormDrawer() {
           onClick={() => setPetPickerOpen((v) => !v)}
           className="flex items-center gap-1 text-sm font-semibold text-ink"
         >
-          {targetPet?.name ?? "選擇寵物"}
+          {targetPet?.name ?? t("vaccine.selectPetFallback")}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
         <div className="truncate text-[11px] text-ink/45">
-          {targetPet?.birthday && `${calculateAge(targetPet.birthday)}歲 · `}
+          {targetPet?.birthday &&
+            t("vaccine.petAgePrefix", { age: calculateAge(targetPet.birthday) })}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>
       </div>
@@ -330,12 +332,14 @@ export function AddVaccineFormDrawer() {
         <button
           type="button"
           onClick={handleClose}
-          aria-label="返回"
+          aria-label={t("common.backAria")}
           className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ChevronLeft size={20} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">新增疫苗紀錄</h1>
+        <h1 className="text-sm font-semibold text-ink">
+          {t("vaccine.addFormHeaderTitle")}
+        </h1>
         <span className="w-9" />
       </div>
 
@@ -349,87 +353,86 @@ export function AddVaccineFormDrawer() {
             <div className="space-y-4">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
                 <Syringe size={13} />
-                疫苗資訊
+                {t("vaccine.sectionVaccineInfo")}
               </div>
 
-              <Field label="疫苗類型" required>
+              <Field label={t("vaccine.fieldVaccineType")} required>
                 <Select
                   value={vaccineType}
                   onChange={setVaccineType}
-                  placeholder="請選擇疫苗類型"
+                  placeholder={t("vaccine.selectVaccineTypePlaceholder")}
                   options={vaccineTypeOptions}
                 />
               </Field>
 
               {vaccineType && vaccineType === "其他" && (
-                <Field label="疫苗名稱">
+                <Field label={t("vaccine.fieldVaccineName")}>
                   <input
                     value={vaccineName}
                     onChange={(e) => setVaccineName(e.target.value)}
-                    placeholder="請輸入疫苗名稱（例：狂犬病疫苗）"
+                    placeholder={t("vaccine.vaccineNamePlaceholder")}
                     className={inputClass}
                   />
                 </Field>
               )}
 
-              <Field label="疫苗批號（選填）">
+              <Field label={t("vaccine.fieldBatchNumber")}>
                 <input
                   value={batchNumber}
                   onChange={(e) => setBatchNumber(e.target.value)}
-                  placeholder="請輸入疫苗批號"
+                  placeholder={t("vaccine.batchNumberPlaceholder")}
                   className={inputClass}
                 />
               </Field>
 
-              <Field label="施打日期" required>
+              <Field label={t("vaccine.fieldVaccinationDate")} required>
                 <div className="relative">
                   <input
                     type="date"
                     value={vaccinationDate}
                     onChange={(e) => setVaccinationDate(e.target.value)}
-                    placeholder="請選擇施打日期"
                     className={`${inputClass} pr-9 [color-scheme:light]`}
                   />
                 </div>
               </Field>
 
-              <Field label="施打地點" required>
+              <Field label={t("vaccine.fieldLocation")} required>
                 <ToggleGroup
                   value={location}
                   onChange={setLocation}
                   options={[
-                    { label: "動物醫院", value: "hospital" },
-                    { label: "自行施打(地方施打)", value: "home" },
+                    { label: t("vaccine.locationHospital"), value: "hospital" },
+                    { label: t("vaccine.locationHome"), value: "home" },
                   ]}
                 />
               </Field>
 
               {location === "hospital" && (
-                <Field label="動物醫院" required>
+                <Field label={t("vaccine.fieldHospital")} required>
                   <input
                     value={hospital}
                     onChange={(e) => setHospital(e.target.value)}
-                    placeholder="請輸入動物醫院名稱"
+                    placeholder={t("vaccine.hospitalPlaceholder")}
                     className={inputClass}
                   />
                 </Field>
               )}
 
-              <Field label="施打醫師（選填）">
+              <Field label={t("vaccine.fieldVet")}>
                 <input
                   value={vet}
                   onChange={(e) => setVet(e.target.value)}
-                  placeholder="請輸入施打醫師姓名"
+                  placeholder={t("vaccine.vetPlaceholder")}
                   className={inputClass}
                 />
               </Field>
 
-              <Field label="備註（選填）">
+              <Field label={t("common.noteOptional")}>
                 <div className="relative">
                   <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value.slice(0, 200))}
-                    placeholder="可記錄寵物施打後的狀況或注意事項..."
+                    placeholder={t("vaccine.notePlaceholderDone")}
                     rows={3}
                     maxLength={200}
                     className={`${inputClass} resize-none`}
@@ -452,10 +455,13 @@ export function AddVaccineFormDrawer() {
                 <CheckCircle2 size={32} />
               </span>
               <h2 className="mt-4 text-base font-semibold text-ink">
-                疫苗紀錄新增成功！
+                {t("vaccine.addSuccessTitle")}
               </h2>
               <p className="mt-1.5 text-[12px] text-ink/50">
-                {targetPet?.name} 的 {vaccineName || vaccineType} 已經記錄好了。
+                {t("vaccine.addSuccessBody", {
+                  name: targetPet?.name,
+                  vaccineName: vaccineName || vaccineType,
+                })}
               </p>
             </div>
           )}
@@ -471,7 +477,7 @@ export function AddVaccineFormDrawer() {
               disabled={isSaving}
               className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "儲存中…" : "完成並儲存"}
+              {isSaving ? t("common.saving") : t("vaccine.saveAndFinish")}
             </button>
           )}
           {step === 2 && (
@@ -480,7 +486,7 @@ export function AddVaccineFormDrawer() {
               onClick={handleClose}
               className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
             >
-              完成
+              {t("vaccine.finish")}
             </button>
           )}
         </div>

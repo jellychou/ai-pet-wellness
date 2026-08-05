@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check, MailCheck, Sparkles, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type ResetLinkSentSheetProps = {
   open: boolean;
@@ -17,6 +18,7 @@ export function ResetLinkSentSheet({
   onClose,
   onResend,
 }: ResetLinkSentSheetProps) {
+  const { t } = useTranslation();
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function ResetLinkSentSheet({
             <button
               type="button"
               onClick={onClose}
-              aria-label="關閉"
+              aria-label={t("common.close")}
               className="grid h-8 w-8 place-items-center rounded-full text-ink/50 transition hover:bg-cream"
             >
               <X size={18} />
@@ -83,17 +85,17 @@ export function ResetLinkSentSheet({
             </div>
 
             <h2 className="mt-4 text-lg font-bold text-ink">
-              重設連結已寄出！
+              {t("resetLinkSent.title")}
             </h2>
             <p className="mt-2 text-sm leading-6 text-ink/60">
-              我們已將重設密碼的連結寄到
+              {t("resetLinkSent.bodyLine1")}
               <br />
               <span className="font-semibold text-ink">{email}</span>
               <br />
-              請前往信箱收信並點擊連結。
+              {t("resetLinkSent.bodyLine2")}
             </p>
             <p className="mt-2 text-xs text-ink/45">
-              若未收到信件，請檢查垃圾郵件匣或重新發送。
+              {t("resetLinkSent.hint")}
             </p>
           </div>
 
@@ -104,7 +106,9 @@ export function ResetLinkSentSheet({
               disabled={countdown > 0}
               className="w-full rounded-full border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {countdown > 0 ? `重新發送（${countdown}s）` : "重新發送"}
+              {countdown > 0
+                ? t("resetLinkSent.resendWithCountdown", { seconds: countdown })
+                : t("resetLinkSent.resend")}
             </button>
           </div>
         </div>

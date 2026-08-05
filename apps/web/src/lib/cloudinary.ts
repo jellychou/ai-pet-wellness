@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
@@ -10,9 +12,7 @@ const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 // 上傳完只會拿到一個 secure_url 字串，存進資料庫的是這個網址，不是整張圖。
 export async function uploadImageToCloudinary(file: File): Promise<string> {
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
-    throw new Error(
-      "尚未設定 VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET",
-    );
+    throw new Error(i18n.t("common.cloudinaryConfigMissing"));
   }
 
   const formData = new FormData();
@@ -29,7 +29,10 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.error?.message ?? `圖片上傳失敗（${res.status}）`);
+    throw new Error(
+      body?.error?.message ??
+        i18n.t("common.imageUploadFailedWithStatus", { status: res.status }),
+    );
   }
 
   const data = (await res.json()) as { secure_url: string };
@@ -42,9 +45,7 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
 // report_files。
 export async function uploadFileToCloudinary(file: File): Promise<string> {
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
-    throw new Error(
-      "尚未設定 VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET",
-    );
+    throw new Error(i18n.t("common.cloudinaryConfigMissing"));
   }
 
   const formData = new FormData();
@@ -62,7 +63,11 @@ export async function uploadFileToCloudinary(file: File): Promise<string> {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(
-      body?.error?.message ?? `檔案「${file.name}」上傳失敗（${res.status}）`,
+      body?.error?.message ??
+        i18n.t("common.fileUploadFailedWithStatus", {
+          fileName: file.name,
+          status: res.status,
+        }),
     );
   }
 

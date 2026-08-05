@@ -14,6 +14,7 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   useAppStore,
@@ -25,8 +26,6 @@ import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
-
-const speciesLabel: Record<string, string> = { dog: "狗狗", cat: "貓咪" };
 
 // 純前端產生的暫存 id，不是後端資料
 function makeLocalId(): string {
@@ -71,11 +70,13 @@ type HistoryFoodItem = {
 type Step = "choose" | "collect" | "results" | "portions" | "confirm";
 type CollectTab = "upload" | "history";
 
+// label 改成 labelKey：跟 DashboardPage 的 mealTypeOrder 同一個理由，
+// 顯示文字要跟著語言切換
 const mealTypeOptions = [
-  { label: "早餐", value: "breakfast" },
-  { label: "午餐", value: "lunch" },
-  { label: "晚餐", value: "dinner" },
-  { label: "點心", value: "snack" },
+  { labelKey: "dashboard.mealBreakfast", value: "breakfast" },
+  { labelKey: "dashboard.mealLunch", value: "lunch" },
+  { labelKey: "dashboard.mealDinner", value: "dinner" },
+  { labelKey: "dashboard.mealSnack", value: "snack" },
 ] as const;
 
 function toDateTimeLocal(d: Date) {
@@ -88,15 +89,22 @@ function toDateTimeLocal(d: Date) {
 // 逐項食材/品項分解表，唯讀顯示。included=false 的品項（AI 判斷不該計入
 // 總熱量，例如明顯沒吃完的配菜）用淡化 + 刪除線顯示，note 說明原因
 function ItemsTable({ items }: { items: FoodScanItem[] }) {
+  const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
     <div className="overflow-hidden rounded-xl border border-[#eee5da]">
       <table className="w-full text-left text-[11px]">
         <thead>
           <tr className="bg-[#f7f2ea] text-ink/50">
-            <th className="px-2.5 py-2 font-medium">食材</th>
-            <th className="px-2.5 py-2 text-right font-medium">估計份量</th>
-            <th className="px-2.5 py-2 text-right font-medium">熱量</th>
+            <th className="px-2.5 py-2 font-medium">
+              {t("food.tableHeaderIngredient")}
+            </th>
+            <th className="px-2.5 py-2 text-right font-medium">
+              {t("food.tableHeaderEstGrams")}
+            </th>
+            <th className="px-2.5 py-2 text-right font-medium">
+              {t("food.tableHeaderCalories")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -120,7 +128,10 @@ function ItemsTable({ items }: { items: FoodScanItem[] }) {
                 )}
               </td>
               <td className="whitespace-nowrap px-2.5 py-2 text-right text-ink/60">
-                約 {item.estimated_grams_low}–{item.estimated_grams_high}g
+                {t("food.estimatedGramsRange", {
+                  low: item.estimated_grams_low,
+                  high: item.estimated_grams_high,
+                })}
               </td>
               <td className="whitespace-nowrap px-2.5 py-2 text-right font-medium text-ink">
                 {item.calories_low}–{item.calories_high}
@@ -137,11 +148,12 @@ function ItemsTable({ items }: { items: FoodScanItem[] }) {
 }
 
 function NutritionGrid({ result }: { result: FoodScanResult }) {
+  const { t } = useTranslation();
   const items = [
-    { label: "蛋白質", value: result.protein },
-    { label: "脂肪", value: result.fat },
-    { label: "碳水", value: result.carb },
-    { label: "纖維", value: result.fiber },
+    { label: t("food.nutrientProtein"), value: result.protein },
+    { label: t("food.nutrientFat"), value: result.fat },
+    { label: t("food.nutrientCarb"), value: result.carb },
+    { label: t("food.nutrientFiber"), value: result.fiber },
   ];
   return (
     <div className="grid grid-cols-4 gap-2">
@@ -164,19 +176,24 @@ function NutritionGrid({ result }: { result: FoodScanResult }) {
 // 「這一份」（AI 估計的 estimated_grams）的完整分析結果卡——只有拍照辨識
 // 來的品項才有，在「AI 辨識結果」畫面點進某一項才會看到
 function ResultCard({ result }: { result: FoodScanResult }) {
+  const { t } = useTranslation();
+  const speciesLabel: Record<string, string> = {
+    dog: t("common.dog"),
+    cat: t("common.cat"),
+  };
   return (
     <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
       <div className="flex items-start justify-between">
-        <div className="text-xs text-ink/45">AI 辨識結果</div>
+        <div className="text-xs text-ink/45">{t("food.aiResultLabel")}</div>
         <span className="rounded-full bg-[#f1e6d8] px-2 py-0.5 text-[11px] font-medium text-ink/60">
-          信心度 {result.confidence}%
+          {t("food.confidence", { value: result.confidence })}
         </span>
       </div>
       <div className="mt-1 text-base font-semibold text-ink">
         {result.food_name}
       </div>
       <div className="text-xs text-ink/40">
-        AI 估計這份大約 {result.estimated_grams} g
+        {t("food.aiEstimatedGrams", { grams: result.estimated_grams })}
       </div>
 
       {result.items.length > 0 && (
@@ -195,11 +212,16 @@ function ResultCard({ result }: { result: FoodScanResult }) {
       <div className="mt-3">
         <div className="flex items-baseline gap-1">
           <span className="text-4xl font-bold text-ink">{result.calories}</span>
-          <span className="text-sm text-ink/50">kcal（最佳估計）</span>
+          <span className="text-sm text-ink/50">
+            {t("food.kcalBestEstimate")}
+          </span>
         </div>
         {(result.calories_low > 0 || result.calories_high > 0) && (
           <div className="mt-0.5 text-xs text-ink/40">
-            整體估計範圍約 {result.calories_low}–{result.calories_high} kcal
+            {t("food.overallRange", {
+              low: result.calories_low,
+              high: result.calories_high,
+            })}
           </div>
         )}
       </div>
@@ -207,7 +229,7 @@ function ResultCard({ result }: { result: FoodScanResult }) {
       <div className="my-4 h-px bg-[#eee5da]" />
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-ink/50">安全等級</span>
+        <span className="text-ink/50">{t("food.safetyLevel")}</span>
         <span className="flex items-center gap-2">
           <span
             className={`font-medium ${
@@ -236,10 +258,10 @@ function ResultCard({ result }: { result: FoodScanResult }) {
       <div className="my-4 h-px bg-[#eee5da]" />
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-ink/50">適合寵物</span>
+        <span className="text-ink/50">{t("food.suitableSpecies")}</span>
         <span className="flex items-center gap-3">
           {result.suitable_species.length === 0 ? (
-            <span className="text-ink/40">無</span>
+            <span className="text-ink/40">{t("common.none")}</span>
           ) : (
             result.suitable_species.map((s) => (
               <span key={s} className="flex items-center gap-1 text-ink/80">
@@ -255,7 +277,7 @@ function ResultCard({ result }: { result: FoodScanResult }) {
 
       <div>
         <div className="text-xs text-ink/50">
-          這份（約 {result.estimated_grams}g）的營養資訊
+          {t("food.portionNutritionInfo", { grams: result.estimated_grams })}
         </div>
         <div className="mt-2">
           <NutritionGrid result={result} />
@@ -266,7 +288,9 @@ function ResultCard({ result }: { result: FoodScanResult }) {
         <>
           <div className="my-4 h-px bg-[#eee5da]" />
           <div>
-            <div className="text-xs text-ink/50">建議與注意事項</div>
+            <div className="text-xs text-ink/50">
+              {t("food.suggestionsTitle")}
+            </div>
             <ul className="mt-1.5 space-y-1">
               {result.suggestions.map((s) => (
                 <li key={s} className="text-sm leading-6 text-ink/80">
@@ -293,6 +317,7 @@ function ResultsRow({
   onOpenDetail: () => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   const clickable = Boolean(item.scanDetail);
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-3">
@@ -317,14 +342,17 @@ function ResultsRow({
           {item.food_name}
         </div>
         <div className="mt-0.5 text-xs text-ink/45">
-          約 {item.portion_grams}g・約 {item.calories} kcal
+          {t("food.portionCaloriesLine", {
+            grams: item.portion_grams,
+            calories: item.calories,
+          })}
         </div>
       </button>
       {clickable && <ChevronRight size={16} className="shrink-0 text-ink/30" />}
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`移除 ${item.food_name}`}
+        aria-label={t("food.removeAria", { name: item.food_name })}
         className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink/35 transition hover:bg-cream hover:text-ink/60"
       >
         <X size={14} />
@@ -344,6 +372,7 @@ function PortionRow({
   onAdjustPortion: (delta: number) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-3">
       {item.image_url ? (
@@ -384,7 +413,7 @@ function PortionRow({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`移除 ${item.food_name}`}
+        aria-label={t("food.removeAria", { name: item.food_name })}
         className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink/35 transition hover:bg-cream hover:text-ink/60"
       >
         <X size={15} />
@@ -394,6 +423,7 @@ function PortionRow({
 }
 
 export function AddFoodDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.addFoodOpen);
   const setOpen = useAppStore((s) => s.setAddFoodOpen);
   const setHistoryOpen = useAppStore((s) => s.setFoodScanHistoryOpen);
@@ -527,7 +557,7 @@ export function AddFoodDrawer() {
     e.target.value = "";
     if (files.length === 0) return;
     if (!selectedPet) {
-      showError("請先選擇寵物");
+      showError(t("healthJournal.selectPetFirst"));
       return;
     }
     setPendingPhotos((current) =>
@@ -622,11 +652,9 @@ export function AddFoodDrawer() {
     setAnalyzing(false);
     setPendingPhotos([]);
     if (quotaStopped) {
-      showError(
-        `今天的 AI 食物辨識次數已用完（每天最多 ${limit} 次），還有 ${skipped} 張照片沒分析`,
-      );
+      showError(t("food.quotaStoppedError", { limit, skipped }));
     } else if (skipped > 0) {
-      showError(`${skipped} 張照片看不出是食物或分析失敗，已略過`);
+      showError(t("food.skippedPhotosError", { skipped }));
     }
     setStep("results");
   }
@@ -682,19 +710,19 @@ export function AddFoodDrawer() {
 
   async function handleSave() {
     if (draftItems.length === 0) {
-      setError("沒有食材，請先新增");
+      setError(t("food.noItemsError"));
       return;
     }
     if (!selectedPet) {
-      setError("請選擇寵物");
+      setError(t("food.selectPetError"));
       return;
     }
     if (draftItems.some((item) => item.portion_grams <= 0)) {
-      setError("每項食材的份量都要大於 0");
+      setError(t("food.portionMustBePositive"));
       return;
     }
     if (!fedAt) {
-      setError("請選擇餵食時間");
+      setError(t("food.selectFedAtError"));
       return;
     }
     setError("");
@@ -717,16 +745,14 @@ export function AddFoodDrawer() {
           note: note || null,
         }),
       });
-      showSuccess(`已加入 ${selectedPet.name} 的飲食記錄`);
+      showSuccess(t("food.addSuccess", { name: selectedPet.name }));
       clearFoodDraftItems();
       setOpen(false);
       navigate("/");
       bumpFoodRecordRefreshKey();
       bumpWaterRefreshKey();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "飲食記錄儲存失敗，請稍後再試",
-      );
+      setError(err instanceof Error ? err.message : t("food.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -765,22 +791,22 @@ export function AddFoodDrawer() {
     macroGramSum > 0
       ? [
           {
-            label: "蛋白質",
+            label: t("food.nutrientProtein"),
             percent: Math.round((macroTotals.protein / macroGramSum) * 100),
             color: "bg-[#688696]",
           },
           {
-            label: "脂肪",
+            label: t("food.nutrientFat"),
             percent: Math.round((macroTotals.fat / macroGramSum) * 100),
             color: "bg-[#d9834f]",
           },
           {
-            label: "碳水化合物",
+            label: t("food.nutrientCarbFull"),
             percent: Math.round((macroTotals.carb / macroGramSum) * 100),
             color: "bg-[#caa06f]",
           },
           {
-            label: "纖維",
+            label: t("food.nutrientFiber"),
             percent: Math.round((macroTotals.fiber / macroGramSum) * 100),
             color: "bg-[#3fa88f]",
           },
@@ -789,16 +815,16 @@ export function AddFoodDrawer() {
 
   const headerTitle =
     step === "choose"
-      ? "新增飲食記錄"
+      ? t("food.headerChoose")
       : step === "collect"
         ? collectTab === "upload"
-          ? "上傳照片"
-          : "從歷史選擇"
+          ? t("food.headerUpload")
+          : t("food.headerHistory")
         : step === "results"
-          ? "AI 辨識結果"
+          ? t("food.headerResults")
           : step === "portions"
-            ? "調整份量與組合"
-            : "今日飲食總結";
+            ? t("food.headerPortions")
+            : t("food.headerConfirm");
 
   return (
     <div
@@ -815,12 +841,14 @@ export function AddFoodDrawer() {
             <button
               type="button"
               onClick={() => setDetailItem(null)}
-              aria-label="返回"
+              aria-label={t("common.backAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-sm font-semibold text-ink">AI 判讀細節</h1>
+            <h1 className="text-sm font-semibold text-ink">
+              {t("food.aiDetailTitle")}
+            </h1>
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-5">
             <div className="mx-auto max-w-md">
@@ -836,7 +864,7 @@ export function AddFoodDrawer() {
             <button
               type="button"
               onClick={handleBack}
-              aria-label="返回"
+              aria-label={t("common.backAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
@@ -846,7 +874,7 @@ export function AddFoodDrawer() {
               <button
                 type="button"
                 onClick={handleViewHistory}
-                aria-label="檢視辨識記錄"
+                aria-label={t("food.viewHistoryAria")}
                 className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
               >
                 <Clock size={19} />
@@ -867,8 +895,15 @@ export function AddFoodDrawer() {
                 }`}
               >
                 {usage.unlimited
-                  ? `管理員帳號，今日已使用 ${usage.used} 次，無次數限制`
-                  : `今日已使用 ${usage.used} / ${usage.limit} 次${limitReached ? "，請明天再試" : ""}`}
+                  ? t("healthJournal.usageUnlimited", { used: usage.used })
+                  : `${t("healthJournal.usageLimited", {
+                      used: usage.used,
+                      limit: usage.limit,
+                    })}${
+                      limitReached
+                        ? t("healthJournal.usageLimitReachedSuffix")
+                        : ""
+                    }`}
               </div>
             )}
 
@@ -884,7 +919,7 @@ export function AddFoodDrawer() {
           {/* 1 選擇記錄方式 */}
           {step === "choose" && (
             <div className="space-y-3">
-              <p className="text-sm text-ink/50">你要如何新增？</p>
+              <p className="text-sm text-ink/50">{t("food.chooseHow")}</p>
               <button
                 type="button"
                 onClick={() => handleChooseMethod("upload")}
@@ -896,10 +931,10 @@ export function AddFoodDrawer() {
                 </span>
                 <div>
                   <div className="text-sm font-semibold text-ink">
-                    拍照辨識食物
+                    {t("food.methodPhotoTitle")}
                   </div>
                   <div className="mt-0.5 text-xs text-ink/45">
-                    拍攝食物或飼料照片，AI 自動辨識
+                    {t("food.methodPhotoDesc")}
                   </div>
                 </div>
               </button>
@@ -913,10 +948,10 @@ export function AddFoodDrawer() {
                 </span>
                 <div>
                   <div className="text-sm font-semibold text-ink">
-                    從歷史 Item 選擇
+                    {t("food.methodHistoryTitle")}
                   </div>
                   <div className="mt-0.5 text-xs text-ink/45">
-                    從常用食材中選擇，快速記錄
+                    {t("food.methodHistoryDesc")}
                   </div>
                 </div>
               </button>
@@ -936,7 +971,7 @@ export function AddFoodDrawer() {
                       : "text-ink/45"
                   }`}
                 >
-                  上傳照片
+                  {t("food.tabUpload")}
                 </button>
                 <button
                   type="button"
@@ -947,7 +982,7 @@ export function AddFoodDrawer() {
                       : "text-ink/45"
                   }`}
                 >
-                  歷史選擇
+                  {t("food.tabHistory")}
                 </button>
               </div>
 
@@ -955,7 +990,7 @@ export function AddFoodDrawer() {
                 (analyzing ? (
                   <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-[#eee5da] bg-[#fffdfa] px-6 py-8">
                     <p className="text-base font-semibold text-ink">
-                      食物辨識中…
+                      {t("food.analyzingTitle")}
                     </p>
                     <div className="relative grid h-20 w-20 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
                       <Bot size={40} />
@@ -964,11 +999,13 @@ export function AddFoodDrawer() {
                       </span>
                     </div>
                     <p className="text-sm font-medium text-ink/70">
-                      正在辨識第 {analyzeProgress.current} /{" "}
-                      {analyzeProgress.total} 張照片…
+                      {t("food.analyzingProgress", {
+                        current: analyzeProgress.current,
+                        total: analyzeProgress.total,
+                      })}
                     </p>
                     <p className="text-xs text-ink/40">
-                      每張約 10~30 秒，請稍候
+                      {t("food.analyzingHint")}
                     </p>
                   </div>
                 ) : (
@@ -988,7 +1025,7 @@ export function AddFoodDrawer() {
                             <button
                               type="button"
                               onClick={() => handleRemovePendingPhoto(i)}
-                              aria-label="移除照片"
+                              aria-label={t("food.removePhotoAria")}
                               className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-black/50 text-white"
                             >
                               <X size={11} />
@@ -1000,7 +1037,7 @@ export function AddFoodDrawer() {
                               handleUpdatePendingNote(i, e.target.value)
                             }
                             rows={2}
-                            placeholder="補充說明（選填），例如品牌、包裝上的文字…"
+                            placeholder={t("food.photoNotePlaceholder")}
                             className="min-w-0 flex-1 resize-none rounded-xl border border-[#eee5da] bg-white px-2.5 py-1.5 text-xs outline-none placeholder:text-ink/30"
                           />
                         </div>
@@ -1013,12 +1050,12 @@ export function AddFoodDrawer() {
                           className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1] py-3 text-sm font-medium text-[#b98a5c] transition disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Plus size={16} />
-                          新增照片
+                          {t("food.addPhotoButton")}
                         </button>
                       )}
                     </div>
                     <p className="text-center text-xs text-ink/35">
-                      最多可上傳 10 張照片
+                      {t("food.maxPhotosHint")}
                     </p>
                   </>
                 ))}
@@ -1026,11 +1063,13 @@ export function AddFoodDrawer() {
               {collectTab === "history" &&
                 (historyLoading ? (
                   <p className="py-10 text-center text-sm text-ink/40">
-                    載入中…
+                    {t("common.loading")}
                   </p>
                 ) : historyItems.length === 0 ? (
                   <p className="py-10 text-center text-sm text-ink/40">
-                    {selectedPet?.name ?? "這隻寵物"} 還沒有飲食記錄可以選
+                    {t("food.noHistoryItems", {
+                      name: selectedPet?.name ?? t("healthJournal.petFallback"),
+                    })}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -1065,8 +1104,11 @@ export function AddFoodDrawer() {
                               {item.food_name}
                             </div>
                             <div className="mt-0.5 text-[11px] text-ink/45">
-                              上次約 {item.portion_grams}g / {item.calories}{" "}
-                              kcal・吃過 {item.times_used} 次
+                              {t("food.historyItemMeta", {
+                                grams: item.portion_grams,
+                                calories: item.calories,
+                                times: item.times_used,
+                              })}
                             </div>
                           </div>
                           <span
@@ -1103,7 +1145,7 @@ export function AddFoodDrawer() {
                 className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#d8c9b4] py-3 text-sm font-medium text-[#b98a5c] transition hover:bg-[#fbf7f1]"
               >
                 <Plus size={16} />
-                新增其他食材
+                {t("food.addMoreItems")}
               </button>
             </div>
           )}
@@ -1112,7 +1154,7 @@ export function AddFoodDrawer() {
           {step === "portions" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-medium text-ink/50">
-                <span>共 {draftItems.length} 項食材</span>
+                <span>{t("food.itemCount", { count: draftItems.length })}</span>
                 <span className="text-sm font-semibold text-ink">
                   {totalCalories} kcal
                 </span>
@@ -1137,7 +1179,9 @@ export function AddFoodDrawer() {
           {step === "confirm" && (
             <div className="space-y-4">
               <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 text-center">
-                <div className="text-xs text-ink/45">總熱量</div>
+                <div className="text-xs text-ink/45">
+                  {t("food.totalCaloriesLabel")}
+                </div>
                 <div className="mt-1 text-4xl font-bold text-ink">
                   {totalCalories}
                   <span className="ml-1 text-sm font-normal text-ink/40">
@@ -1175,7 +1219,9 @@ export function AddFoodDrawer() {
 
               {macroPercents && (
                 <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4">
-                  <div className="text-xs text-ink/45">營養概況</div>
+                  <div className="text-xs text-ink/45">
+                    {t("food.nutritionOverview")}
+                  </div>
                   <div className="mt-3 space-y-2.5">
                     {macroPercents.map((m) => (
                       <div key={m.label}>
@@ -1196,8 +1242,7 @@ export function AddFoodDrawer() {
                   </div>
                   {hasItemsWithoutMacro && (
                     <p className="mt-3 text-[11px] text-ink/35">
-                      僅供參考：從歷史選擇加入的品項沒有存過營養素資料，
-                      這裡的比例只計算有 AI 分析資料的品項。
+                      {t("food.macroDisclaimer")}
                     </p>
                   )}
                 </div>
@@ -1205,7 +1250,7 @@ export function AddFoodDrawer() {
 
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-ink/70">
-                  餐別
+                  {t("food.mealTypeLabel")}
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {mealTypeOptions.map((o) => (
@@ -1219,7 +1264,7 @@ export function AddFoodDrawer() {
                           : "border-[#ece4dc] bg-white text-ink/50"
                       }`}
                     >
-                      {o.label}
+                      {t(o.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -1227,7 +1272,7 @@ export function AddFoodDrawer() {
 
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-ink/70">
-                  餵食時間
+                  {t("food.fedAtLabel")}
                 </label>
                 <input
                   type="datetime-local"
@@ -1239,12 +1284,12 @@ export function AddFoodDrawer() {
 
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-ink/70">
-                  備註（選填）
+                  {t("food.noteLabel")}
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value.slice(0, 200))}
-                  placeholder="可記錄寵物進食狀況..."
+                  placeholder={t("food.notePlaceholder")}
                   rows={2}
                   maxLength={200}
                   className="w-full resize-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2.5 text-[12px] text-ink outline-none placeholder:text-ink/30"
@@ -1268,7 +1313,7 @@ export function AddFoodDrawer() {
                 disabled
                 className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white opacity-60"
               >
-                分析中…
+                {t("food.analyzingButton")}
               </button>
             ) : collectTab === "upload" ? (
               <button
@@ -1278,8 +1323,8 @@ export function AddFoodDrawer() {
                 className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
               >
                 {pendingPhotos.length > 0
-                  ? `開始分析（${pendingPhotos.length} 張）`
-                  : "請先選擇照片"}
+                  ? t("food.startAnalysisButton", { count: pendingPhotos.length })
+                  : t("food.selectPhotosFirst")}
               </button>
             ) : (
               <button
@@ -1289,8 +1334,10 @@ export function AddFoodDrawer() {
                 className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
               >
                 {selectedHistoryNames.size > 0
-                  ? `加入 ${selectedHistoryNames.size} 項`
-                  : "請先選擇食材"}
+                  ? t("food.addItemsButton", {
+                      count: selectedHistoryNames.size,
+                    })
+                  : t("food.selectItemsFirst")}
               </button>
             ))}
 
@@ -1301,7 +1348,7 @@ export function AddFoodDrawer() {
               disabled={draftItems.length === 0}
               className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
-              下一步：調整份量
+              {t("food.nextToPortions")}
             </button>
           )}
 
@@ -1312,7 +1359,7 @@ export function AddFoodDrawer() {
               disabled={draftItems.length === 0}
               className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
-              計算總熱量
+              {t("food.calcTotalCalories")}
             </button>
           )}
 
@@ -1323,7 +1370,7 @@ export function AddFoodDrawer() {
               disabled={isSaving || draftItems.length === 0}
               className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "儲存中…" : "儲存記錄"}
+              {isSaving ? t("common.saving") : t("food.saveRecord")}
             </button>
           )}
         </div>

@@ -8,13 +8,22 @@ import { apiFetch, ApiError } from "../lib/api";
 import { useAuthStore, type AuthUser } from "../store/useAuthStore";
 import { strengthOf } from "../lib/passwordStrength";
 
-const steps = [
-  { n: 1, label: "設定帳號" },
-  { n: 2, label: "基本資料" },
-  { n: 3, label: "完成" },
-] as const;
+// strengthOf() 回傳的 label 是純中文字串（"弱"/"中"/"強"），跟共用的
+// lib/passwordStrength.ts 綁在一起，這裡不改那個共用檔（避免影響其他還
+// 沒改的呼叫端），只用這個小 map 把回傳的 label 轉成 i18n key 再顯示
+const STRENGTH_LABEL_KEY: Record<string, string> = {
+  弱: "password.strengthWeak",
+  中: "password.strengthMedium",
+  強: "password.strengthStrong",
+};
 
 function Stepper({ step }: { step: 1 | 2 | 3 }) {
+  const { t } = useTranslation();
+  const steps = [
+    { n: 1, label: t("register.stepAccount") },
+    { n: 2, label: t("register.stepProfile") },
+    { n: 3, label: t("register.stepDone") },
+  ] as const;
   return (
     <div className="mt-6 flex items-center justify-center">
       {steps.map((item, i) => (
@@ -63,7 +72,7 @@ type RegisterDrawerProps = {
 export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -109,15 +118,15 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
   function handleAccountNext() {
     setError("");
     if (!email || !password || !confirmPassword) {
-      setError("請完整填寫所有欄位");
+      setError(t("resetPassword.fieldsRequiredError"));
       return;
     }
     if (password.length < 8) {
-      setError("密碼至少需要 8 個字元");
+      setError(t("resetPassword.passwordTooShortError"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("兩次輸入的密碼不一致");
+      setError(t("resetPassword.passwordMismatchError"));
       return;
     }
     setStep(2);
@@ -126,7 +135,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
   async function handleProfileNext() {
     setError("");
     if (!name || !phone || !birthday) {
-      setError("請完整填寫所有欄位");
+      setError(t("resetPassword.fieldsRequiredError"));
       return;
     }
 
@@ -150,9 +159,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
       setStep(3);
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : "無法連上伺服器，請確認後端是否已啟動",
+        err instanceof ApiError ? err.message : t("login.serverError"),
       );
     } finally {
       setLoading(false);
@@ -189,9 +196,11 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
             <>
               <Stepper step={1} />
               <div className="mt-2 text-center">
-                <h2 className="text-xl font-bold text-ink">建立帳號</h2>
+                <h2 className="text-xl font-bold text-ink">
+                  {t("register.accountTitle")}
+                </h2>
                 <p className="mt-1 text-sm text-ink/60">
-                  陪伴毛孩的每一天，從註冊開始
+                  {t("register.accountSubtitle")}
                 </p>
               </div>
 
@@ -199,14 +208,14 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                 <div>
                   <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-ink/80">
                     <Mail size={14} className="text-[#5b83ab]" />
-                    電子郵件
+                    {t("register.emailLabel")}
                   </label>
                   <div className={inputWrapClass}>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="請輸入電子郵件"
+                      placeholder={t("register.emailPlaceholder")}
                       autoComplete="email"
                       className={inputClass}
                     />
@@ -216,21 +225,21 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                 <div>
                   <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-ink/80">
                     <Lock size={14} className="text-[#5b83ab]" />
-                    密碼
+                    {t("register.passwordLabel")}
                   </label>
                   <div className={inputWrapClass}>
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="請輸入至少 8 個字元"
+                      placeholder={t("resetPassword.newPasswordPlaceholder")}
                       autoComplete="new-password"
                       className={inputClass}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      aria-label="顯示或隱藏密碼"
+                      aria-label={t("password.toggleVisibilityAria")}
                       className="text-ink/35 transition hover:text-ink/60"
                     >
                       {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -241,21 +250,21 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                 <div>
                   <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-ink/80">
                     <Lock size={14} className="text-[#5b83ab]" />
-                    確認密碼
+                    {t("register.confirmPasswordLabel")}
                   </label>
                   <div className={inputWrapClass}>
                     <input
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="請再次輸入密碼"
+                      placeholder={t("register.confirmPasswordPlaceholder")}
                       autoComplete="new-password"
                       className={inputClass}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm((v) => !v)}
-                      aria-label="顯示或隱藏密碼"
+                      aria-label={t("password.toggleVisibilityAria")}
                       className="text-ink/35 transition hover:text-ink/60"
                     >
                       {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -265,14 +274,17 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
                 <div>
                   <div className="mb-1.5 text-sm text-ink/70">
-                    密碼強度：
+                    {t("password.strengthLabel")}
                     {password && (
                       <span
                         className="font-semibold"
                         style={{ color: strength.color }}
                       >
                         {" "}
-                        {strength.label}
+                        {t(
+                          STRENGTH_LABEL_KEY[strength.label] ??
+                            "password.strengthWeak",
+                        )}
                       </span>
                     )}
                   </div>
@@ -297,17 +309,17 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                 onClick={handleAccountNext}
                 className="mt-5 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
               >
-                下一步
+                {t("common.next")}
               </button>
 
               <p className="mt-5 text-center text-xs text-ink/55">
-                已有帳號？{" "}
+                {t("register.hasAccount")}{" "}
                 <button
                   type="button"
                   onClick={resetAndClose}
                   className="font-medium text-[#4a90d9] hover:underline"
                 >
-                  立即登入
+                  {t("register.signInNow")}
                 </button>
               </p>
             </>
@@ -317,21 +329,25 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
             <>
               <Stepper step={2} />
               <div className="mt-2 text-center">
-                <h2 className="text-xl font-bold text-ink">基本資料</h2>
-                <p className="mt-1 text-sm text-ink/60">請填寫您的基本資料</p>
+                <h2 className="text-xl font-bold text-ink">
+                  {t("register.profileTitle")}
+                </h2>
+                <p className="mt-1 text-sm text-ink/60">
+                  {t("register.profileSubtitle")}
+                </p>
               </div>
 
               <div className={cardClass}>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-ink/80">
-                    姓名
+                    {t("register.nameLabel")}
                   </label>
                   <div className={inputWrapClass}>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="請輸入您的姓名"
+                      placeholder={t("register.namePlaceholder")}
                       autoComplete="name"
                       className={inputClass}
                     />
@@ -340,14 +356,14 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-ink/80">
-                    電話
+                    {t("register.phoneLabel")}
                   </label>
                   <div className={inputWrapClass}>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="請輸入您的手機號碼"
+                      placeholder={t("register.phonePlaceholder")}
                       autoComplete="tel"
                       className={inputClass}
                     />
@@ -356,7 +372,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-ink/80">
-                    生日
+                    {t("register.birthdayLabel")}
                   </label>
                   <div className={inputWrapClass}>
                     <input
@@ -379,7 +395,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                   onClick={() => setStep(1)}
                   className="flex-1 rounded-2xl border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
                 >
-                  上一步
+                  {t("common.previous")}
                 </button>
                 <button
                   type="button"
@@ -387,7 +403,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                   disabled={loading}
                   className="flex-1 rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
                 >
-                  {loading ? "處理中…" : "下一步"}
+                  {loading ? t("healthJournal.processing") : t("common.next")}
                 </button>
               </div>
             </>
@@ -396,11 +412,13 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
           {step === 3 && (
             <>
               <div className="mt-10 text-center">
-                <h2 className="text-xl font-bold text-ink">完成註冊</h2>
+                <h2 className="text-xl font-bold text-ink">
+                  {t("register.doneTitle")}
+                </h2>
                 <p className="mt-1 text-sm text-ink/60">
-                  歡迎加入 Pet・Wellness！
+                  {t("register.doneSubtitleLine1")}
                   <br />
-                  開始記錄毛孩的健康與快樂生活吧！
+                  {t("register.doneSubtitleLine2")}
                 </p>
               </div>
 
@@ -419,7 +437,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                 onClick={handleFinish}
                 className="mt-10 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
               >
-                開始使用
+                {t("register.startButton")}
               </button>
             </>
           )}

@@ -7,6 +7,7 @@ import {
   Lightbulb,
   Syringe,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
@@ -37,18 +38,18 @@ const vaccineTypeOptions = [
   "其他",
 ];
 
+// doseCountOptions/recurringIntervalOptions 目前沒有對應的表單欄位會用到
+// （UI 還沒做，畫面上看不到），先不處理裡面的中文——沒有畫面會顯示，
+// 翻了也沒有使用者看得到
 const doseCountOptions = [
   { label: "1 劑", value: "1" },
   { label: "2 劑", value: "2" },
   { label: "3 劑以上", value: "3+" },
 ];
 
-const reminderLeadDaysOptions = [
-  { label: "提前 14 天", value: "14" },
-  { label: "提前 7 天", value: "7" },
-  { label: "提前 3 天", value: "3" },
-  { label: "提前 1 天", value: "1" },
-];
+// 提前天數本身是數字（14/7/3/1），標籤要跟著語言切換，改成在元件裡用
+// t() 現組，不是 module 常數
+const reminderLeadDaysValues = ["14", "7", "3", "1"];
 
 const recurringIntervalOptions = [
   { label: "6 個月", value: "6_months" },
@@ -57,12 +58,13 @@ const recurringIntervalOptions = [
 ];
 
 const steps = [
-  { n: 1, label: "基本資訊" },
-  { n: 2, label: "預計接種" },
-  { n: 3, label: "完成" },
+  { n: 1, labelKey: "vaccine.stepBasicInfo" },
+  { n: 2, labelKey: "vaccine.stepSchedule" },
+  { n: 3, labelKey: "vaccine.stepDone" },
 ] as const;
 
 function Stepper({ step }: { step: 1 | 2 | 3 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center py-4">
       {steps.map((item, i) => (
@@ -82,7 +84,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
                 item.n === step ? "font-medium text-ink/80" : "text-ink/40"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </span>
           </div>
           {i < steps.length - 1 && (
@@ -237,6 +239,11 @@ const initialState = {
 };
 
 export function AddPendingVaccineDrawer() {
+  const { t } = useTranslation();
+  const reminderLeadDaysOptions = reminderLeadDaysValues.map((value) => ({
+    label: t("vaccine.reminderLeadDaysOption", { days: value }),
+    value,
+  }));
   const open = useAppStore((s) => s.addPendingVaccineFormOpen);
   const setOpen = useAppStore((s) => s.setAddPendingVaccineFormOpen);
   const bumpVaccineRefreshKey = useAppStore((s) => s.bumpVaccineRefreshKey);
@@ -294,7 +301,7 @@ export function AddPendingVaccineDrawer() {
 
   function handleNext() {
     if (!vaccineType) {
-      setError("請完整填寫所有必填欄位");
+      setError(t("addPet.validationRequired"));
       return;
     }
     setError("");
@@ -303,11 +310,11 @@ export function AddPendingVaccineDrawer() {
 
   async function handleSave() {
     if (!nextDate) {
-      setError("請選擇預計接種日期");
+      setError(t("vaccine.selectNextDateError"));
       return;
     }
     if (!targetPet) {
-      setError("請選擇寵物");
+      setError(t("food.selectPetError"));
       return;
     }
     setError("");
@@ -339,7 +346,7 @@ export function AddPendingVaccineDrawer() {
       setStep(3);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "待接種疫苗儲存失敗，請稍後再試",
+        err instanceof Error ? err.message : t("vaccine.savePendingFailed"),
       );
     } finally {
       setIsSaving(false);
@@ -362,11 +369,12 @@ export function AddPendingVaccineDrawer() {
           onClick={() => setPetPickerOpen((v) => !v)}
           className="flex items-center gap-1 text-sm font-semibold text-ink"
         >
-          {targetPet?.name ?? "選擇寵物"}
+          {targetPet?.name ?? t("vaccine.selectPetFallback")}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
         <div className="truncate text-[11px] text-ink/45">
-          {targetPet?.birthday && `${calculateAge(targetPet.birthday)}歲 · `}
+          {targetPet?.birthday &&
+            t("vaccine.petAgePrefix", { age: calculateAge(targetPet.birthday) })}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>
       </div>
@@ -409,12 +417,14 @@ export function AddPendingVaccineDrawer() {
         <button
           type="button"
           onClick={handleClose}
-          aria-label="返回"
+          aria-label={t("common.backAria")}
           className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ChevronLeft size={20} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">新增待接種疫苗</h1>
+        <h1 className="text-sm font-semibold text-ink">
+          {t("vaccine.addPendingHeaderTitle")}
+        </h1>
         <span className="w-9" />
       </div>
 
@@ -429,11 +439,11 @@ export function AddPendingVaccineDrawer() {
               <div className="rounded-xl bg-[#fbf1e6] p-3">
                 <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
                   <Lightbulb size={13} />
-                  什麼是待接種疫苗？
+                  {t("vaccine.pendingInfoTitle")}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[11px] leading-5 text-ink/70">
-                    記錄尚未接種的疫苗，系統會在接種時間前提醒您，幫助毛孩準時獲得保護！
+                    {t("vaccine.pendingInfoBody")}
                   </p>
                   <span className="shrink-0 text-3xl">🐶</span>
                 </div>
@@ -441,43 +451,43 @@ export function AddPendingVaccineDrawer() {
 
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
                 <Syringe size={13} />
-                疫苗資訊
+                {t("vaccine.sectionVaccineInfo")}
               </div>
 
-              <Field label="疫苗類型" required>
+              <Field label={t("vaccine.fieldVaccineType")} required>
                 <Select
                   value={vaccineType}
                   onChange={setVaccineType}
-                  placeholder="請選擇疫苗類型"
+                  placeholder={t("vaccine.selectVaccineTypePlaceholder")}
                   options={vaccineTypeOptions}
                 />
               </Field>
               {vaccineType && vaccineType === "其他" && (
-                <Field label="疫苗名稱" required>
+                <Field label={t("vaccine.fieldVaccineName")} required>
                   <input
                     value={vaccineName}
                     onChange={(e) => setVaccineName(e.target.value)}
-                    placeholder="請輸入疫苗名稱（例：狂犬病疫苗）"
+                    placeholder={t("vaccine.vaccineNamePlaceholder")}
                     className={inputClass}
                   />
                 </Field>
               )}
 
-              <Field label="疫苗批號（選填）">
+              <Field label={t("vaccine.fieldBatchNumber")}>
                 <input
                   value={batchNumber}
                   onChange={(e) => setBatchNumber(e.target.value)}
-                  placeholder="若尚未取得，可稍後再補上"
+                  placeholder={t("vaccine.batchNumberPendingPlaceholder")}
                   className={inputClass}
                 />
               </Field>
 
-              <Field label="備註（選填）">
+              <Field label={t("common.noteOptional")}>
                 <div className="relative">
                   <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value.slice(0, 200))}
-                    placeholder="可記錄此疫苗的備註或建議事項..."
+                    placeholder={t("vaccine.notePlaceholderPending")}
                     rows={3}
                     maxLength={200}
                     className={`${inputClass} resize-none`}
@@ -499,29 +509,28 @@ export function AddPendingVaccineDrawer() {
               <div className="rounded-xl bg-[#eef3f6] p-3">
                 <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#5d7c8c]">
                   <Calendar size={13} />
-                  預計接種提醒
+                  {t("vaccine.scheduleReminderTitle")}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[11px] leading-5 text-ink/70">
-                    設定預計接種日期，系統將在接種前時間您，建議依照獸醫師建議的時間進行接種。
+                    {t("vaccine.scheduleReminderBody")}
                   </p>
                   <span className="shrink-0 text-3xl">📅🔔</span>
                 </div>
               </div>
 
-              <Field label="預計接種日期" required>
+              <Field label={t("vaccine.fieldNextDate")} required>
                 <div className="relative">
                   <input
                     type="date"
                     value={nextDate}
                     onChange={(e) => setNextDate(e.target.value)}
-                    placeholder="請選擇預計接種日期"
                     className={`${inputClass} pr-9 [color-scheme:light]`}
                   />
                 </div>
               </Field>
 
-              <Field label="提醒時間">
+              <Field label={t("vaccine.fieldReminderLead")}>
                 <ToggleGroup
                   value={reminderLeadDays}
                   onChange={setReminderLeadDays}
@@ -530,12 +539,12 @@ export function AddPendingVaccineDrawer() {
                 />
               </Field>
 
-              <Field label="備註（選填）">
+              <Field label={t("common.noteOptional")}>
                 <div className="relative">
                   <textarea
                     value={nextNote}
                     onChange={(e) => setNextNote(e.target.value.slice(0, 200))}
-                    placeholder="可記錄此疫苗的施打週期或獸醫師建議..."
+                    placeholder={t("vaccine.notePlaceholderPending")}
                     rows={3}
                     maxLength={200}
                     className={`${inputClass} resize-none`}
@@ -558,12 +567,15 @@ export function AddPendingVaccineDrawer() {
                 <CheckCircle2 size={32} />
               </span>
               <h2 className="mt-4 text-base font-semibold text-ink">
-                待接種疫苗新增成功！
+                {t("vaccine.pendingAddSuccessTitle")}
               </h2>
               <p className="mt-1.5 text-[12px] text-ink/50">
-                {targetPet?.name} 的 {vaccineName || vaccineType}
-                ，預計接種日期是 {nextDate}
-                ，我們會提前 {reminderLeadDays} 天提醒您。
+                {t("vaccine.pendingAddSuccessBody", {
+                  name: targetPet?.name,
+                  vaccineName: vaccineName || vaccineType,
+                  nextDate,
+                  days: reminderLeadDays,
+                })}
               </p>
             </div>
           )}
@@ -578,7 +590,7 @@ export function AddPendingVaccineDrawer() {
               onClick={handleNext}
               className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
             >
-              下一步
+              {t("common.next")}
             </button>
           )}
           {step === 2 && (
@@ -589,7 +601,7 @@ export function AddPendingVaccineDrawer() {
                 disabled={isSaving}
                 className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSaving ? "儲存中…" : "完成並儲存"}
+                {isSaving ? t("common.saving") : t("vaccine.saveAndFinish")}
               </button>
               <button
                 type="button"
@@ -597,7 +609,7 @@ export function AddPendingVaccineDrawer() {
                 disabled={isSaving}
                 className="w-full rounded-full border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                上一步
+                {t("common.previous")}
               </button>
             </>
           )}
@@ -607,7 +619,7 @@ export function AddPendingVaccineDrawer() {
               onClick={handleClose}
               className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
             >
-              完成
+              {t("vaccine.finish")}
             </button>
           )}
         </div>

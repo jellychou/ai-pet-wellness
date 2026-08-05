@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, CalendarCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
@@ -35,6 +36,7 @@ function formatDateTime(iso: string) {
 // 跟 HealthDetailDrawer 疊在 EditHealthDrawer 上面是同一個模式：點「返回」
 // 只關掉自己，底下的 AiScanDrawer 本來就還開著，不用特別處理
 export function AiScanHistoryDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.aiScanHistoryOpen);
   const setOpen = useAppStore((s) => s.setAiScanHistoryOpen);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -65,17 +67,21 @@ export function AiScanHistoryDrawer() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="返回 AI 拍照診斷室"
+              aria-label={t("aiScan.historyBackAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-lg font-semibold text-ink">AI 診斷記錄</h1>
+            <h1 className="text-lg font-semibold text-ink">
+              {t("aiScan.historyTitle")}
+            </h1>
           </div>
 
           {items.length === 0 ? (
             <p className="py-10 text-center text-sm text-ink/40">
-              {selectedPet?.name ?? "這隻寵物"} 還沒有 AI 診斷記錄
+              {t("aiScan.historyEmptyState", {
+                name: selectedPet?.name ?? t("healthJournal.petFallback"),
+              })}
             </p>
           ) : (
             <div className="space-y-3">
@@ -86,7 +92,7 @@ export function AiScanHistoryDrawer() {
                 >
                   <img
                     src={item.image_url}
-                    alt="診斷照片"
+                    alt={t("aiScan.historyPhotoAlt")}
                     className="h-20 w-20 shrink-0 rounded-xl object-cover"
                   />
                   <div className="min-w-0 flex-1">
@@ -100,7 +106,7 @@ export function AiScanHistoryDrawer() {
                       {item.added_to_timeline && (
                         <span className="flex items-center gap-0.5 text-[10px] text-[#3fa88f]">
                           <CalendarCheck size={10} />
-                          已加入時間軸
+                          {t("aiScan.historyAddedToTimelineBadge")}
                         </span>
                       )}
                     </div>

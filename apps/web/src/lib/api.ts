@@ -1,4 +1,5 @@
 import { useAuthStore } from "../store/useAuthStore";
+import i18n from "../i18n/config";
 
 export const API_BASE_URL: string =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -32,7 +33,10 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new ApiError(res.status, body?.detail ?? `API 錯誤（${res.status}）`);
+    throw new ApiError(
+      res.status,
+      body?.detail ?? i18n.t("common.apiErrorFallback", { status: res.status }),
+    );
   }
 
   return res.json() as Promise<T>;

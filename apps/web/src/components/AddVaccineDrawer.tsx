@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Syringe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
 import { usePetStore } from "../store/usePetStore";
 import { isPastDate } from "../lib/utils";
 import { VaccineRecord } from "../data/pets";
 
-const tabs = [
-  { label: "全部", value: "all" },
-  { label: "已接種", value: "1" },
-  { label: "待接種", value: "0" },
-] as const;
-
 export function AddVaccineDrawer() {
+  const { t } = useTranslation();
+  const tabs = [
+    { label: t("vaccine.tabAll"), value: "all" },
+    { label: t("vaccine.tabDone"), value: "1" },
+    { label: t("vaccine.tabPending"), value: "0" },
+  ] as const;
   const open = useAppStore((s) => s.addVaccineOpen);
   const setOpen = useAppStore((s) => s.setAddVaccineOpen);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -79,29 +80,29 @@ export function AddVaccineDrawer() {
             <button
               type="button"
               onClick={handleBack}
-              aria-label="返回首頁"
+              aria-label={t("vaccine.backHomeAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-base font-semibold text-ink">
-              疫苗記錄 / Vaccine
+              {t("vaccine.headerTitle")}
             </h1>
           </div>
 
           <div className="flex gap-6 border-b border-[#ece4dc] text-sm">
-            {tabs.map((t) => (
+            {tabs.map((tb) => (
               <button
-                key={t.value}
+                key={tb.value}
                 type="button"
-                onClick={() => setTab(t.value)}
+                onClick={() => setTab(tb.value)}
                 className={`pb-2 transition ${
-                  tab === t.value
+                  tab === tb.value
                     ? "border-b-2 border-[#5b83ab] font-medium text-ink"
                     : "text-ink/40"
                 }`}
               >
-                {t.label}
+                {tb.label}
               </button>
             ))}
           </div>
@@ -134,16 +135,20 @@ export function AddVaccineDrawer() {
                         }`}
                       >
                         {v.status === "all"
-                          ? "全部"
+                          ? t("vaccine.tabAll")
                           : v.status === "0"
-                            ? "待接種"
-                            : "已接種"}
+                            ? t("vaccine.tabPending")
+                            : t("vaccine.tabDone")}
                       </span>
                     </div>
                     <div className="text-xs text-ink/45">{v.note}</div>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink/70">
                       <span>{v.vaccination_date}</span>
-                      {v.next_date && <span>下次接種 {v.next_date}</span>}
+                      {v.next_date && (
+                        <span>
+                          {t("vaccine.nextDateLabel", { date: v.next_date })}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -160,14 +165,14 @@ export function AddVaccineDrawer() {
             onClick={() => setAddVaccineFormOpen(true)}
             className="w-1/2 rounded-2xl bg-[#ead3ba] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#e4c6a5]"
           >
-            ＋ 新增疫苗
+            {t("vaccine.addVaccineButton")}
           </button>
           <button
             type="button"
             onClick={() => setAddPendingVaccineFormOpen(true)}
             className="w-1/2 rounded-2xl border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
           >
-            ＋ 新增待接種疫苗
+            {t("vaccine.addPendingVaccineButton")}
           </button>
         </div>
       </div>

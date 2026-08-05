@@ -12,8 +12,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
-import { ReportTypeEnum } from "../data/pets";
 import { apiFetch } from "../lib/api";
 import { useAlert } from "../hooks/useAlert";
 
@@ -35,11 +35,10 @@ function attachmentFromUrl(url: string): Attachment {
   };
 }
 
-function formatReportType(type: string) {
-  return ReportTypeEnum[type as keyof typeof ReportTypeEnum] ?? type;
-}
-
 export function HealthDetailDrawer() {
+  const { t } = useTranslation();
+  const formatReportType = (type: string) =>
+    t(`health.reportType.${type}`, { defaultValue: type });
   // 存的是整筆紀錄（不是 id）——後端沒有「用 id 查單筆」的 API，列表那邊
   // 本來就已經抓過完整資料了，點下去直接把那筆傳過來，這裡不用再打一次 API
   const record = useAppStore((s) => s.healthDetailRecord);
@@ -74,13 +73,13 @@ export function HealthDetailDrawer() {
       await apiFetch(`/report/delete-report-record/${record.id}`, {
         method: "DELETE",
       });
-      showSuccess("已刪除健康檢查紀錄");
+      showSuccess(t("health.deleteSuccess"));
       bumpHealthRecordRefreshKey();
       setConfirmOpen(false);
       setRecord(null);
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "刪除失敗，請稍後再試",
+        error instanceof Error ? error.message : t("health.deleteFailed"),
       );
     } finally {
       setIsDeleting(false);
@@ -123,12 +122,12 @@ export function HealthDetailDrawer() {
 
   const rows = record
     ? [
-        ["體重", `${record.report_weight} kg`],
-        ["體溫", `${record.report_temperature} °C`],
-        ["心跳", `${record.report_heart_rate} bpm`],
-        ["醫院", record.report_hospital],
-        ["醫師", record.report_vet],
-        ["備註", record.report_note || "—"],
+        [t("health.fieldWeight"), `${record.report_weight} kg`],
+        [t("health.fieldTemperature"), `${record.report_temperature} °C`],
+        [t("health.fieldHeartRate"), `${record.report_heart_rate} bpm`],
+        [t("health.fieldHospital"), record.report_hospital],
+        [t("health.fieldVet"), record.report_vet],
+        [t("health.fieldNote"), record.report_note || "—"],
       ]
     : [];
 
@@ -147,12 +146,14 @@ export function HealthDetailDrawer() {
             <button
               type="button"
               onClick={handleBack}
-              aria-label="返回"
+              aria-label={t("common.backAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-base font-semibold text-ink">檢查詳情</h1>
+            <h1 className="text-base font-semibold text-ink">
+              {t("health.detailTitle")}
+            </h1>
             <span className="w-9" />
           </div>
 
@@ -179,7 +180,7 @@ export function HealthDetailDrawer() {
 
               <div>
                 <div className="text-sm font-semibold text-ink">
-                  檢驗報告 / 圖片
+                  {t("health.attachmentsTitle")}
                 </div>
                 <input
                   ref={fileInputRef}
@@ -240,7 +241,7 @@ export function HealthDetailDrawer() {
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd] disabled:opacity-60"
             >
               <Trash2 size={16} />
-              {isDeleting ? "刪除中..." : "刪除這筆紀錄"}
+              {isDeleting ? t("common.deleting") : t("health.deleteRecordButton")}
             </button>
           </div>
         </div>
@@ -251,18 +252,18 @@ export function HealthDetailDrawer() {
         onClose={() => !isDeleting && setConfirmOpen(false)}
         aria-labelledby="delete-record-title"
       >
-        <DialogTitle id="delete-record-title">刪除健康檢查紀錄</DialogTitle>
+        <DialogTitle id="delete-record-title">
+          {t("health.deleteDialogTitle")}
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            確定要刪除這筆健康檢查紀錄嗎？此動作無法復原。
-          </DialogContentText>
+          <DialogContentText>{t("health.deleteDialogText")}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)} disabled={isDeleting}>
-            取消
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleDelete} color="error" disabled={isDeleting}>
-            {isDeleting ? "刪除中..." : "刪除"}
+            {isDeleting ? t("common.deleting") : t("common.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -277,7 +278,7 @@ export function HealthDetailDrawer() {
           <button
             type="button"
             onClick={() => setPreviewAttachment(null)}
-            aria-label="關閉"
+            aria-label={t("common.close")}
             className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
           >
             <X size={20} />

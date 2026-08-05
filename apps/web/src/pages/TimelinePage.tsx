@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { usePetStore } from "../store/usePetStore";
 import { fetchTimeline, formatTimelineDayLabel, type TimelineItem } from "../lib/timeline";
 
 export function TimelinePage() {
+  const { t } = useTranslation();
   const selectedPet = usePetStore((s) => s.selectedPet);
   const [items, setItems] = useState<TimelineItem[]>([]);
 
@@ -16,9 +18,9 @@ export function TimelinePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-3xl font-semibold">歷史日誌</h1>
+      <h1 className="text-3xl font-semibold">{t("timeline.pageTitle")}</h1>
       {items.length === 0 ? (
-        <p className="muted mt-8">目前還沒有任何紀錄</p>
+        <p className="muted mt-8">{t("timeline.emptyState")}</p>
       ) : (
         <div className="relative mt-8 border-l-2 border-mist pl-8">
           {items.map((item) => (

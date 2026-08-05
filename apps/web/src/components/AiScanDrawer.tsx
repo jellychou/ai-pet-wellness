@@ -14,6 +14,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
@@ -28,16 +29,19 @@ type AiScanFinding = {
 
 // 分析 loading 畫面用的假進度清單，跟 AddFoodDrawer 同一套做法——實際分析
 // 是一次 API call 打完，不是真的分這幾步驟執行，純粹讓等待感覺有在動
-const LOADING_STEPS = [
-  "辨識症狀特徵",
-  "比對可能狀況",
-  "評估緊急程度",
-  "生成建議",
-];
+const LOADING_STEP_KEYS = [
+  "aiScan.loadingSteps.step1",
+  "aiScan.loadingSteps.step2",
+  "aiScan.loadingSteps.step3",
+  "aiScan.loadingSteps.step4",
+] as const;
 
 // 上傳照片時可以指定要分析的部位，單選——選了會附進送給 AI 的 prompt裡，
 // 讓分析更聚焦。純前端定義的選項清單，後端 body_part 欄位是自由文字，
-// 不是綁死的 enum，之後要加選項只要改這裡就好，不用動後端
+// 不是綁死的 enum，之後要加選項只要改這裡就好，不用動後端。
+// 這裡的值會直接當成 body_part 存進後端、也會被拿來顯示在結果卡片上，
+// 屬於「自由文字資料」而不是純 UI 顯示字串，跟 vaccine 的
+// vaccineTypeOptions 是同一種情況，所以刻意不做 i18n 轉換
 const BODY_PART_OPTIONS = [
   "皮膚",
   "耳朵",
@@ -54,10 +58,10 @@ const BODY_PART_OPTIONS = [
 // 可以點擊跳轉的連結（沒有對應頁面可以跳，做成假的可點擊反而誤導使用者），
 // 純粹是跟設計稿一致的靜態展示
 const RELATED_RECORDS = [
-  { icon: Utensils, label: "飲食紀錄" },
-  { icon: Footprints, label: "行為紀錄" },
-  { icon: Flame, label: "活動量" },
-  { icon: Smile, label: "心情日記" },
+  { icon: Utensils, labelKey: "aiScan.relatedRecordFood" },
+  { icon: Footprints, labelKey: "aiScan.relatedRecordBehavior" },
+  { icon: Flame, labelKey: "aiScan.relatedRecordActivity" },
+  { icon: Smile, labelKey: "aiScan.relatedRecordMood" },
 ];
 
 function formatTodayDate() {
@@ -84,6 +88,7 @@ type AnalyzeImageResponse = {
 };
 
 export function AiScanDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.aiScanOpen);
   const setOpen = useAppStore((s) => s.setAiScanOpen);
   const setHistoryOpen = useAppStore((s) => s.setAiScanHistoryOpen);
@@ -138,7 +143,9 @@ export function AiScanDrawer() {
       return;
     }
     const timer = setInterval(() => {
-      setLoadingStep((step) => Math.min(step + 1, LOADING_STEPS.length - 1));
+      setLoadingStep((step) =>
+        Math.min(step + 1, LOADING_STEP_KEYS.length - 1),
+      );
     }, 4000);
     return () => clearInterval(timer);
   }, [analyzing]);
@@ -160,9 +167,7 @@ export function AiScanDrawer() {
 
   function handleReupload() {
     if (limitReached) {
-      showError(
-        `今天的 AI 診斷次數已用完（每天最多 ${usage?.limit} 次），請明天再試`,
-      );
+      showError(t("aiScan.limitReachedMessage", { limit: usage?.limit }));
       return;
     }
     fileInputRef.current?.click();
@@ -181,7 +186,7 @@ export function AiScanDrawer() {
     e.target.value = "";
     if (!file) return;
     if (!selectedPet) {
-      showError("請先選擇寵物");
+      showError(t("healthJournal.selectPetFirst"));
       return;
     }
     resetAll();
@@ -216,7 +221,7 @@ export function AiScanDrawer() {
       }
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "AI 分析失敗，請稍後再試",
+        error instanceof Error ? error.message : t("healthJournal.analyzeFailed"),
       );
     } finally {
       setAnalyzing(false);
@@ -232,7 +237,7 @@ export function AiScanDrawer() {
       setAddedToTimeline(true);
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "加入時間軸失敗，請稍後再試",
+        error instanceof Error ? error.message : t("aiScan.addToTimelineFailed"),
       );
     }
   }
@@ -267,18 +272,18 @@ export function AiScanDrawer() {
             <button
               type="button"
               onClick={handleBack}
-              aria-label="返回首頁"
+              aria-label={t("common.backAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-base font-semibold text-ink">
-              AI 拍照診斷室 / AI Diagnosis
+              {t("aiScan.headerTitle")}
             </h1>
             <button
               type="button"
               onClick={handleViewHistory}
-              aria-label="檢視辨識記錄"
+              aria-label={t("aiScan.viewHistoryAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <Clock size={19} />
@@ -294,8 +299,12 @@ export function AiScanDrawer() {
               }`}
             >
               {usage.unlimited
-                ? `管理員帳號，今日已使用 ${usage.used} 次，無次數限制`
-                : `今日已使用 ${usage.used} / ${usage.limit} 次${limitReached ? "，請明天再試" : ""}`}
+                ? t("healthJournal.usageUnlimited", { used: usage.used })
+                : `${t("healthJournal.usageLimited", { used: usage.used, limit: usage.limit })}${
+                    limitReached
+                      ? t("healthJournal.usageLimitReachedSuffix")
+                      : ""
+                  }`}
             </div>
           )}
 
@@ -311,7 +320,9 @@ export function AiScanDrawer() {
           {!addedToTimeline &&
             (analyzing ? (
               <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-[#eee5da] bg-[#fffdfa] px-6 py-8">
-                <p className="text-base font-semibold text-ink">AI 判讀中…</p>
+                <p className="text-base font-semibold text-ink">
+                  {t("aiScan.analyzingTitle")}
+                </p>
                 <div className="relative grid h-20 w-20 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
                   <Bot size={40} />
                   <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-white text-[#688696] shadow-[0_2px_8px_rgba(0,0,0,.12)]">
@@ -320,13 +331,18 @@ export function AiScanDrawer() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-ink/70">
-                    AI 正在判讀照片…
+                    {t("aiScan.analyzingSubtitle")}
                   </p>
-                  <p className="mt-0.5 text-xs text-ink/40">請稍候 10~20 秒</p>
+                  <p className="mt-0.5 text-xs text-ink/40">
+                    {t("aiScan.analyzingWait")}
+                  </p>
                 </div>
                 <ul className="w-full max-w-[220px] space-y-2">
-                  {LOADING_STEPS.map((step, i) => (
-                    <li key={step} className="flex items-center gap-2 text-xs">
+                  {LOADING_STEP_KEYS.map((stepKey, i) => (
+                    <li
+                      key={stepKey}
+                      className="flex items-center gap-2 text-xs"
+                    >
                       <span
                         className={`grid h-4 w-4 shrink-0 place-items-center rounded-full transition-colors ${
                           i <= loadingStep
@@ -341,7 +357,7 @@ export function AiScanDrawer() {
                           i <= loadingStep ? "text-ink/70" : "text-ink/30"
                         }
                       >
-                        {step}
+                        {t(stepKey)}
                       </span>
                     </li>
                   ))}
@@ -352,7 +368,7 @@ export function AiScanDrawer() {
                 {earPhoto ? (
                   <img
                     src={earPhoto}
-                    alt="寵物拍照診斷照片"
+                    alt={t("aiScan.photoAlt")}
                     className="h-56 w-full rounded-2xl object-contain"
                   />
                 ) : (
@@ -361,10 +377,10 @@ export function AiScanDrawer() {
                       <Camera size={22} />
                     </span>
                     <p className="text-sm font-medium text-ink/50">
-                      尚未上傳照片
+                      {t("aiScan.noPhotoTitle")}
                     </p>
                     <p className="text-xs text-ink/35">
-                      點擊下方「拍照AI診斷」開始
+                      {t("aiScan.noPhotoHint")}
                     </p>
                   </div>
                 )}
@@ -377,7 +393,7 @@ export function AiScanDrawer() {
             <div className="space-y-3 rounded-2xl border border-[#eee5da] bg-[#fffdfa] p-4">
               <div>
                 <div className="text-xs font-medium text-ink/50">
-                  請選擇要分析的部位（選填）
+                  {t("aiScan.bodyPartLabel")}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {BODY_PART_OPTIONS.map((part) => (
@@ -402,13 +418,13 @@ export function AiScanDrawer() {
               </div>
               <div>
                 <div className="text-xs font-medium text-ink/50">
-                  補充說明（選填）
+                  {t("aiScan.descriptionLabel")}
                 </div>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={2}
-                  placeholder="例如：最近一直舔腳，皮膚有點紅腫…"
+                  placeholder={t("aiScan.descriptionPlaceholder")}
                   className="mt-2 w-full resize-none rounded-xl border border-[#eee5da] bg-white px-3 py-2 text-sm outline-none placeholder:text-ink/30"
                 />
               </div>
@@ -418,7 +434,9 @@ export function AiScanDrawer() {
           {result && !addedToTimeline && (
             <>
               <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
-                <div className="text-xs text-ink/45">AI 判讀結果</div>
+                <div className="text-xs text-ink/45">
+                  {t("aiScan.resultTitle")}
+                </div>
                 {result.summary && (
                   <p className="mt-2 text-sm text-ink/80">{result.summary}</p>
                 )}
@@ -450,14 +468,16 @@ export function AiScanDrawer() {
                   </div>
                 ) : (
                   <p className="mt-3 text-sm text-ink/60">
-                    沒有觀察到明顯異常。
+                    {t("aiScan.noAbnormalFound")}
                   </p>
                 )}
               </div>
 
               {result.suggestions.length > 0 && (
                 <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
-                  <div className="text-xs text-ink/45">建議</div>
+                  <div className="text-xs text-ink/45">
+                    {t("aiScan.suggestionsTitle")}
+                  </div>
                   <ul className="mt-2 space-y-1.5">
                     {result.suggestions.map((suggestion, i) => (
                       <li key={i} className="flex gap-1.5 text-sm text-ink/70">
@@ -481,7 +501,7 @@ export function AiScanDrawer() {
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
               >
                 <CalendarPlus size={16} />
-                加入健康時間軸
+                {t("aiScan.addToTimelineButton")}
               </button>
             </>
           )}
@@ -496,14 +516,14 @@ export function AiScanDrawer() {
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#3fa88f] text-white">
                   <Check size={13} strokeWidth={3} />
                 </span>
-                已加入健康時間軸
+                {t("healthJournal.addedToTimelineNote")}
               </div>
 
               <div className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-3 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
                 {earPhoto ? (
                   <img
                     src={earPhoto}
-                    alt="寵物拍照診斷照片"
+                    alt={t("aiScan.photoAlt")}
                     className="h-14 w-14 shrink-0 rounded-xl object-cover"
                   />
                 ) : (
@@ -514,8 +534,10 @@ export function AiScanDrawer() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">
                     {result.body_part
-                      ? `AI 影像分析：${result.body_part}`
-                      : "AI 影像分析"}
+                      ? t("aiScan.analysisTitleWithPart", {
+                          bodyPart: result.body_part,
+                        })
+                      : t("aiScan.analysisTitleDefault")}
                   </p>
                   <p className="mt-0.5 text-xs text-ink/45">
                     {formatTodayDate()}
@@ -528,17 +550,18 @@ export function AiScanDrawer() {
                       : "bg-[#eef4f6] text-[#688696]"
                   }`}
                 >
-                  {result.findings.length > 0 ? "需觀察" : "正常"}
+                  {result.findings.length > 0
+                    ? t("aiScan.statusWatch")
+                    : t("health.summaryNormal")}
                 </span>
               </div>
 
               <div className="rounded-2xl border border-[#eee5da] bg-[#fffdfa] p-4">
                 <p className="text-sm font-semibold text-ink">
-                  要進一步諮詢嗎？
+                  {t("aiScan.consultTitle")}
                 </p>
                 <p className="mt-1 text-xs text-ink/50">
-                  可以直接詢問 AI
-                  心靈導師，帶入這次的判讀結果，取得更完整的照護建議
+                  {t("aiScan.consultSubtitle")}
                 </p>
                 <div className="mt-3 space-y-2.5">
                   <button
@@ -547,30 +570,32 @@ export function AiScanDrawer() {
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(104,134,150,.3)] transition hover:bg-[#5a7684]"
                   >
                     <Sparkles size={16} />
-                    詢問 AI 心靈導師
+                    {t("aiScan.askMentorButton")}
                   </button>
                   <button
                     type="button"
                     onClick={resetAll}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] py-3.5 text-sm font-semibold text-ink/60 transition hover:bg-[#f7f2ea]"
                   >
-                    暫時不用
+                    {t("aiScan.notNowButton")}
                   </button>
                 </div>
               </div>
 
               <div>
-                <div className="text-xs font-medium text-ink/45">相關記錄</div>
+                <div className="text-xs font-medium text-ink/45">
+                  {t("aiScan.relatedRecordsTitle")}
+                </div>
                 <div className="mt-2 space-y-2">
-                  {RELATED_RECORDS.map(({ icon: Icon, label }) => (
+                  {RELATED_RECORDS.map(({ icon: Icon, labelKey }) => (
                     <div
-                      key={label}
+                      key={labelKey}
                       className="flex items-center gap-3 rounded-xl border border-[#eee5da] bg-[#fffdfa] px-3 py-2.5 text-sm text-ink/60"
                     >
                       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef4f6] text-[#688696]">
                         <Icon size={15} />
                       </span>
-                      {label}
+                      {t(labelKey)}
                     </div>
                   ))}
                 </div>
@@ -591,7 +616,7 @@ export function AiScanDrawer() {
                   disabled={limitReached || analyzing}
                   className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 >
-                  重新選擇照片
+                  {t("aiScan.reuploadButton")}
                 </button>
                 <button
                   type="button"
@@ -599,7 +624,7 @@ export function AiScanDrawer() {
                   disabled={limitReached || analyzing}
                   className="rounded-2xl  py-3.5 text-sm font-semibold bg-[#688696] text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 >
-                  開始分析
+                  {t("aiScan.startAnalysisButton")}
                 </button>
               </>
             ) : (
@@ -609,7 +634,7 @@ export function AiScanDrawer() {
                 disabled={limitReached || analyzing}
                 className="w-full rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
-                拍照AI診斷
+                {t("aiScan.uploadCta")}
               </button>
             )}
           </div>

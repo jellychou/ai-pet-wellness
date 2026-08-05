@@ -6,13 +6,14 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { HealthRecord } from "../data/pets";
 import { apiFetch } from "../lib/api";
 import { usePetStore } from "../store/usePetStore";
-import { ReportTypeEnum } from "../data/pets";
 
 export function EditHealthDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.editHealthOpen);
   const setOpen = useAppStore((s) => s.setEditHealthOpen);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -43,7 +44,7 @@ export function EditHealthDrawer() {
   };
 
   const formatReportType = (type: string) => {
-    return ReportTypeEnum[type as keyof typeof ReportTypeEnum];
+    return t(`health.reportType.${type}`, { defaultValue: type });
   };
 
   useEffect(() => {
@@ -65,24 +66,30 @@ export function EditHealthDrawer() {
             <button
               type="button"
               onClick={handleBack}
-              aria-label="返回首頁"
+              aria-label={t("health.backHomeAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-base font-semibold text-ink">健康檢查紀錄</h1>
+            <h1 className="text-base font-semibold text-ink">
+              {t("health.pageTitle")}
+            </h1>
           </div>
 
           <div className="flex items-center justify-between rounded-2xl bg-[#fbe9dc] p-4">
             <div>
-              <div className="text-xs text-ink/50">最新檢查</div>
+              <div className="text-xs text-ink/50">
+                {t("health.latestCheckLabel")}
+              </div>
               <div className="mt-1 text-xl font-bold text-ink">
                 2025 / 05 / 10
               </div>
               <div className="mt-2 flex items-center gap-2 text-sm">
-                <span className="text-ink/60">身體狀況</span>
+                <span className="text-ink/60">
+                  {t("health.bodyConditionLabel")}
+                </span>
                 <span className="pill bg-[#dff3e6] font-medium text-[#3fa876]">
-                  良好
+                  {t("health.bodyConditionGood")}
                 </span>
               </div>
             </div>
@@ -113,10 +120,10 @@ export function EditHealthDrawer() {
                     {formatReportType(r.report_type)}
                   </div>
                   <div className="mt-1 text-xs text-ink/60">
-                    體重 {r.report_weight} kg
+                    {t("health.fieldWeight")} {r.report_weight} kg
                   </div>
                   <div className="mt-1 text-xs text-ink/60">
-                    醫院 {r.report_hospital}
+                    {t("health.fieldHospital")} {r.report_hospital}
                   </div>
                 </div>
               </button>
@@ -131,7 +138,7 @@ export function EditHealthDrawer() {
             onClick={() => setAddHealthRecordOpen(true)}
             className="w-full rounded-2xl bg-[#f3e6d6] py-2.5 text-sm font-semibold text-ink transition hover:bg-[#ecdcc7]"
           >
-            新增健康檢查紀錄
+            {t("health.addRecordButton")}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { ClipboardPlus, Syringe, type LucideIcon } from "lucide-react";
 import { apiFetch } from "./api";
+import i18n from "../i18n/config";
 
 // 跟後端 app/schemas/timeline.py 的 TimelineItemOut 對齊——時間軸只是把
 // vaccine_records / report_records 兩張表讀出來、依日期攤平合併，不是自己
@@ -34,8 +35,9 @@ export function formatTimelineDayLabel(dateStr: string): string {
   const today = dayjs().startOf("day");
   const diffDays = today.diff(target, "day");
 
-  if (diffDays === 0) return "今天";
-  if (diffDays === 1) return "昨天";
-  if (diffDays > 1 && diffDays < 7) return `${diffDays} 天前`;
+  if (diffDays === 0) return i18n.t("timeline.today");
+  if (diffDays === 1) return i18n.t("timeline.yesterday");
+  if (diffDays > 1 && diffDays < 7)
+    return i18n.t("timeline.daysAgo", { days: diffDays });
   return target.format("YYYY/MM/DD");
 }

@@ -176,6 +176,15 @@ type AppState = {
   // foodRecordRefreshKey/vaccineRefreshKey 同樣的道理
   healthJournalRefreshKey: number;
   bumpHealthJournalRefreshKey: () => void;
+  // Dashboard 頂部「飲水量」卡片的記錄小視窗，比照 healthJournalOpen 同一種
+  // 「Dashboard 觸發、全螢幕 drawer 記錄」模式
+  waterIntakeOpen: boolean;
+  setWaterIntakeOpen: (v: boolean) => void;
+  // 跟 foodRecordRefreshKey 同樣的道理：Dashboard 只在自己 mount/切換寵物時
+  // 打一次「今日飲水量」API，WaterIntakeDrawer 記錄成功關掉不會觸發它重新
+  // mount，所以用這個數字當訊號，成功就 +1，讓 Dashboard 重新抓一次
+  waterRefreshKey: number;
+  bumpWaterRefreshKey: () => void;
 };
 export const useAppStore = create<AppState>((set) => ({
   sidebarOpen: false,
@@ -267,4 +276,9 @@ export const useAppStore = create<AppState>((set) => ({
   healthJournalRefreshKey: 0,
   bumpHealthJournalRefreshKey: () =>
     set((s) => ({ healthJournalRefreshKey: s.healthJournalRefreshKey + 1 })),
+  waterIntakeOpen: false,
+  setWaterIntakeOpen: (waterIntakeOpen) => set({ waterIntakeOpen }),
+  waterRefreshKey: 0,
+  bumpWaterRefreshKey: () =>
+    set((s) => ({ waterRefreshKey: s.waterRefreshKey + 1 })),
 }));

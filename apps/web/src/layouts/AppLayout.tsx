@@ -19,6 +19,7 @@ import { AddHealthRecordDrawer } from "../components/AddHealthRecordDrawer";
 import { SettingsEditDrawer } from "../components/SettingsEditDrawer";
 import { ChangePasswordDrawer } from "../components/ChangePasswordDrawer";
 import { SetPasswordDrawer } from "../components/SetPasswordDrawer";
+import { WaterIntakeDrawer } from "../components/WaterIntakeDrawer";
 
 const pageTitleKeys: Record<string, string> = {
   "/": "home",
@@ -68,6 +69,7 @@ export function AppLayout() {
       <SettingsEditDrawer />
       <ChangePasswordDrawer />
       <SetPasswordDrawer />
+      <WaterIntakeDrawer />
     </div>
   );
 }

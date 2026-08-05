@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.vaccine import VaccineRecord
     from app.models.report import ReportRecord
     from app.models.food_record import FoodRecord
+    from app.models.water_record import WaterRecord
 
 
 class Pet(Base):
@@ -60,4 +61,8 @@ class Pet(Base):
     # 飲食記錄，寵物被刪除時一併刪掉
     food_records: Mapped[list["FoodRecord"]] = relationship(
         "FoodRecord", back_populates="pet", cascade="all, delete-orphan"
+    )
+    # 飲水記錄，寵物被刪除時一併刪掉
+    water_records: Mapped[list["WaterRecord"]] = relationship(
+        "WaterRecord", back_populates="pet", cascade="all, delete-orphan"
     )

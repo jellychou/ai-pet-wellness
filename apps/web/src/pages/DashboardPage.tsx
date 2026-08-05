@@ -21,6 +21,7 @@ import {
   calculateMacros,
   sumCalories,
 } from "../lib/calorie";
+import { calculateDailyWaterTargetMl } from "../lib/water";
 import { apiFetch } from "../lib/api";
 
 const defaultPetPhoto =
@@ -135,6 +136,23 @@ type FoodRecordEntry = {
   fed_at: string;
   note: string | null;
 };
+
+// 頂部「健康分數」卡片只關心今天這一筆——只挑 log_date 對到今天的那筆,
+// 只取需要的兩個欄位,不用整份 HealthJournalHistoryItemOut
+type HealthJournalHistoryEntry = {
+  log_date: string;
+  health_score: number;
+};
+
+type WaterTodaySummary = { total_ml: number };
+
+// 心情狀態沒有後端欄位,用「今天的健康分數」門檻推算,跟健康日誌 AI 給分的
+// 分佈區間(75-90 算正常)對齊,不是隨便訂的數字
+function moodFromScore(score: number): "good" | "normal" | "watch" {
+  if (score >= 80) return "good";
+  if (score >= 50) return "normal";
+  return "watch";
+}
 
 const mealTypeOrder: {
   value: FoodRecordEntry["meal_type"];
@@ -340,12 +358,87 @@ export function DashboardPage() {
   const setAiScanOpen = useAppStore((s) => s.setAiScanOpen);
   const setEditHealthOpen = useAppStore((s) => s.setEditHealthOpen);
   const setHealthJournalOpen = useAppStore((s) => s.setHealthJournalOpen);
+  const setWaterIntakeOpen = useAppStore((s) => s.setWaterIntakeOpen);
+  const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
+  const healthJournalRefreshKey = useAppStore(
+    (s) => s.healthJournalRefreshKey,
+  );
+  const waterRefreshKey = useAppStore((s) => s.waterRefreshKey);
   const userInfo = useAuthStore((s) => s.userInfo);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const dailyCalories = selectedPet
     ? String(calculateDailyCalories(selectedPet) ?? "--")
     : null;
   const macros = selectedPet ? calculateMacros(selectedPet) : null;
+
+  const [todayCalories, setTodayCalories] = useState<number | null>(null);
+  const [healthScoreToday, setHealthScoreToday] = useState<number | null>(
+    null,
+  );
+  const [waterTodayMl, setWaterTodayMl] = useState<number | null>(null);
+
+  // 「今日熱量」跟 FoodCard 抓的是同一支 API，各自獨立打一次——FoodCard
+  // 內部的 selectedDate 可能被使用者切去別天，不能共用它算出來的總和，
+  // 這裡固定只算今天
+  useEffect(() => {
+    const petId = selectedPet?.id;
+    if (!petId) {
+      setTodayCalories(null);
+      return;
+    }
+    const todayKey = toDateKey(new Date());
+    apiFetch<FoodRecordEntry[]>(`/food/food-records/${petId}`, {
+      method: "GET",
+    })
+      .then((records) => {
+        const todayRecords = records.filter(
+          (r) => toDateKey(new Date(r.fed_at)) === todayKey,
+        );
+        setTodayCalories(
+          sumCalories(todayRecords.map((r) => ({ calories: r.total_calories }))),
+        );
+      })
+      .catch((err) => console.error(err));
+  }, [selectedPet?.id, foodRecordRefreshKey]);
+
+  // 「健康分數」只看今天有沒有記過健康日誌——沒有的話卡片顯示 "--"，
+  // 不要拿以前的分數冒充今天的狀況
+  useEffect(() => {
+    const petId = selectedPet?.id;
+    if (!petId) {
+      setHealthScoreToday(null);
+      return;
+    }
+    const todayKey = toDateKey(new Date());
+    apiFetch<HealthJournalHistoryEntry[]>(`/health-journal/history/${petId}`, {
+      method: "GET",
+    })
+      .then((entries) => {
+        const todayEntry = entries.find((e) => e.log_date === todayKey);
+        setHealthScoreToday(todayEntry ? todayEntry.health_score : null);
+      })
+      .catch((err) => console.error(err));
+  }, [selectedPet?.id, healthJournalRefreshKey]);
+
+  // 「飲水量」百分比 = 今天累計 ml / 用體重估算的目標 ml
+  useEffect(() => {
+    const petId = selectedPet?.id;
+    if (!petId) {
+      setWaterTodayMl(null);
+      return;
+    }
+    apiFetch<WaterTodaySummary>(`/water/today/${petId}`, { method: "GET" })
+      .then((res) => setWaterTodayMl(res.total_ml))
+      .catch((err) => console.error(err));
+  }, [selectedPet?.id, waterRefreshKey]);
+
+  const waterTargetMl = selectedPet
+    ? calculateDailyWaterTargetMl(selectedPet)
+    : null;
+  const waterPercent =
+    waterTodayMl != null && waterTargetMl
+      ? Math.min(100, Math.round((waterTodayMl / waterTargetMl) * 100))
+      : null;
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-3">
@@ -389,27 +482,39 @@ export function DashboardPage() {
               <Metric
                 icon={Heart}
                 title={t("dashboard.healthScore")}
-                value="0"
+                value={healthScoreToday != null ? String(healthScoreToday) : "--"}
                 unit="/100"
                 tone="peach"
               />
               <Metric
                 icon={Flame}
                 title={t("dashboard.todayCalories")}
-                value="0"
+                value={
+                  todayCalories != null ? String(Math.round(todayCalories)) : "--"
+                }
                 unit={`/${dailyCalories ?? "--"} kcal`}
                 tone="peach"
               />
-              <Metric
-                icon={Droplets}
-                title={t("dashboard.waterIntake")}
-                value="80"
-                unit="%"
-              />
+              <button
+                type="button"
+                onClick={() => setWaterIntakeOpen(true)}
+                className="text-left transition hover:-translate-y-0.5"
+              >
+                <Metric
+                  icon={Droplets}
+                  title={t("dashboard.waterIntake")}
+                  value={waterPercent != null ? String(waterPercent) : "--"}
+                  unit="%"
+                />
+              </button>
               <Metric
                 icon={HeartPulse}
                 title={t("dashboard.mood")}
-                value={t("dashboard.moodHappy")}
+                value={
+                  healthScoreToday != null
+                    ? t(`healthJournal.mood.${moodFromScore(healthScoreToday)}`)
+                    : "--"
+                }
                 tone="cream"
               />
             </div>

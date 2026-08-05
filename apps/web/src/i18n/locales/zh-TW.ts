@@ -375,6 +375,19 @@ export const zhTW = {
     calcTotalCalories: "計算總熱量",
     saveRecord: "儲存記錄",
   },
+  water: {
+    title: "記錄飲水量",
+    todayTotal: "今日已喝 {{total}} ml",
+    targetLine: "目標 {{target}} ml",
+    noTarget: "尚未設定體重，無法估算目標",
+    quickAddTitle: "快速記錄",
+    customTitle: "自訂數量",
+    customPlaceholder: "輸入毫升數",
+    addAria: "新增 {{amount}} ml",
+    addButton: "新增",
+    doneButton: "完成",
+    addFailed: "記錄飲水量失敗，請稍後再試",
+  },
 };
 
 export type ZhTWResources = typeof zhTW;

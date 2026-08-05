@@ -8,6 +8,7 @@ from app.models.food_scan import FoodScanLog
 from app.models.food_record import FoodRecord, FoodRecordItem
 from app.models.health_journal import HealthJournalLog
 from app.models.mentor import MentorSession, MentorMessage
+from app.models.water_record import WaterRecord
 
 __all__ = [
     "User",
@@ -21,4 +22,5 @@ __all__ = [
     "HealthJournalLog",
     "MentorSession",
     "MentorMessage",
+    "WaterRecord",
 ]

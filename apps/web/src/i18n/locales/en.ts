@@ -381,4 +381,17 @@ export const en = {
     calcTotalCalories: "Calculate Total Calories",
     saveRecord: "Save Record",
   },
+  water: {
+    title: "Log Water Intake",
+    todayTotal: "{{total}} ml today",
+    targetLine: "Goal {{target}} ml",
+    noTarget: "Set your pet's weight to estimate a goal",
+    quickAddTitle: "Quick Add",
+    customTitle: "Custom Amount",
+    customPlaceholder: "Enter amount in ml",
+    addAria: "Add {{amount}} ml",
+    addButton: "Add",
+    doneButton: "Done",
+    addFailed: "Failed to log water intake, please try again later",
+  },
 };

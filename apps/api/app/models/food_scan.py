@@ -72,6 +72,7 @@ class FoodScanLog(Base):
     fat: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     carb: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     fiber: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
+    water: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     # 估算準確度的簡短說明（例如「只能做估算，誤差可能約 ±20~30%」），
     # 前端要顯示在結果卡片上，避免使用者把估計值當成秤重般精確的數字
     estimate_note: Mapped[str] = mapped_column(Text, nullable=False, server_default="")

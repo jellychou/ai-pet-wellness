@@ -13,6 +13,11 @@ class FoodRecordItemIn(BaseModel):
     # 前端算好「這一項」的總熱量（calories_per_gram * portion_grams）再送過來，
     # 後端只負責存跟加總，不重新計算
     calories: float
+    # 前端算好「這一項」估計含多少水分（water_per_gram * portion_grams），
+    # 只在這裡當輸入用來加總成一筆 WaterRecord（見 add_food_record），
+    # 不會存進 food_record_items 表——「從歷史選擇」來源沒有水分資料，
+    # 前端固定會傳 0，不是欄位遺漏
+    water_ml: float = 0
 
 
 class FoodRecordItemOut(BaseModel):

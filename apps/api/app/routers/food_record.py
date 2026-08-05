@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.models.food_record import FoodRecord, FoodRecordItem
 from app.models.pet import Pet
 from app.models.user import User
+from app.models.water_record import WaterRecord
 from app.schemas.food_record import (
     AddFoodRecordRequest,
     FoodRecordOut,
@@ -81,6 +82,22 @@ def add_food_record(
         ],
     )
     db.add(new_record)
+
+    # 濕食/湯泡飯本身含的水分也算進當天喝水量——items[].water_ml 只是拿來
+    # 加總的輸入，不會存進 food_record_items（那張表沒有這欄），這裡直接
+    # 生一筆 WaterRecord，recorded_at 用 fed_at（吃飯的時間）而不是現在儲存
+    # 的時間，這樣「今日飲水量」才會算在正確的那一天，不是使用者晚點才
+    # 補記錄的當下
+    total_water_ml = round(sum(item.water_ml for item in payload.items))
+    if total_water_ml > 0:
+        db.add(
+            WaterRecord(
+                pet_id=payload.pet_id,
+                amount_ml=total_water_ml,
+                recorded_at=payload.fed_at,
+            )
+        )
+
     db.commit()
     db.refresh(new_record)
     return new_record

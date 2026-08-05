@@ -37,6 +37,10 @@ export type FoodScanResult = {
   fat: number;
   carb: number;
   fiber: number;
+  // 這份餐點本身估計含多少水分（ml，例如濕食罐頭、湯泡飯）——跟寵物自己
+  // 喝水是兩件事，但存進飲食記錄時會拿這個數字幫忙加進當天的飲水量
+  // 追蹤（見 AddFoodDrawer.handleSave），不是單純顯示用的數字
+  water: number;
   // 估算準確度的簡短說明，前端要顯示在結果卡片上
   estimate_note: string;
   safety_level: number; // 0-5，0 = food_detected 是 false
@@ -60,6 +64,10 @@ export type FoodDraftItem = {
   portion_grams: number;
   calories: number;
   caloriesPerGram: number;
+  // 跟 caloriesPerGram 同樣的道理：這個食材「每公克含多少水分」，調整份量
+  // 時用它算出這一項要記多少水分進飲水量。「從歷史選擇」來源沒有水分資料
+  // （food_record_items 沒存過這欄），固定是 0，不會假裝算出一個數字
+  waterPerGram: number;
   source: "scan" | "history";
   // 只有「拍照辨識」來源才有——完整的 AI 分析結果，保留起來是為了「AI 辨識
   // 結果」畫面可以點進去看逐項食材/安全等級/建議等細節，也讓「營養概況」

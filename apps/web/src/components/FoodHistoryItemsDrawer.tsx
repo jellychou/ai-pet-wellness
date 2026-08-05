@@ -72,6 +72,8 @@ export function FoodHistoryItemsDrawer() {
         portion_grams: item.portion_grams,
         calories: item.calories,
         caloriesPerGram,
+        // 「從歷史選擇」來源沒有水分資料，固定 0，不會假裝算出一個數字
+        waterPerGram: 0,
         source: "history",
       };
       addFoodDraftItem(draftItem);

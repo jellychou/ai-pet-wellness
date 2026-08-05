@@ -75,6 +75,7 @@ SYSTEM_PROMPT = (
     '"fat": 整份餐點總脂肪最佳估計（公克）, '
     '"carb": 整份餐點總碳水化合物最佳估計（公克）, '
     '"fiber": 整份餐點總纖維最佳估計（公克）, '
+    '"water": 整份餐點總水分最佳估計（毫升）, '
     '"estimate_note": "估算準確度的簡短說明，例如「只能做估算，無法僅靠'
     '照片精準得知重量、奶油、起司或油脂用量，因此誤差可能約 ±20~30%」", '
     '"safety_level": 1-5 整數（5 = 很安全，1 = 危險/有毒，food_detected 是 '
@@ -396,6 +397,7 @@ def analyze_food(
         calories = float(parsed.get("calories", 0) or 0)
         protein = float(parsed.get("protein", 0) or 0)
         fat = float(parsed.get("fat", 0) or 0)
+        water = float(parsed.get("water", 0) or 0)
         carb = float(parsed.get("carb", 0) or 0)
         fiber = float(parsed.get("fiber", 0) or 0)
     except (TypeError, ValueError) as exc:
@@ -426,6 +428,7 @@ def analyze_food(
             protein=protein,
             fat=fat,
             carb=carb,
+            water=water,
             fiber=fiber,
             estimate_note=estimate_note,
             safety_level=safety_level,
@@ -448,6 +451,7 @@ def analyze_food(
         protein=protein,
         fat=fat,
         carb=carb,
+        water=water,
         fiber=fiber,
         estimate_note=estimate_note,
         safety_level=safety_level,

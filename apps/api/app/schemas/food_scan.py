@@ -63,6 +63,7 @@ class AnalyzeFoodResponse(BaseModel):
     fat: float
     carb: float
     fiber: float
+    water: float
     # 估算準確度的簡短說明，前端要顯示在結果卡片上，提醒使用者這是目測
     # 估計、不是秤重得出的精確值
     estimate_note: str
@@ -96,6 +97,7 @@ class FoodScanHistoryItemOut(BaseModel):
     protein: float
     fat: float
     carb: float
+    water: float
     fiber: float
     estimate_note: str
     safety_level: int

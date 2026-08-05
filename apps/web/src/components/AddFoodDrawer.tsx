@@ -407,6 +407,7 @@ export function AddFoodDrawer() {
   const bumpFoodRecordRefreshKey = useAppStore(
     (s) => s.bumpFoodRecordRefreshKey,
   );
+  const bumpWaterRefreshKey = useAppStore((s) => s.bumpWaterRefreshKey);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const { showError, showSuccess } = useAlert();
   const navigate = useNavigate();
@@ -594,6 +595,10 @@ export function AddFoodDrawer() {
             scanResult.estimated_grams > 0
               ? scanResult.calories / scanResult.estimated_grams
               : 0;
+          const waterPerGram =
+            scanResult.estimated_grams > 0
+              ? scanResult.water / scanResult.estimated_grams
+              : 0;
           addFoodDraftItem({
             localId: makeLocalId(),
             food_name: scanResult.food_name,
@@ -601,6 +606,7 @@ export function AddFoodDrawer() {
             portion_grams: scanResult.estimated_grams,
             calories: scanResult.calories,
             caloriesPerGram,
+            waterPerGram,
             source: "scan",
             scanDetail: scanResult,
           });
@@ -649,6 +655,9 @@ export function AddFoodDrawer() {
         portion_grams: item.portion_grams,
         calories: item.calories,
         caloriesPerGram,
+        // 「從歷史選擇」來源沒有水分資料（food_record_items 沒存過這欄），
+        // 固定 0，不會假裝算出一個數字
+        waterPerGram: 0,
         source: "history",
       });
     }
@@ -700,6 +709,8 @@ export function AddFoodDrawer() {
             image_url: item.image_url,
             portion_grams: item.portion_grams,
             calories: item.calories,
+            water_ml:
+              Math.round(item.portion_grams * item.waterPerGram * 10) / 10,
           })),
           meal_type: mealType,
           fed_at: new Date(fedAt).toISOString(),
@@ -711,6 +722,7 @@ export function AddFoodDrawer() {
       setOpen(false);
       navigate("/");
       bumpFoodRecordRefreshKey();
+      bumpWaterRefreshKey();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "飲食記錄儲存失敗，請稍後再試",

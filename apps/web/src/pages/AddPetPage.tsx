@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { apiFetch } from "../lib/api";
 import { usePetStore } from "../store/usePetStore";
 import { Pet } from "../data/pets";
@@ -18,12 +19,6 @@ import { useAlert } from "../hooks/useAlert";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
-
-const tips = [
-  "請確保資訊正確，有助於提供更精準的建議",
-  "生日與體重將用於健康與飲食建議",
-  "您可以隨時到「我的寵物」更新寵物資訊",
-];
 
 function Field({
   label,
@@ -104,8 +99,14 @@ function ToggleGroup({
 }
 
 export function AddPetPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setAllPetsList = usePetStore((s) => s.setAllPetsList);
+  const tips = [
+    t("addPet.tip1"),
+    t("addPet.tip2"),
+    t("addPet.tip3"),
+  ];
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -134,7 +135,7 @@ export function AddPetPage() {
       setAvatarSrc(url);
     } catch (error) {
       console.error(error);
-      showError("圖片上傳失敗，請稍後再試");
+      showError(t("addPet.imageUploadFailed"));
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -142,7 +143,7 @@ export function AddPetPage() {
 
   async function handleSubmit() {
     if (!name || !breed || !gender || !birthday || !weight || !coatColor) {
-      setError("請完整填寫所有必填欄位");
+      setError(t("addPet.validationRequired"));
       return;
     }
     setError("");
@@ -184,9 +185,11 @@ export function AddPetPage() {
   return (
     <div className="min-h-dvh bg-[#fbf8f4]">
       <div className="sticky top-0 z-10 border-b border-[#ece4dc] bg-[#fffdfa]/90 px-4 py-3 text-center backdrop-blur">
-        <h1 className="text-sm font-semibold text-ink">新增寵物</h1>
+        <h1 className="text-sm font-semibold text-ink">
+          {t("addPet.headerTitle")}
+        </h1>
         <p className="mt-0.5 text-[11px] text-ink/50">
-          填寫毛孩的基本資料，開始使用 Pet Wellness
+          {t("addPet.headerSubtitle")}
         </p>
       </div>
 
@@ -203,14 +206,14 @@ export function AddPetPage() {
             <div className="relative">
               <img
                 src={avatarSrc}
-                alt="寵物頭像"
+                alt={t("addPet.petAvatarAlt")}
                 className="h-20 w-20 rounded-full object-cover"
               />
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                aria-label="更換頭像"
+                aria-label={t("addPet.changeAvatarAria")}
                 className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85]"
               >
                 <Camera size={12} />
@@ -221,39 +224,39 @@ export function AddPetPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <PawPrint size={13} />
-              基本資訊
+              {t("addPet.sectionBasic")}
             </div>
 
-            <Field label="名字" required>
+            <Field label={t("pets.fieldName")} required>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="請輸入寵物名字"
+                placeholder={t("addPet.fieldNamePlaceholder")}
                 className={inputClass}
               />
             </Field>
 
-            <Field label="品種" required>
+            <Field label={t("pets.fieldBreed")} required>
               <input
                 value={breed}
                 onChange={(e) => setBreed(e.target.value)}
-                placeholder="請輸入寵物品種"
+                placeholder={t("addPet.fieldBreedPlaceholder")}
                 className={inputClass}
               />
             </Field>
 
-            <Field label="性別" required>
+            <Field label={t("pets.fieldGender")} required>
               <ToggleGroup
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "女生", icon: "♀", value: "Female" },
-                  { label: "男生", icon: "♂", value: "Male" },
+                  { label: t("common.female"), icon: "♀", value: "Female" },
+                  { label: t("common.male"), icon: "♂", value: "Male" },
                 ]}
               />
             </Field>
 
-            <Field label="生日" required>
+            <Field label={t("pets.fieldBirthday")} required>
               <div className="relative">
                 <input
                   type="date"
@@ -264,13 +267,13 @@ export function AddPetPage() {
               </div>
             </Field>
 
-            <Field label="體重" required>
+            <Field label={t("pets.fieldWeight")} required>
               <div className="relative">
                 <input
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   inputMode="decimal"
-                  placeholder="請輸入體重"
+                  placeholder={t("addPet.fieldWeightPlaceholder")}
                   className={`${inputClass} pr-9`}
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-ink/40">
@@ -279,11 +282,11 @@ export function AddPetPage() {
               </div>
             </Field>
 
-            <Field label="毛色" required>
+            <Field label={t("pets.fieldCoatColor")} required>
               <input
                 value={coatColor}
                 onChange={(e) => setCoatColor(e.target.value)}
-                placeholder="請輸入寵物毛色"
+                placeholder={t("addPet.fieldCoatColorPlaceholder")}
                 className={inputClass}
               />
             </Field>
@@ -292,30 +295,30 @@ export function AddPetPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <Heart size={13} />
-              健康資訊
+              {t("addPet.sectionHealth")}
             </div>
 
-            <Field label="絕育狀態">
+            <Field label={t("pets.fieldNeutered")}>
               <ToggleGroup
                 value={neutered}
                 onChange={setNeutered}
                 options={[
-                  { label: "已絕育", value: "1" },
-                  { label: "未絕育", value: "0" },
+                  { label: t("pets.neuteredYes"), value: "1" },
+                  { label: t("pets.neuteredNo"), value: "0" },
                 ]}
               />
             </Field>
 
-            <Field label="過敏">
+            <Field label={t("pets.fieldAllergy")}>
               <input
                 value={allergy}
                 onChange={(e) => setAllergy(e.target.value)}
-                placeholder="請輸入寵物過敏"
+                placeholder={t("addPet.fieldAllergyPlaceholder")}
                 className={inputClass}
               />
             </Field>
 
-            <Field label="活動量">
+            <Field label={t("pets.fieldActivity")}>
               <Select
                 value={activity}
                 onChange={setActivity}
@@ -331,24 +334,24 @@ export function AddPetPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <FileText size={13} />
-              其他資訊
+              {t("addPet.sectionOther")}
             </div>
 
-            <Field label="晶片號碼">
+            <Field label={t("pets.fieldChipNumber")}>
               <input
                 value={chipNumber}
                 onChange={(e) => setChipNumber(e.target.value)}
-                placeholder="請輸入晶片號碼（選填）"
+                placeholder={t("addPet.fieldChipNumberPlaceholder")}
                 className={inputClass}
               />
             </Field>
 
-            <Field label="備註">
+            <Field label={t("addPet.fieldNote")}>
               <div className="relative">
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value.slice(0, 100))}
-                  placeholder="請輸入備註（選填）"
+                  placeholder={t("addPet.fieldNotePlaceholder")}
                   rows={3}
                   maxLength={100}
                   className={`${inputClass} resize-none placeholder:text-ink/30`}
@@ -363,7 +366,7 @@ export function AddPetPage() {
           <div className="rounded-xl bg-[#fbf1e6] p-3">
             <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <Lightbulb size={13} />
-              小提醒
+              {t("addPet.tipsTitle")}
             </div>
             <div className="space-y-2">
               {tips.map((tip) => (
@@ -387,7 +390,7 @@ export function AddPetPage() {
             onClick={handleSubmit}
             className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
           >
-            完成新增
+            {t("addPet.submit")}
           </button>
         </div>
       </div>

@@ -1,4 +1,6 @@
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
 import { useEffect, useState } from "react";
@@ -10,51 +12,58 @@ import { calculateDailyCalories } from "../lib/calorie";
 const defaultPetAvatar =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
 
-// 只定義欄位順序跟中文標籤，實際的值要從 API 抓回來的寵物資料算，
+// 只定義欄位順序跟標籤 key/格式化邏輯，實際的值要從 API 抓回來的寵物資料算，
 // 不要把假資料寫死在這裡（之前 value 都是寫死的 "Coco"/"Golden Retriever"...）
-// format 是可選的：像 neutered 這種原始值是代碼（"1"/"0"）、需要轉成中文
-// 顯示的欄位才需要給，格式化邏輯跟著欄位定義走，不用在渲染那裡另外寫 if/else
+// format 是可選的：像 neutered 這種原始值是代碼（"1"/"0"）、需要轉成對應語言
+// 顯示文字的欄位才需要給，格式化邏輯跟著欄位定義走，不用在渲染那裡另外寫
+// if/else。因為 format 需要用 t() 翻譯，這個定義要放在元件裡面（拿得到 t）
+// 才能建立，不能是模組層級的常數
 type PetFieldDef = {
   label: string;
   key: keyof Pet;
   format?: (value: Pet[keyof Pet]) => string;
 };
 
-const petFieldDefs: PetFieldDef[] = [
-  { label: "名字", key: "name" },
-  {
-    label: "物種",
-    key: "species",
-    format: (value) => (value === "cat" ? "貓" : "狗"),
-  },
-  { label: "品種", key: "breed" },
-  {
-    label: "性別",
-    key: "gender",
-    format: (value) => (value === "male" ? "男生" : "女生"),
-  },
-  {
-    label: "年紀",
-    key: "birthday",
-    format: (value) => {
-      const now = new Date();
-      const birth = new Date(String(value ?? ""));
-      const age = now.getFullYear() - birth.getFullYear();
-      return `${age} 歲`;
+function getPetFieldDefs(t: TFunction): PetFieldDef[] {
+  return [
+    { label: t("pets.fieldName"), key: "name" },
+    {
+      label: t("pets.fieldSpecies"),
+      key: "species",
+      format: (value) =>
+        value === "cat" ? t("pets.speciesCat") : t("pets.speciesDog"),
     },
-  },
-  { label: "生日", key: "birthday" },
-  { label: "體重", key: "weight" },
-  { label: "毛色", key: "coatColor" },
-  {
-    label: "絕育狀態",
-    key: "neutered",
-    format: (value) => (value === "1" ? "已絕育" : "未絕育"),
-  },
-  { label: "晶片號碼", key: "chipNumber" },
-  { label: "過敏", key: "allergy" },
-  { label: "運動量", key: "activity" },
-];
+    { label: t("pets.fieldBreed"), key: "breed" },
+    {
+      label: t("pets.fieldGender"),
+      key: "gender",
+      format: (value) =>
+        value === "male" ? t("common.male") : t("common.female"),
+    },
+    {
+      label: t("pets.fieldAge"),
+      key: "birthday",
+      format: (value) => {
+        const now = new Date();
+        const birth = new Date(String(value ?? ""));
+        const age = now.getFullYear() - birth.getFullYear();
+        return t("pets.ageValue", { age });
+      },
+    },
+    { label: t("pets.fieldBirthday"), key: "birthday" },
+    { label: t("pets.fieldWeight"), key: "weight" },
+    { label: t("pets.fieldCoatColor"), key: "coatColor" },
+    {
+      label: t("pets.fieldNeutered"),
+      key: "neutered",
+      format: (value) =>
+        value === "1" ? t("pets.neuteredYes") : t("pets.neuteredNo"),
+    },
+    { label: t("pets.fieldChipNumber"), key: "chipNumber" },
+    { label: t("pets.fieldAllergy"), key: "allergy" },
+    { label: t("pets.fieldActivity"), key: "activity" },
+  ];
+}
 
 function PetAvatarSwitcher({
   pets,
@@ -67,6 +76,7 @@ function PetAvatarSwitcher({
   onSelect: (id: number) => void;
   onAdd: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="mb-3 flex gap-3 overflow-x-auto px-1 py-1">
       {pets.map((pet) => (
@@ -103,19 +113,20 @@ function PetAvatarSwitcher({
       <button
         type="button"
         onClick={onAdd}
-        aria-label="新增寵物"
+        aria-label={t("pets.addAria")}
         className="flex shrink-0 flex-col items-center gap-1"
       >
         <span className="grid h-14 w-14 place-items-center rounded-full bg-[#fbe9d9] text-[#c9784a] transition hover:bg-[#f6ddc2]">
           <Plus size={22} />
         </span>
-        <span className="text-[11px] text-ink/50">新增</span>
+        <span className="text-[11px] text-ink/50">{t("pets.add")}</span>
       </button>
     </div>
   );
 }
 
 export function PetsPage() {
+  const { t } = useTranslation();
   const setEditPetOpen = useAppStore((s) => s.setEditPetOpen);
   const allPetsList = usePetStore((s) => s.allPetsList);
   const setAddPetOpen = useAppStore((s) => s.setAddPetOpen);
@@ -129,6 +140,7 @@ export function PetsPage() {
     : null;
 
   useEffect(() => {
+    const petFieldDefs = getPetFieldDefs(t);
     setRows(
       selectedPet
         ? petFieldDefs.map(({ label, key, format }) => ({
@@ -139,6 +151,7 @@ export function PetsPage() {
           }))
         : [],
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPetsList]);
 
   const setActivePet = async (petId: number) => {
@@ -146,6 +159,7 @@ export function PetsPage() {
       await apiFetch(`/pet/set-active-pet/${petId}`, { method: "PUT" });
       const activePet = pets.find((pet) => pet.id === petId) ?? null;
       setSelectedPet(activePet);
+      const petFieldDefs = getPetFieldDefs(t);
       setRows(
         activePet
           ? petFieldDefs.map(({ label, key, format }) => ({
@@ -163,6 +177,7 @@ export function PetsPage() {
 
   useEffect(() => {
     if (selectedPet) {
+      const petFieldDefs = getPetFieldDefs(t);
       setRows(
         petFieldDefs.map(({ label, key, format }) => ({
           label,
@@ -172,6 +187,7 @@ export function PetsPage() {
         })),
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPet]);
 
   return (
@@ -184,7 +200,7 @@ export function PetsPage() {
       />
       <section className="card p-4 mb-[12px]">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="section-title">寵物資訊 / Pet Profile</h2>
+          <h2 className="section-title">{t("pets.profileTitle")}</h2>
         </div>
         <div className="mb-3 flex justify-center">
           <div className="relative">
@@ -209,12 +225,12 @@ export function PetsPage() {
           onClick={() => setEditPetOpen(true)}
           className="mt-3 w-full rounded-xl bg-[#b88672] py-2 text-xs font-medium text-white"
         >
-          編輯資訊
+          {t("pets.editInfo")}
         </button>
       </section>
       <section className="card p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="section-title">熱量建議 / Calorie Advisor</h2>
+          <h2 className="section-title">{t("pets.calorieTitle")}</h2>
         </div>
         <div className="flex items-center gap-3">
           <img
@@ -233,7 +249,9 @@ export function PetsPage() {
         <div className="relative mx-auto mt-4 h-28 w-28 overflow-hidden rounded-full border-[12px] border-[#edf0ee] border-r-mist border-t-mist">
           <div className="absolute inset-0 grid place-items-center text-center">
             <div>
-              <div className="text-[9px]">建議每日熱量</div>
+              <div className="text-[9px]">
+                {t("pets.suggestedDailyCalories")}
+              </div>
               <b className="text-xl">{dailyCalories ?? "--"}</b>
               <span className="text-[9px]"> kcal</span>
             </div>
@@ -243,20 +261,20 @@ export function PetsPage() {
             現在還沒有那張表，先維持假資料，不要被當成真的算出來的數字 */}
         <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[12px]">
           <div className="rounded-xl bg-[#fbf7f1] p-2">
-            已攝取
+            {t("pets.consumed")}
             <br />
             <b>430 kcal</b>
           </div>
           <div className="rounded-xl bg-[#fbf7f1] p-2">
-            還可攝取
+            {t("pets.remaining")}
             <br />
             <b>90 kcal</b>
           </div>
         </div>
         <ul className="mt-3 list-disc space-y-1 pl-4 text-[12px]">
-          <li>增加優質蛋白質</li>
-          <li>減少加工食品</li>
-          <li>多攝取 Omega-3</li>
+          <li>{t("pets.tipProtein")}</li>
+          <li>{t("pets.tipProcessed")}</li>
+          <li>{t("pets.tipOmega3")}</li>
         </ul>
       </section>
     </>

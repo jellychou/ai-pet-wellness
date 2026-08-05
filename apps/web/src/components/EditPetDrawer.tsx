@@ -18,6 +18,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -35,12 +36,6 @@ import { uploadImageToCloudinary } from "../lib/cloudinary";
 
 const defaultPetPhoto =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
-
-const tips = [
-  "請確保資訊正確，有助於提供更精準的建議",
-  "生日與體重將用於健康與飲食建議",
-  "您可以隨時更新寵物資訊",
-];
 
 function Field({
   label,
@@ -121,6 +116,8 @@ function ToggleGroup({
 }
 
 export function EditPetDrawer() {
+  const { t } = useTranslation();
+  const tips = [t("addPet.tip1"), t("addPet.tip2"), t("editPet.tip3")];
   const open = useAppStore((s) => s.editPetOpen);
   const setOpen = useAppStore((s) => s.setEditPetOpen);
   const navigate = useNavigate();
@@ -163,7 +160,7 @@ export function EditPetDrawer() {
       setAvatarSrc(url);
     } catch (error) {
       console.error(error);
-      showError("圖片上傳失敗，請稍後再試");
+      showError(t("addPet.imageUploadFailed"));
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -185,11 +182,11 @@ export function EditPetDrawer() {
       !birthday ||
       !coatColor.trim()
     ) {
-      showError("請完整填寫所有必填欄位");
+      showError(t("editPet.validationRequired"));
       return;
     }
     if (!weight || Number.isNaN(weight) || weight <= 0) {
-      showError("請輸入正確的體重");
+      showError(t("editPet.validationWeight"));
       return;
     }
 
@@ -213,12 +210,12 @@ export function EditPetDrawer() {
           avatar: avatarSrc,
         }),
       });
-      showSuccess("寵物資訊已更新");
+      showSuccess(t("editPet.updateSuccess"));
       fetchPet();
       setOpen(false);
     } catch (error) {
       console.error(error);
-      showError("寵物資訊更新失敗");
+      showError(t("editPet.updateFailed"));
     }
   }
 
@@ -242,7 +239,7 @@ export function EditPetDrawer() {
       await apiFetch<Pet>(`/pet/delete-pet/${userInfo?.active_pet_id}`, {
         method: "DELETE",
       });
-      showSuccess("寵物已刪除");
+      showSuccess(t("editPet.deleteSuccess"));
       fetchUserInfo();
       fetchAllPetsList();
       setSelectedPet(
@@ -255,7 +252,7 @@ export function EditPetDrawer() {
       setOpen(false);
     } catch (error) {
       console.error(error);
-      showError("寵物刪除失敗");
+      showError(t("editPet.deleteFailed"));
     } finally {
       setIsDeleting(false);
     }
@@ -304,18 +301,20 @@ export function EditPetDrawer() {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="返回首頁"
+          aria-label={t("editPet.backHomeAria")}
           className="grid h-8 w-8 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ChevronLeft size={19} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">編輯寵物資訊</h1>
+        <h1 className="text-sm font-semibold text-ink">
+          {t("editPet.headerTitle")}
+        </h1>
         <button
           type="button"
           onClick={handleSave}
           className="text-xs font-semibold text-[#c9784a] transition hover:text-[#b56a3d]"
         >
-          儲存
+          {t("common.save")}
         </button>
       </div>
 
@@ -332,14 +331,14 @@ export function EditPetDrawer() {
             <div className="relative">
               <img
                 src={avatarSrc}
-                alt="寵物頭像"
+                alt={t("addPet.petAvatarAlt")}
                 className="h-20 w-20 rounded-full object-cover"
               />
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                aria-label="更換頭像"
+                aria-label={t("addPet.changeAvatarAria")}
                 className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85] disabled:opacity-60"
               >
                 <Camera size={12} />
@@ -350,10 +349,10 @@ export function EditPetDrawer() {
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <PawPrint size={13} />
-              基本資訊
+              {t("addPet.sectionBasic")}
             </div>
 
-            <Field label="名字" required>
+            <Field label={t("pets.fieldName")} required>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -361,18 +360,18 @@ export function EditPetDrawer() {
               />
             </Field>
 
-            <Field label="物種" required>
+            <Field label={t("pets.fieldSpecies")} required>
               <ToggleGroup
                 value={species}
                 onChange={setSpecies}
                 options={[
-                  { label: "狗", icon: "🐶", value: "dog" },
-                  { label: "貓", icon: "🐱", value: "cat" },
+                  { label: t("pets.speciesDog"), icon: "🐶", value: "dog" },
+                  { label: t("pets.speciesCat"), icon: "🐱", value: "cat" },
                 ]}
               />
             </Field>
 
-            <Field label="品種" required>
+            <Field label={t("pets.fieldBreed")} required>
               <input
                 value={breed}
                 onChange={(e) => setBreed(e.target.value)}
@@ -380,18 +379,18 @@ export function EditPetDrawer() {
               />
             </Field>
 
-            <Field label="性別" required>
+            <Field label={t("pets.fieldGender")} required>
               <ToggleGroup
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "女生", icon: "♀", value: "Female" },
-                  { label: "男生", icon: "♂", value: "Male" },
+                  { label: t("common.female"), icon: "♀", value: "Female" },
+                  { label: t("common.male"), icon: "♂", value: "Male" },
                 ]}
               />
             </Field>
 
-            <Field label="生日" required>
+            <Field label={t("pets.fieldBirthday")} required>
               <div className="relative">
                 <input
                   type="date"
@@ -402,7 +401,7 @@ export function EditPetDrawer() {
               </div>
             </Field>
 
-            <Field label="體重" required>
+            <Field label={t("pets.fieldWeight")} required>
               <div className="relative">
                 <input
                   value={weight}
@@ -423,11 +422,11 @@ export function EditPetDrawer() {
               </div>
             </Field>
 
-            <Field label="毛色" required>
+            <Field label={t("pets.fieldCoatColor")} required>
               <input
                 value={coatColor}
                 onChange={(e) => setCoatColor(e.target.value)}
-                placeholder="請輸入寵物毛色"
+                placeholder={t("addPet.fieldCoatColorPlaceholder")}
                 className={inputClass}
               />
             </Field>
@@ -436,21 +435,21 @@ export function EditPetDrawer() {
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <Heart size={13} />
-              健康資訊
+              {t("addPet.sectionHealth")}
             </div>
 
-            <Field label="絕育狀態">
+            <Field label={t("pets.fieldNeutered")}>
               <ToggleGroup
                 value={neutered}
                 onChange={setNeutered}
                 options={[
-                  { label: "已絕育", value: "1" },
-                  { label: "未絕育", value: "0" },
+                  { label: t("pets.neuteredYes"), value: "1" },
+                  { label: t("pets.neuteredNo"), value: "0" },
                 ]}
               />
             </Field>
 
-            <Field label="過敏">
+            <Field label={t("pets.fieldAllergy")}>
               <Select
                 value={allergy}
                 onChange={setAllergy}
@@ -458,7 +457,7 @@ export function EditPetDrawer() {
               />
             </Field>
 
-            <Field label="活動量">
+            <Field label={t("pets.fieldActivity")}>
               <Select
                 value={activity}
                 onChange={setActivity}
@@ -470,10 +469,10 @@ export function EditPetDrawer() {
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <FileText size={13} />
-              其他資訊
+              {t("addPet.sectionOther")}
             </div>
 
-            <Field label="晶片號碼">
+            <Field label={t("pets.fieldChipNumber")}>
               <input
                 value={chipNumber}
                 onChange={(e) => setChipNumber(e.target.value)}
@@ -481,12 +480,12 @@ export function EditPetDrawer() {
               />
             </Field>
 
-            <Field label="備註">
+            <Field label={t("addPet.fieldNote")}>
               <div className="relative">
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value.slice(0, 100))}
-                  placeholder="請輸入備註（選填）"
+                  placeholder={t("addPet.fieldNotePlaceholder")}
                   rows={3}
                   maxLength={100}
                   className={`${inputClass} resize-none placeholder:text-ink/30`}
@@ -501,7 +500,7 @@ export function EditPetDrawer() {
           <div className="rounded-xl bg-[#fbf1e6] p-3">
             <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <Lightbulb size={13} />
-              小提醒
+              {t("addPet.tipsTitle")}
             </div>
             <div className="space-y-2">
               {tips.map((tip) => (
@@ -524,7 +523,7 @@ export function EditPetDrawer() {
               disabled={isDeleting}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
             >
-              刪除寵物
+              {t("editPet.deletePet")}
             </button>
           )}
         </div>
@@ -535,21 +534,21 @@ export function EditPetDrawer() {
         onClose={() => !isDeleting && setConfirmDeleteOpen(false)}
         aria-labelledby="delete-pet-title"
       >
-        <DialogTitle id="delete-pet-title">刪除寵物</DialogTitle>
+        <DialogTitle id="delete-pet-title">
+          {t("editPet.deletePet")}
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            確定要刪除這隻寵物嗎？所有相關的疫苗與健康檢查紀錄都會一併刪除，此動作無法復原。
-          </DialogContentText>
+          <DialogContentText>{t("editPet.deleteDialogText")}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button
             onClick={() => setConfirmDeleteOpen(false)}
             disabled={isDeleting}
           >
-            取消
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleDelete} color="error" disabled={isDeleting}>
-            {isDeleting ? "刪除中..." : "刪除"}
+            {isDeleting ? t("editPet.deleting") : t("common.delete")}
           </Button>
         </DialogActions>
       </Dialog>

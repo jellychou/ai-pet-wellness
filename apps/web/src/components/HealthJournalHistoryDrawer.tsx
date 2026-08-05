@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
@@ -31,13 +32,11 @@ const RISK_COLOR: Record<string, string> = {
   高: "#c9503f",
 };
 
-const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
-
-function formatDate(iso: string) {
+function formatDate(iso: string, weekdays: string[]) {
   const d = new Date(`${iso}T00:00:00`);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}（${
-    WEEKDAY_LABELS[d.getDay()]
+    weekdays[d.getDay()]
   }）`;
 }
 
@@ -45,10 +44,12 @@ function formatDate(iso: string) {
 // 的 z-50），跟 FoodScanHistoryDrawer 疊在 AddFoodDrawer 上面同一個模式——
 // 純唯讀查看，不能在這裡編輯過去的日誌
 export function HealthJournalHistoryDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.healthJournalHistoryOpen);
   const setOpen = useAppStore((s) => s.setHealthJournalHistoryOpen);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const [items, setItems] = useState<HealthJournalHistoryItem[]>([]);
+  const weekdays = t("common.weekdays", { returnObjects: true }) as string[];
 
   useEffect(() => {
     const petId = selectedPet?.id;
@@ -75,17 +76,21 @@ export function HealthJournalHistoryDrawer() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="返回健康日誌"
+              aria-label={t("healthJournal.backToJournalAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-lg font-semibold text-ink">健康日誌記錄</h1>
+            <h1 className="text-lg font-semibold text-ink">
+              {t("healthJournal.headerEntry")}
+            </h1>
           </div>
 
           {items.length === 0 ? (
             <p className="py-10 text-center text-sm text-ink/40">
-              {selectedPet?.name ?? "這隻寵物"} 還沒有健康日誌記錄
+              {t("healthJournal.emptyState", {
+                name: selectedPet?.name ?? t("healthJournal.petFallback"),
+              })}
             </p>
           ) : (
             <div className="space-y-3">
@@ -96,7 +101,7 @@ export function HealthJournalHistoryDrawer() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-ink/40">
-                      {formatDate(item.log_date)}
+                      {formatDate(item.log_date, weekdays)}
                     </span>
                     <span
                       className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -105,7 +110,11 @@ export function HealthJournalHistoryDrawer() {
                         backgroundColor: `${RISK_COLOR[item.risk_level] ?? "#8a8a8a"}1a`,
                       }}
                     >
-                      {item.risk_level}風險
+                      {t("healthJournal.riskSuffix", {
+                        level: t(`healthJournal.risk.${item.risk_level}`, {
+                          defaultValue: item.risk_level,
+                        }),
+                      })}
                     </span>
                   </div>
                   <div className="mt-1.5 flex items-center gap-2">
@@ -116,8 +125,18 @@ export function HealthJournalHistoryDrawer() {
                       </span>
                     </span>
                     <span className="text-[11px] text-ink/40">
-                      食慾 {item.appetite}・精神 {item.energy}・活動量{" "}
-                      {item.activity_level}
+                      {t("healthJournal.fieldAppetite")}{" "}
+                      {t(`healthJournal.option.${item.appetite}`, {
+                        defaultValue: item.appetite,
+                      })}
+                      ・{t("healthJournal.fieldEnergy")}{" "}
+                      {t(`healthJournal.option.${item.energy}`, {
+                        defaultValue: item.energy,
+                      })}
+                      ・{t("healthJournal.fieldActivity")}{" "}
+                      {t(`healthJournal.option.${item.activity_level}`, {
+                        defaultValue: item.activity_level,
+                      })}
                     </span>
                   </div>
                   {item.summary_points.length > 0 && (
@@ -132,14 +151,14 @@ export function HealthJournalHistoryDrawer() {
                           key={tag}
                           className="rounded-full bg-cream px-2 py-0.5 text-[10px] text-ink/50"
                         >
-                          {tag}
+                          {t(`healthJournal.tag.${tag}`, { defaultValue: tag })}
                         </span>
                       ))}
                     </div>
                   )}
                   {item.added_to_timeline && (
                     <p className="mt-1.5 text-[10px] font-medium text-[#b98a5c]">
-                      已加入健康時間軸
+                      {t("healthJournal.addedToTimelineNote")}
                     </p>
                   )}
                 </div>

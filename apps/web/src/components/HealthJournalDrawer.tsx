@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
@@ -57,22 +58,21 @@ type AnalyzeJournalResponse = {
   usage: HealthJournalUsage;
 };
 
-// 風險等級對應的顏色/圖示/預設說明文字——後端只回傳「低/中/高」三個字，
-// 這裡負責轉成畫面上的顏色跟一句固定的補充說明
-const RISK_META: Record<
-  string,
-  { color: string; bg: string; note: string }
-> = {
-  低: { color: "#3fa88f", bg: "#e8f5f0", note: "持續觀察即可" },
-  中: { color: "#d9834f", bg: "#fff3e5", note: "建議留意變化，必要時諮詢獸醫" },
-  高: { color: "#c9503f", bg: "#fdf1ee", note: "建議儘快諮詢獸醫" },
+// 風險等級對應的顏色——後端只回傳「低/中/高」三個字，文字說明改用 i18n
+// key（healthJournal.risk / healthJournal.riskNote）在渲染時查，這裡只
+// 留顏色，不用因為切換語言又要重寫一份對照表
+const RISK_COLORS: Record<string, { color: string; bg: string }> = {
+  低: { color: "#3fa88f", bg: "#e8f5f0" },
+  中: { color: "#d9834f", bg: "#fff3e5" },
+  高: { color: "#c9503f", bg: "#fdf1ee" },
 };
 
-// 依健康評分給一個簡短的心情標籤，純粹是畫面上的呈現，不是後端算出來的
-function moodLabel(score: number): { emoji: string; label: string } {
-  if (score >= 80) return { emoji: "😊", label: "良好" };
-  if (score >= 60) return { emoji: "😐", label: "普通" };
-  return { emoji: "😟", label: "需留意" };
+// 依健康評分給一個簡短的心情標籤，純粹是畫面上的呈現，不是後端算出來的——
+// 回的是 i18n key，不是寫死的中文，渲染時再用 t() 查
+function moodLabel(score: number): { emoji: string; key: string } {
+  if (score >= 80) return { emoji: "😊", key: "healthJournal.mood.good" };
+  if (score >= 60) return { emoji: "😐", key: "healthJournal.mood.normal" };
+  return { emoji: "😟", key: "healthJournal.mood.watch" };
 }
 
 function toDateKey(d: Date) {
@@ -80,12 +80,10 @@ function toDateKey(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
-
-function formatDateHeader(d: Date) {
+function formatDateHeader(d: Date, weekdays: string[]) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}（${
-    WEEKDAY_LABELS[d.getDay()]
+    weekdays[d.getDay()]
   }）`;
 }
 
@@ -114,6 +112,7 @@ function ToggleRow({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="mb-1.5 text-[12px] font-medium text-ink/70">{label}</div>
@@ -132,7 +131,7 @@ function ToggleRow({
                 : "border-[#ece4dc] bg-white text-ink/50"
             }`}
           >
-            {o}
+            {t(`healthJournal.option.${o}`, { defaultValue: o })}
           </button>
         ))}
       </div>
@@ -141,6 +140,7 @@ function ToggleRow({
 }
 
 export function HealthJournalDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.healthJournalOpen);
   const setOpen = useAppStore((s) => s.setHealthJournalOpen);
   const setHistoryOpen = useAppStore((s) => s.setHealthJournalHistoryOpen);
@@ -270,13 +270,11 @@ export function HealthJournalDrawer() {
 
   async function handleAnalyze() {
     if (!selectedPet) {
-      showError("請先選擇寵物");
+      showError(t("healthJournal.selectPetFirst"));
       return;
     }
     if (limitReached) {
-      showError(
-        `今天的 AI 健康日誌分析次數已用完（每天最多 ${usage?.limit} 次），請明天再試`,
-      );
+      showError(t("healthJournal.dailyLimitReached", { limit: usage?.limit }));
       return;
     }
     setAnalyzing(true);
@@ -310,7 +308,7 @@ export function HealthJournalDrawer() {
       bumpHealthJournalRefreshKey();
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "AI 分析失敗，請稍後再試",
+        error instanceof Error ? error.message : t("healthJournal.analyzeFailed"),
       );
     } finally {
       setAnalyzing(false);
@@ -321,7 +319,7 @@ export function HealthJournalDrawer() {
     // 分析成功的當下後端就已經存進 health_journal_logs 了，這裡不用再打
     // 一次 API，純粹是「看完了，關掉」的動作——跟「加入健康日誌」的差別
     // 只在於要不要順便把這篇加進健康時間軸
-    showSuccess("已儲存這篇日誌紀錄");
+    showSuccess(t("healthJournal.saveSuccess"));
     setOpen(false);
     navigate("/records");
   }
@@ -334,13 +332,13 @@ export function HealthJournalDrawer() {
         method: "PUT",
       });
       setAddedToTimeline(true);
-      showSuccess("已加入健康日誌");
+      showSuccess(t("healthJournal.addToTimelineSuccess"));
       bumpHealthJournalRefreshKey();
       setOpen(false);
       navigate("/records");
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "加入健康日誌失敗，請稍後再試",
+        error instanceof Error ? error.message : t("healthJournal.addToTimelineFailed"),
       );
     } finally {
       setAddingToTimeline(false);
@@ -359,15 +357,18 @@ export function HealthJournalDrawer() {
           {selectedPet.name}
         </div>
         <div className="truncate text-[11px] text-ink/45">
-          {selectedPet.breed}・{calculateAge(selectedPet.birthday)}歲・
-          {selectedPet.weight}kg
+          {t("healthJournal.petMeta", {
+            breed: selectedPet.breed,
+            age: calculateAge(selectedPet.birthday),
+            weight: selectedPet.weight,
+          })}
         </div>
       </div>
     </div>
   );
 
   const mood = result ? moodLabel(result.health_score) : null;
-  const riskMeta = result ? RISK_META[result.risk_level] : null;
+  const riskColors = result ? RISK_COLORS[result.risk_level] : null;
 
   return (
     <div
@@ -384,19 +385,21 @@ export function HealthJournalDrawer() {
             <button
               type="button"
               onClick={result ? () => setResult(null) : handleClose}
-              aria-label="返回"
+              aria-label={t("healthJournal.back")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-base font-semibold text-ink">
-              {result ? "AI 分析結果" : "健康日誌記錄"}
+              {result
+                ? t("healthJournal.headerResult")
+                : t("healthJournal.headerEntry")}
             </h1>
             {!result ? (
               <button
                 type="button"
                 onClick={handleViewHistory}
-                aria-label="檢視日誌記錄"
+                aria-label={t("healthJournal.viewHistory")}
                 className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
               >
                 <Clock size={19} />
@@ -417,8 +420,14 @@ export function HealthJournalDrawer() {
                   }`}
                 >
                   {usage.unlimited
-                    ? `管理員帳號，今日已使用 ${usage.used} 次，無次數限制`
-                    : `今日已使用 ${usage.used} / ${usage.limit} 次${limitReached ? "，請明天再試" : ""}`}
+                    ? t("healthJournal.usageUnlimited", { used: usage.used })
+                    : t("healthJournal.usageLimited", {
+                        used: usage.used,
+                        limit: usage.limit,
+                      }) +
+                      (limitReached
+                        ? t("healthJournal.usageLimitReachedSuffix")
+                        : "")}
                 </div>
               )}
 
@@ -426,19 +435,22 @@ export function HealthJournalDrawer() {
                 <button
                   type="button"
                   onClick={() => setLogDate((d) => addDays(d, -1))}
-                  aria-label="前一天"
+                  aria-label={t("dashboard.prevDay")}
                   className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition hover:bg-cream"
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <span className="font-semibold text-ink">
-                  {formatDateHeader(logDate)}
+                  {formatDateHeader(
+                    logDate,
+                    t("common.weekdays", { returnObjects: true }) as string[],
+                  )}
                 </span>
                 <button
                   type="button"
                   onClick={() => setLogDate((d) => addDays(d, 1))}
                   disabled={isToday}
-                  aria-label="後一天"
+                  aria-label={t("dashboard.nextDay")}
                   className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronRight size={18} />
@@ -449,34 +461,34 @@ export function HealthJournalDrawer() {
 
               <div className="space-y-3 rounded-2xl border border-[#eee5da] bg-[#fffdfa] p-4">
                 <div className="text-xs font-medium text-ink/50">
-                  今日狀況記錄
+                  {t("healthJournal.sectionTitle")}
                 </div>
                 <ToggleRow
-                  label="食慾"
+                  label={t("healthJournal.fieldAppetite")}
                   options={APPETITE_OPTIONS}
                   value={appetite}
                   onChange={setAppetite}
                 />
                 <ToggleRow
-                  label="精神"
+                  label={t("healthJournal.fieldEnergy")}
                   options={ENERGY_OPTIONS}
                   value={energy}
                   onChange={setEnergy}
                 />
                 <ToggleRow
-                  label="活動量"
+                  label={t("healthJournal.fieldActivity")}
                   options={ACTIVITY_OPTIONS}
                   value={activityLevel}
                   onChange={setActivityLevel}
                 />
                 <ToggleRow
-                  label="排便"
+                  label={t("healthJournal.fieldBowel")}
                   options={BOWEL_OPTIONS}
                   value={bowelMovement}
                   onChange={setBowelMovement}
                 />
                 <ToggleRow
-                  label="嘔吐"
+                  label={t("healthJournal.fieldVomit")}
                   options={VOMIT_OPTIONS}
                   value={vomiting}
                   onChange={setVomiting}
@@ -484,7 +496,7 @@ export function HealthJournalDrawer() {
 
                 <div>
                   <div className="mb-1.5 text-[12px] font-medium text-ink/70">
-                    其他症狀
+                    {t("healthJournal.fieldOtherSymptoms")}
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <button
@@ -496,7 +508,7 @@ export function HealthJournalDrawer() {
                           : "border-[#ece4dc] bg-white text-ink/50"
                       }`}
                     >
-                      無
+                      {t("common.none")}
                     </button>
                     {otherSymptoms.map((s) => (
                       <span
@@ -507,7 +519,9 @@ export function HealthJournalDrawer() {
                         <button
                           type="button"
                           onClick={() => handleRemoveSymptom(s)}
-                          aria-label={`移除 ${s}`}
+                          aria-label={t("healthJournal.removeSymptomAria", {
+                            symptom: s,
+                          })}
                         >
                           <X size={12} />
                         </button>
@@ -523,7 +537,7 @@ export function HealthJournalDrawer() {
                             if (e.key === "Enter") handleConfirmNewSymptom();
                           }}
                           onBlur={handleConfirmNewSymptom}
-                          placeholder="輸入症狀"
+                          placeholder={t("healthJournal.symptomPlaceholder")}
                           className="w-20 text-[12px] outline-none"
                         />
                       </span>
@@ -535,7 +549,7 @@ export function HealthJournalDrawer() {
                           className="flex items-center gap-1 rounded-xl border border-dashed border-[#d8c9b4] px-3 py-2 text-[12px] font-medium text-[#b98a5c]"
                         >
                           <Plus size={12} />
-                          新增症狀
+                          {t("healthJournal.addSymptom")}
                         </button>
                       )
                     )}
@@ -546,7 +560,7 @@ export function HealthJournalDrawer() {
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <span className="text-[12px] font-medium text-ink/70">
-                    文字日誌（自由輸入）
+                    {t("healthJournal.diaryLabel")}
                   </span>
                 </div>
                 <div className="relative">
@@ -557,7 +571,7 @@ export function HealthJournalDrawer() {
                     }
                     rows={3}
                     maxLength={MAX_DIARY_LENGTH}
-                    placeholder="今天早上食慾正常，散步後精神很好，晚上有一點飲食，但沒有嘔吐或咳嗽"
+                    placeholder={t("healthJournal.diaryPlaceholder")}
                     className="w-full resize-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2.5 text-[12px] text-ink outline-none placeholder:text-ink/30"
                   />
                   <span className="pointer-events-none absolute bottom-2 right-3 text-[9px] text-ink/35">
@@ -568,7 +582,7 @@ export function HealthJournalDrawer() {
 
               <div>
                 <div className="mb-1.5 text-[12px] font-medium text-ink/70">
-                  照片上傳（可多張）
+                  {t("healthJournal.photoLabel")}
                 </div>
                 <input
                   ref={fileInputRef}
@@ -592,7 +606,7 @@ export function HealthJournalDrawer() {
                       <button
                         type="button"
                         onClick={() => handleRemovePhoto(i)}
-                        aria-label="移除照片"
+                        aria-label={t("healthJournal.removePhotoAria")}
                         className="absolute right-0.5 top-0.5 grid h-4 w-4 place-items-center rounded-full bg-black/50 text-white"
                       >
                         <X size={10} />
@@ -606,7 +620,7 @@ export function HealthJournalDrawer() {
                       className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1] text-[9px] font-medium text-[#b98a5c]"
                     >
                       <Camera size={16} />
-                      新增照片
+                      {t("healthJournal.addPhoto")}
                     </button>
                   )}
                 </div>
@@ -614,7 +628,7 @@ export function HealthJournalDrawer() {
 
               <div>
                 <div className="mb-1.5 text-[12px] font-medium text-ink/70">
-                  更多標籤（可選）
+                  {t("healthJournal.tagsLabel")}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {TAG_OPTIONS.map((tag) => (
@@ -628,7 +642,7 @@ export function HealthJournalDrawer() {
                           : "border-[#eee5da] bg-white text-ink/60 hover:bg-[#f7f2ea]"
                       }`}
                     >
-                      {tag}
+                      {t(`healthJournal.tag.${tag}`, { defaultValue: tag })}
                     </button>
                   ))}
                 </div>
@@ -636,11 +650,13 @@ export function HealthJournalDrawer() {
             </>
           )}
 
-          {result && riskMeta && mood && (
+          {result && riskColors && mood && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4">
-                  <div className="text-xs text-ink/45">AI 健康評分</div>
+                  <div className="text-xs text-ink/45">
+                    {t("healthJournal.scoreLabel")}
+                  </div>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="relative grid h-16 w-16 shrink-0 place-items-center">
                       <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
@@ -675,15 +691,17 @@ export function HealthJournalDrawer() {
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-ink">
-                        {mood.emoji} {mood.label}
+                        {mood.emoji} {t(mood.key)}
                       </div>
                       {result.score_delta !== null && (
                         <div className="mt-0.5 text-[11px] text-ink/45">
-                          較前次{" "}
                           {result.score_delta >= 0
-                            ? `↑${result.score_delta}`
-                            : `↓${Math.abs(result.score_delta)}`}{" "}
-                          分
+                            ? t("healthJournal.scoreDeltaUp", {
+                                delta: result.score_delta,
+                              })
+                            : t("healthJournal.scoreDeltaDown", {
+                                delta: Math.abs(result.score_delta),
+                              })}
                         </div>
                       )}
                     </div>
@@ -691,23 +709,30 @@ export function HealthJournalDrawer() {
                 </div>
 
                 <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4">
-                  <div className="text-xs text-ink/45">風險等級</div>
+                  <div className="text-xs text-ink/45">
+                    {t("healthJournal.riskLabel")}
+                  </div>
                   <div className="mt-2 flex items-start gap-2">
                     <span
                       className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
-                      style={{ backgroundColor: riskMeta.bg, color: riskMeta.color }}
+                      style={{
+                        backgroundColor: riskColors?.bg,
+                        color: riskColors?.color,
+                      }}
                     >
                       <TriangleAlert size={16} />
                     </span>
                     <div>
                       <div
                         className="text-sm font-bold"
-                        style={{ color: riskMeta.color }}
+                        style={{ color: riskColors?.color }}
                       >
-                        {result.risk_level}風險
+                        {t("healthJournal.riskSuffix", {
+                          level: t(`healthJournal.risk.${result.risk_level}`),
+                        })}
                       </div>
                       <div className="mt-0.5 text-[11px] text-ink/45">
-                        {riskMeta.note}
+                        {t(`healthJournal.riskNote.${result.risk_level}`)}
                       </div>
                     </div>
                   </div>
@@ -717,7 +742,7 @@ export function HealthJournalDrawer() {
               {result.summary_points.length > 0 && (
                 <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4">
                   <div className="text-xs font-semibold text-ink/60">
-                    重點摘要
+                    {t("healthJournal.summaryTitle")}
                   </div>
                   <ul className="mt-2 space-y-1.5">
                     {result.summary_points.map((s, i) => (
@@ -735,17 +760,17 @@ export function HealthJournalDrawer() {
 
               <div>
                 <div className="mb-2 text-xs font-semibold text-ink/60">
-                  AI 建議
+                  {t("healthJournal.adviceTitle")}
                 </div>
                 <div className="space-y-2.5">
                   <div className="rounded-2xl bg-[#e8f5f0] p-4">
                     <div className="text-sm font-semibold text-[#3fa88f]">
-                      ✓ 可維持
+                      {t("healthJournal.maintainTitle")}
                     </div>
                     <ul className="mt-1.5 space-y-1">
                       {(result.recommendations.maintain.length > 0
                         ? result.recommendations.maintain
-                        : ["維持目前的照顧方式即可"]
+                        : [t("healthJournal.maintainDefault")]
                       ).map((s, i) => (
                         <li key={i} className="text-xs leading-5 text-[#2f8a72]">
                           · {s}
@@ -755,12 +780,12 @@ export function HealthJournalDrawer() {
                   </div>
                   <div className="rounded-2xl bg-[#fff3e5] p-4">
                     <div className="text-sm font-semibold text-[#d9834f]">
-                      ⏱ 建議觀察
+                      {t("healthJournal.watchTitle")}
                     </div>
                     <ul className="mt-1.5 space-y-1">
                       {(result.recommendations.watch.length > 0
                         ? result.recommendations.watch
-                        : ["目前沒有特別需要觀察的地方"]
+                        : [t("healthJournal.watchDefault")]
                       ).map((s, i) => (
                         <li key={i} className="text-xs leading-5 text-[#a9713f]">
                           · {s}
@@ -770,12 +795,12 @@ export function HealthJournalDrawer() {
                   </div>
                   <div className="rounded-2xl bg-[#fdf1ee] p-4">
                     <div className="text-sm font-semibold text-[#c9503f]">
-                      ⚠ 需要留意
+                      {t("healthJournal.concernTitle")}
                     </div>
                     <ul className="mt-1.5 space-y-1">
                       {(result.recommendations.concern.length > 0
                         ? result.recommendations.concern
-                        : ["目前沒有明顯警訊，很好！"]
+                        : [t("healthJournal.concernDefault")]
                       ).map((s, i) => (
                         <li key={i} className="text-xs leading-5 text-[#a13c2f]">
                           · {s}
@@ -803,7 +828,9 @@ export function HealthJournalDrawer() {
               disabled={analyzing || limitReached}
               className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {analyzing ? "AI 分析中…" : "開始 AI 分析"}
+              {analyzing
+                ? t("healthJournal.analyzing")
+                : t("healthJournal.startAnalyze")}
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-2">
@@ -812,7 +839,7 @@ export function HealthJournalDrawer() {
                 onClick={handleSaveOnly}
                 className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10"
               >
-                儲存紀錄
+                {t("healthJournal.saveOnly")}
               </button>
               <button
                 type="button"
@@ -821,10 +848,10 @@ export function HealthJournalDrawer() {
                 className="rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {addingToTimeline
-                  ? "處理中…"
+                  ? t("healthJournal.processing")
                   : addedToTimeline
-                    ? "已加入健康日誌"
-                    : "加入健康日誌"}
+                    ? t("healthJournal.addedToTimeline")
+                    : t("healthJournal.addToTimeline")}
               </button>
             </div>
           )}

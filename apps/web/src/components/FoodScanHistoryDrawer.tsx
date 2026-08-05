@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
-
-const speciesLabel: Record<string, string> = { dog: "狗狗", cat: "貓咪" };
 
 type FoodScanHistoryItemEntry = {
   name: string;
@@ -53,6 +52,11 @@ function formatDateTime(iso: string) {
 // 疊在 AddFoodDrawer 上面的第二層 drawer（z-[60] > AddFoodDrawer 的 z-50），
 // 跟 AiScanHistoryDrawer 疊在 AiScanDrawer 上面同一個模式
 export function FoodScanHistoryDrawer() {
+  const { t } = useTranslation();
+  const speciesLabel: Record<string, string> = {
+    dog: t("common.dog"),
+    cat: t("common.cat"),
+  };
   const open = useAppStore((s) => s.foodScanHistoryOpen);
   const setOpen = useAppStore((s) => s.setFoodScanHistoryOpen);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -83,17 +87,21 @@ export function FoodScanHistoryDrawer() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="返回 AI 食物辨別"
+              aria-label={t("food.backToScanAria")}
               className="grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-lg font-semibold text-ink">AI 食物辨識記錄</h1>
+            <h1 className="text-lg font-semibold text-ink">
+              {t("food.scanHistoryTitle")}
+            </h1>
           </div>
 
           {items.length === 0 ? (
             <p className="py-10 text-center text-sm text-ink/40">
-              {selectedPet?.name ?? "這隻寵物"} 還沒有 AI 食物辨識記錄
+              {t("food.emptyScanHistory", {
+                name: selectedPet?.name ?? t("healthJournal.petFallback"),
+              })}
             </p>
           ) : (
             <div className="space-y-3">
@@ -104,7 +112,7 @@ export function FoodScanHistoryDrawer() {
                 >
                   <img
                     src={item.image_url}
-                    alt="食物照片"
+                    alt={t("food.photoAlt")}
                     className="h-20 w-20 shrink-0 rounded-xl object-cover"
                   />
                   <div className="min-w-0 flex-1">
@@ -131,13 +139,16 @@ export function FoodScanHistoryDrawer() {
                         )}
                         {item.user_note && (
                           <p className="mt-0.5 truncate text-[11px] text-ink/35">
-                            補充說明：{item.user_note}
+                            {t("food.userNotePrefix", { note: item.user_note })}
                           </p>
                         )}
                         {(item.calories_low > 0 || item.calories_high > 0) && (
                           <p className="mt-0.5 text-[11px] text-ink/35">
-                            約 {item.estimated_grams}g・範圍 {item.calories_low}
-                            –{item.calories_high} kcal
+                            {t("food.approxRange", {
+                              grams: item.estimated_grams,
+                              low: item.calories_low,
+                              high: item.calories_high,
+                            })}
                           </p>
                         )}
                         <div className="mt-1 flex items-center gap-2">
@@ -179,7 +190,7 @@ export function FoodScanHistoryDrawer() {
                       </>
                     ) : (
                       <p className="mt-1 text-sm text-ink/50">
-                        AI 沒有從這張照片中辨識出食物
+                        {t("food.noFoodDetected")}
                       </p>
                     )}
                   </div>

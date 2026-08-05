@@ -1,54 +1,54 @@
 # Food・Heart (monorepo)
 
-依照指定設計稿重新切版的寵物飲食與 AI 心靈導師前端專案。使用 npm workspaces 管理，之後會陸續加入其他 app。
+A pet food and AI mental-coaching frontend project, rebuilt from the provided designs. Managed with npm workspaces; more apps will be added over time.
 
-## 專案結構
+## Project Structure
 ```
 .
 ├── apps/
-│   ├── web/        # React 前端
-│   └── api/        # FastAPI + PostgreSQL 後端
-├── packages/        # 未來共用套件放這裡（目前是空的）
-└── docker-compose.yml  # 本機 PostgreSQL
+│   ├── web/        # React frontend
+│   └── api/        # FastAPI + PostgreSQL backend
+├── packages/        # Shared packages go here (currently empty)
+└── docker-compose.yml  # Local PostgreSQL
 ```
 
-前端說明見下方；後端（`apps/api`）的技術棧、設定步驟見 [apps/api/README.md](apps/api/README.md)。
+See below for the frontend; for the backend (`apps/api`) tech stack and setup steps, see [apps/api/README.md](apps/api/README.md).
 
-## 技術
+## Tech Stack
 - React
 - TypeScript
 - Vite
 - Tailwind CSS
 - Zustand
-- i18next（繁體中文 / English）
+- i18next (Traditional Chinese / English)
 
-## 本次重切重點
-- 固定左側品牌與導覽 Sidebar
-- Dashboard 密集卡片 Grid，而非一般單欄後台
-- 寵物資訊、疫苗、飲食、AI 診斷、AI 對話、心情、歷史日誌、健康檢查、熱量建議
-- 底部統計分析、UI Components、核心功能區
-- Desktop / Tablet / Mobile RWD
+## Rebuild Highlights
+- Fixed left-side brand and navigation sidebar
+- Dense card grid dashboard, instead of a typical single-column admin layout
+- Pet profiles, vaccines, food log, AI diagnosis, AI chat, mood, journal history, health checks, calorie recommendations
+- Bottom analytics, UI components, and core feature sections
+- Desktop / tablet / mobile responsive design
 
-## 執行
-在 repo 根目錄安裝（npm workspaces 會自動處理所有 apps/packages）：
+## Running the App
+Install from the repo root (npm workspaces automatically handles all apps/packages):
 ```bash
 npm install
 npm run dev
 ```
-也可以指定單一 workspace 執行：
+You can also run a single workspace:
 ```bash
 npm run dev -w apps/web
 ```
 
-## 建置
+## Build
 ```bash
 npm run build
 ```
 
-> 寵物照片目前使用線上示意圖，正式開發可替換成 API 或本機 assets。
+> Pet photos currently use placeholder images; swap in API or local assets for production.
 
-## 部署到 GitHub Pages
-push 到 `main` 會自動觸發 `.github/workflows/deploy.yml`，build `apps/web` 並部署到 GitHub Pages。第一次啟用需要到 repo 的 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**（只需設定一次）。部署完成後網址會是：
+## Deploying to GitHub Pages
+Pushing to `main` automatically triggers `.github/workflows/deploy.yml`, which builds `apps/web` and deploys it to GitHub Pages. The first time you enable this, go to the repo's **Settings → Pages → Build and deployment → Source** and select **GitHub Actions** (one-time setup). Once deployed, the site will be available at:
 
 ```
 https://jellychou.github.io/ai-pet-wellness/

@@ -6,11 +6,13 @@ import {
   type FormEvent,
 } from "react";
 import { Image as ImageIcon, Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
+import { useAuthStore } from "../store/useAuthStore";
 
 const petAvatar =
   "https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop";
@@ -54,6 +56,7 @@ function now() {
 let nextId = 100;
 
 export function AICenterPage() {
+  const { t } = useTranslation();
   // AiScanDrawer 按「詢問 AI 心靈導師」時會把這次分析結果存進來——這裡拿來
   // 組成開場的背景資訊，讓後端 system prompt 可以直接引用，AI 的開場白就
   // 會提到「今天影像分析」的內容。只消費一次：讀到之後就從 store 清掉，
@@ -64,13 +67,12 @@ export function AICenterPage() {
   );
   const selectedPet = usePetStore((s) => s.selectedPet);
   const { showError } = useAlert();
+  const userInfo = useAuthStore((s) => s.userInfo);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
-  const [summarySections, setSummarySections] = useState<string[] | null>(
-    null,
-  );
+  const [summarySections, setSummarySections] = useState<string[] | null>(null);
   const [usage, setUsage] = useState<MentorUsage | null>(null);
   const [input, setInput] = useState("");
   const [aiTyping, setAiTyping] = useState(false);
@@ -106,7 +108,9 @@ export function AICenterPage() {
       const context = aiScanReference
         ? [
             "已引用今日影像分析",
-            aiScanReference.bodyPart ? `部位：${aiScanReference.bodyPart}` : null,
+            aiScanReference.bodyPart
+              ? `部位：${aiScanReference.bodyPart}`
+              : null,
             aiScanReference.summary,
             aiScanReference.suggestions.length > 0
               ? `目前的建議：${aiScanReference.suggestions.join("；")}`
@@ -127,9 +131,7 @@ export function AICenterPage() {
       applyResponse(res);
     } catch (error) {
       showError(
-        error instanceof Error
-          ? error.message
-          : "AI 心靈導師開場失敗，請稍後再試",
+        error instanceof Error ? error.message : t("mentor.openFailed"),
       );
     } finally {
       setAiTyping(false);
@@ -175,7 +177,7 @@ export function AICenterPage() {
       applyResponse(res);
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "AI 回覆失敗，請稍後再試",
+        error instanceof Error ? error.message : t("mentor.replyFailed"),
       );
     } finally {
       setAiTyping(false);
@@ -199,7 +201,7 @@ export function AICenterPage() {
       await sendMessage("", url);
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : "圖片上傳失敗，請稍後再試",
+        error instanceof Error ? error.message : t("mentor.imageUploadFailed"),
       );
     }
   }
@@ -216,15 +218,20 @@ export function AICenterPage() {
 
   const lastMessage = messages[messages.length - 1];
   const activeQuickReplies =
-    !isFinished && lastMessage?.from === "ai" ? lastMessage.quickReplies : undefined;
+    !isFinished && lastMessage?.from === "ai"
+      ? lastMessage.quickReplies
+      : undefined;
 
   return (
     <div className="mx-auto max-w-md flex-col h-[calc(100dvh-178px)] overflow-y-auto">
       {usage && (
         <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[11px] font-medium text-[#688696]">
           {usage.unlimited
-            ? `管理員帳號，今日已開啟 ${usage.used} 段對話，無次數限制`
-            : `今日已開啟 ${usage.used} / ${usage.limit} 段新對話`}
+            ? t("mentor.usageUnlimited", { used: usage.used })
+            : t("mentor.usageLimited", {
+                used: usage.used,
+                limit: usage.limit,
+              })}
         </div>
       )}
       <div className="min-h-[calc(100dvh-191px)] flex-1 space-y-4 overflow-y-auto pb-2">
@@ -235,7 +242,7 @@ export function AICenterPage() {
                 {m.imageUrl ? (
                   <img
                     src={m.imageUrl}
-                    alt="使用者上傳的圖片"
+                    alt={t("mentor.userUploadedImageAlt")}
                     className="max-h-56 w-full rounded-2xl rounded-br-sm object-cover"
                   />
                 ) : (
@@ -248,8 +255,8 @@ export function AICenterPage() {
                 </div>
               </div>
               <img
-                src={userAvatar}
-                alt="使用者頭像"
+                src={userInfo?.picture_url ?? userAvatar}
+                alt={t("mentor.userAvatarAlt")}
                 className="h-8 w-8 shrink-0 rounded-full object-cover"
               />
             </div>
@@ -257,7 +264,7 @@ export function AICenterPage() {
             <div key={m.id} className="flex items-end gap-2">
               <img
                 src={petAvatar}
-                alt="Coco 頭像"
+                alt={t("mentor.petAvatarAlt")}
                 className="h-8 w-8 shrink-0 rounded-full object-cover"
               />
               <div className="max-w-[85%]">
@@ -273,8 +280,8 @@ export function AICenterPage() {
         {aiTyping && (
           <div className="flex items-end gap-2">
             <img
-              src={petAvatar}
-              alt="Coco 頭像"
+              src={selectedPet?.avatar ?? userAvatar}
+              alt={t("mentor.petAvatarAlt")}
               className="h-8 w-8 shrink-0 rounded-full object-cover"
             />
             <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
@@ -294,11 +301,14 @@ export function AICenterPage() {
         {isFinished && summarySections && summarySections.length > 0 && (
           <div className="rounded-2xl border border-[#ece0d2] bg-[#fdf7ee] p-4">
             <div className="text-xs font-semibold text-[#b9803f]">
-              這次對話的重點整理
+              {t("mentor.summaryTitle")}
             </div>
             <ul className="mt-2 space-y-1.5">
               {summarySections.map((s, i) => (
-                <li key={i} className="flex gap-2 text-sm leading-5 text-ink/80">
+                <li
+                  key={i}
+                  className="flex gap-2 text-sm leading-5 text-ink/80"
+                >
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#caa06f]" />
                   {s}
                 </li>
@@ -309,7 +319,7 @@ export function AICenterPage() {
               onClick={handleRestart}
               className="mt-3 w-full rounded-full bg-[#e8a56b] py-2.5 text-xs font-semibold text-white transition hover:bg-[#dc9558]"
             >
-              開始新的對話
+              {t("mentor.restart")}
             </button>
           </div>
         )}
@@ -345,7 +355,7 @@ export function AICenterPage() {
           />
           <button
             type="button"
-            aria-label="上傳圖片"
+            aria-label={t("mentor.uploadImageAria")}
             onClick={() => fileInputRef.current?.click()}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f3ece2] text-ink/50 transition hover:bg-[#ecdfd0]"
           >
@@ -355,11 +365,11 @@ export function AICenterPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="min-w-0 flex-1 rounded-full border border-[#eee5dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-ink/30"
-            placeholder="輸入訊息..."
+            placeholder={t("mentor.messagePlaceholder")}
           />
           <button
             type="submit"
-            aria-label="送出訊息"
+            aria-label={t("mentor.sendAria")}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#e8a56b] text-white transition hover:bg-[#dc9558] disabled:opacity-40"
             disabled={!input.trim()}
           >

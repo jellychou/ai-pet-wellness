@@ -11,7 +11,7 @@ import {
   NotebookPen,
   Syringe,
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePetStore } from "../store/usePetStore";
@@ -138,13 +138,13 @@ type FoodRecordEntry = {
 
 const mealTypeOrder: {
   value: FoodRecordEntry["meal_type"];
-  label: string;
+  labelKey: string;
   icon: string;
 }[] = [
-  { value: "breakfast", label: "早餐", icon: "🌅" },
-  { value: "lunch", label: "午餐", icon: "☀️" },
-  { value: "dinner", label: "晚餐", icon: "🌙" },
-  { value: "snack", label: "點心", icon: "🍪" },
+  { value: "breakfast", labelKey: "dashboard.mealBreakfast", icon: "🌅" },
+  { value: "lunch", labelKey: "dashboard.mealLunch", icon: "☀️" },
+  { value: "dinner", labelKey: "dashboard.mealDinner", icon: "🌙" },
+  { value: "snack", labelKey: "dashboard.mealSnack", icon: "🍪" },
 ];
 
 // 只取「本地時區的年/月/日」來比對是不是同一天，不要直接比字串化的完整
@@ -172,6 +172,7 @@ function startOfToday() {
 }
 
 function FoodCard({ onAddFood }: { onAddFood: () => void }) {
+  const { t } = useTranslation();
   const selectedPet = usePetStore((s) => s.selectedPet);
   const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
   const [selectedDate, setSelectedDate] = useState(startOfToday);
@@ -238,13 +239,13 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
   return (
     <section className="card p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="section-title">飲食記錄 / Food Record</h2>
+        <h2 className="section-title">{t("dashboard.foodRecordTitle")}</h2>
       </div>
       <div className="mb-3 flex items-center justify-between text-[12px]">
         <button
           type="button"
           onClick={() => setSelectedDate((d) => addDays(d, -1))}
-          aria-label="前一天"
+          aria-label={t("dashboard.prevDay")}
           className="grid h-6 w-6 place-items-center rounded-full text-ink/60 transition hover:bg-cream"
         >
           ‹
@@ -252,14 +253,16 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
         <strong>
           {formatDateHeader(selectedDate)}
           {isToday && (
-            <span className="ml-1 font-normal text-ink/40">（今天）</span>
+            <span className="ml-1 font-normal text-ink/40">
+              {t("dashboard.today")}
+            </span>
           )}
         </strong>
         <button
           type="button"
           onClick={() => setSelectedDate((d) => addDays(d, 1))}
           disabled={isToday}
-          aria-label="後一天"
+          aria-label={t("dashboard.nextDay")}
           className="grid h-6 w-6 place-items-center rounded-full text-ink/60 transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-30"
         >
           ›
@@ -267,15 +270,19 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
       </div>
       <div className="space-y-2">
         {loading ? (
-          <p className="py-6 text-center text-[11px] text-ink/40">載入中…</p>
+          <p className="py-6 text-center text-[11px] text-ink/40">
+            {t("dashboard.loading")}
+          </p>
         ) : groups.length === 0 ? (
           <p className="py-6 text-center text-[11px] text-ink/40">
-            這天還沒有飲食記錄
+            {t("dashboard.noFoodRecordForDay")}
           </p>
         ) : (
           groups.map((g) => (
             <div key={g.value}>
-              <div className="mb-1 text-[9px] font-medium">{g.label}</div>
+              <div className="mb-1 text-[9px] font-medium">
+                {t(g.labelKey)}
+              </div>
               <div className="space-y-1.5">
                 {g.items.map((item) => (
                   <div
@@ -304,14 +311,14 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
       <div className="mt-3 rounded-xl bg-[#fbf7f1] p-3">
         <div className="mb-1 flex items-center justify-between text-[9px] font-medium">
           <div>
-            這天攝取熱量
+            {t("dashboard.todayIntake")}
             {totalCalories > (dailyCalories ?? 0) && (
-              <span className="text-red-500"> 已超標！</span>
+              <span className="text-red-500"> {t("dashboard.exceeded")}</span>
             )}
           </div>
           {dailyCalories != null && (
             <span className="font-normal text-ink/45">
-              建議 {dailyCalories} kcal
+              {t("dashboard.suggestedCalories", { value: dailyCalories })}
             </span>
           )}
         </div>
@@ -347,10 +354,14 @@ export function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-semibold">
-                Hello {userInfo?.name} 👋
+                {t("dashboard.greeting", { name: userInfo?.name })}
               </h1>
               <p className="mt-1 text-[12px] text-ink/50">
-                今天也要和 <b>{selectedPet?.name}</b> 一起健康生活！
+                <Trans
+                  i18nKey="dashboard.greetingSubtitle"
+                  values={{ name: selectedPet?.name }}
+                  components={{ b: <b /> }}
+                />
               </p>
             </div>
           </div>
@@ -367,40 +378,49 @@ export function DashboardPage() {
                 <div className="text-[12px]">{selectedPet?.breed}</div>
                 <div className="text-[12px] text-ink/45">
                   {" "}
-                  {calculateAge(selectedPet?.birthday ?? "")} 歲 /{" "}
-                  {selectedPet?.weight} kg
+                  {t("dashboard.ageWeight", {
+                    age: calculateAge(selectedPet?.birthday ?? ""),
+                    weight: selectedPet?.weight,
+                  })}
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Metric
                 icon={Heart}
-                title="健康分數"
+                title={t("dashboard.healthScore")}
                 value="0"
                 unit="/100"
                 tone="peach"
               />
               <Metric
                 icon={Flame}
-                title="今日熱量"
+                title={t("dashboard.todayCalories")}
                 value="0"
                 unit={`/${dailyCalories ?? "--"} kcal`}
                 tone="peach"
               />
-              <Metric icon={Droplets} title="喝水量" value="80" unit="%" />
+              <Metric
+                icon={Droplets}
+                title={t("dashboard.waterIntake")}
+                value="80"
+                unit="%"
+              />
               <Metric
                 icon={HeartPulse}
-                title="心情狀態"
-                value="Happy"
+                title={t("dashboard.mood")}
+                value={t("dashboard.moodHappy")}
                 tone="cream"
               />
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-[#fbf7f1] p-3">
             <div>
-              <div className="text-[12px] font-semibold">今日建議</div>
+              <div className="text-[12px] font-semibold">
+                {t("dashboard.todaySuggestionTitle")}
+              </div>
               <p className="mt-1 text-[9px] text-ink/55">
-                今天可以增加一點優質蛋白質，幫助毛孩健康！
+                {t("dashboard.todaySuggestionText")}
               </p>
             </div>
             <span className="text-3xl">🐕🥣</span>
@@ -408,48 +428,68 @@ export function DashboardPage() {
           {/* 依每日建議熱量 + 物種（狗/貓比例不同）換算出來的建議攝取量，
               是簡化過的參考值，不是精確的個體營養需求 */}
           <div className="mt-3 rounded-xl bg-[#fbf7f1] p-3">
-            <div className="mb-2 text-[12px] font-semibold">今日建議營養素</div>
+            <div className="mb-2 text-[12px] font-semibold">
+              {t("dashboard.nutrientTitle")}
+            </div>
             <div className="grid grid-cols-3 gap-2 text-center text-[9px]">
               <div>
-                <div>蛋白質</div>
+                <div>{t("dashboard.protein")}</div>
                 <b className="text-xs">
                   {macros ? `${macros.protein} g` : "--"}
                 </b>
               </div>
               <div>
-                <div>脂肪</div>
+                <div>{t("dashboard.fat")}</div>
                 <b className="text-xs">{macros ? `${macros.fat} g` : "--"}</b>
               </div>
               <div>
-                <div>碳水</div>
+                <div>{t("dashboard.carb")}</div>
                 <b className="text-xs">{macros ? `${macros.carb} g` : "--"}</b>
               </div>
             </div>
           </div>
           <div className="mt-3">
-            <div className="mb-2 text-[12px] font-medium">Quick Action</div>
+            <div className="mb-2 text-[12px] font-medium">
+              {t("dashboard.quickAction")}
+            </div>
             <div className="grid grid-cols-3 gap-2">
-              {[
-                [Camera, "AI 拍照診斷"],
-                [Bone, "新增飲食"],
-                [Syringe, "疫苗記錄"],
-                [ClipboardPlus, "健康檢查"],
-                [NotebookPen, "健康日誌"],
-                [MessageCircleHeart, "AI 心靈導師"],
-              ].map(([I, x]) => (
+              {(
+                [
+                  [Camera, "scan", t("dashboard.qaScan"), setAiScanOpen],
+                  [Bone, "addFood", t("dashboard.qaAddFood"), setAddFoodOpen],
+                  [
+                    Syringe,
+                    "vaccine",
+                    t("dashboard.qaVaccine"),
+                    setAddVaccineOpen,
+                  ],
+                  [
+                    ClipboardPlus,
+                    "checkup",
+                    t("dashboard.qaCheckup"),
+                    setEditHealthOpen,
+                  ],
+                  [
+                    NotebookPen,
+                    "journal",
+                    t("dashboard.qaJournal"),
+                    setHealthJournalOpen,
+                  ],
+                  [
+                    MessageCircleHeart,
+                    "mentor",
+                    t("dashboard.qaMentor"),
+                    null,
+                  ],
+                ] as const
+              ).map(([I, id, label, action]) => (
                 <button
-                  key={x as string}
-                  onClick={() => {
-                    if (x === "新增飲食") setAddFoodOpen(true);
-                    if (x === "疫苗記錄") setAddVaccineOpen(true);
-                    if (x === "AI 拍照診斷") setAiScanOpen(true);
-                    if (x === "健康檢查") setEditHealthOpen(true);
-                    if (x === "健康日誌") setHealthJournalOpen(true);
-                  }}
+                  key={id}
+                  onClick={() => action?.(true)}
                   className="soft-card p-2 text-center hover:-translate-y-0.5"
                 >
                   <I size={17} className="mx-auto text-[#7591a2]" />
-                  <span className="mt-1 block text-[8px]">{x as string}</span>
+                  <span className="mt-1 block text-[8px]">{label}</span>
                 </button>
               ))}
             </div>
@@ -460,7 +500,7 @@ export function DashboardPage() {
         <FoodCard onAddFood={() => setAddFoodOpen(true)} />
       </section>
       <footer className="flex items-center justify-between rounded-xl px-5 text-[12px] text-[#78A4CB]">
-        <span>🐾 Food・Heart・Vaccine — 陪伴毛孩，也陪伴你 ♡</span>
+        <span>{t("dashboard.footerTagline")}</span>
         <span className="hidden sm:inline">
           React · TypeScript · Tailwind · Zustand · i18n
         </span>

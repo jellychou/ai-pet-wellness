@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
@@ -31,13 +32,11 @@ const RISK_COLOR: Record<string, string> = {
   高: "#c9503f",
 };
 
-const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
-
-function formatDate(iso: string) {
+function formatDate(iso: string, weekdays: string[]) {
   const d = new Date(`${iso}T00:00:00`);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}（${
-    WEEKDAY_LABELS[d.getDay()]
+    weekdays[d.getDay()]
   }）`;
 }
 
@@ -45,11 +44,13 @@ function formatDate(iso: string) {
 // 直接讀 health_journal_logs 的完整歷史（不像 /timeline 只挑
 // added_to_timeline=True 的那幾筆），並提供「+」直接開新一篇日誌
 export function RecordsPage() {
+  const { t } = useTranslation();
   const selectedPet = usePetStore((s) => s.selectedPet);
   const setHealthJournalOpen = useAppStore((s) => s.setHealthJournalOpen);
   const refreshKey = useAppStore((s) => s.healthJournalRefreshKey);
   const [items, setItems] = useState<HealthJournalHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const weekdays = t("common.weekdays", { returnObjects: true }) as string[];
 
   useEffect(() => {
     const petId = selectedPet?.id;
@@ -65,11 +66,14 @@ export function RecordsPage() {
 
   return (
     <section className="mx-auto max-w-md space-y-4">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-ink">
+          {t("healthJournal.pageTitle")}
+        </h1>
         <button
           type="button"
           onClick={() => setHealthJournalOpen(true)}
-          aria-label="新增健康日誌"
+          aria-label={t("healthJournal.addAria")}
           className="grid h-9 w-9 place-items-center rounded-full bg-[#b98a5c] text-white shadow-[0_8px_18px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
         >
           <Plus size={18} />
@@ -78,8 +82,9 @@ export function RecordsPage() {
 
       {!loading && items.length === 0 && (
         <p className="py-10 text-center text-sm text-ink/40">
-          {selectedPet?.name ?? "這隻寵物"}{" "}
-          還沒有健康日誌記錄，按右上角「+」新增一篇
+          {t("healthJournal.emptyState", {
+            name: selectedPet?.name ?? t("healthJournal.petFallback"),
+          })}
         </p>
       )}
 
@@ -91,7 +96,7 @@ export function RecordsPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-ink/40">
-                {formatDate(item.log_date)}
+                {formatDate(item.log_date, weekdays)}
               </span>
               <span
                 className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -100,7 +105,11 @@ export function RecordsPage() {
                   backgroundColor: `${RISK_COLOR[item.risk_level] ?? "#8a8a8a"}1a`,
                 }}
               >
-                {item.risk_level}風險
+                {t("healthJournal.riskSuffix", {
+                  level: t(`healthJournal.risk.${item.risk_level}`, {
+                    defaultValue: item.risk_level,
+                  }),
+                })}
               </span>
             </div>
             <div className="mt-2 flex items-center gap-2">
@@ -111,8 +120,18 @@ export function RecordsPage() {
                 </span>
               </span>
               <span className="text-xs text-ink/40">
-                食慾 {item.appetite}・精神 {item.energy}・活動量{" "}
-                {item.activity_level}
+                {t("healthJournal.fieldAppetite")}{" "}
+                {t(`healthJournal.option.${item.appetite}`, {
+                  defaultValue: item.appetite,
+                })}
+                ・{t("healthJournal.fieldEnergy")}{" "}
+                {t(`healthJournal.option.${item.energy}`, {
+                  defaultValue: item.energy,
+                })}
+                ・{t("healthJournal.fieldActivity")}{" "}
+                {t(`healthJournal.option.${item.activity_level}`, {
+                  defaultValue: item.activity_level,
+                })}
               </span>
             </div>
             {item.summary_points.length > 0 && (
@@ -127,14 +146,14 @@ export function RecordsPage() {
                     key={tag}
                     className="rounded-full bg-cream px-2 py-0.5 text-[10px] text-ink/50"
                   >
-                    {tag}
+                    {t(`healthJournal.tag.${tag}`, { defaultValue: tag })}
                   </span>
                 ))}
               </div>
             )}
             {item.added_to_timeline && (
               <p className="mt-2 text-[10px] font-medium text-[#b98a5c]">
-                已加入健康時間軸
+                {t("healthJournal.addedToTimelineNote")}
               </p>
             )}
           </div>

@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { Camera, ChevronDown, ChevronLeft, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -75,6 +76,7 @@ function ToggleGroup({
 }
 
 export function SettingsEditDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.settingsEditOpen);
   const setOpen = useAppStore((s) => s.setSettingsEditOpen);
 
@@ -106,7 +108,7 @@ export function SettingsEditDrawer() {
       setAvatarPhoto(url);
     } catch (error) {
       console.error(error);
-      showError("圖片上傳失敗，請稍後再試");
+      showError(t("settings.avatarUploadFailed"));
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -142,14 +144,12 @@ export function SettingsEditDrawer() {
           picture_url: avatarPhoto,
         }),
       });
-      showSuccess("更新使用者資料成功");
+      showSuccess(t("settings.updateSuccess"));
       handleBack();
       getUserInfo();
     } catch (err) {
       console.error("更新使用者資料失敗", err);
-      showError(
-        err instanceof Error ? err.message : "更新使用者資料失敗，請稍後再試",
-      );
+      showError(err instanceof Error ? err.message : t("settings.updateFailed"));
     }
   }
 
@@ -185,18 +185,20 @@ export function SettingsEditDrawer() {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="返回"
+          aria-label={t("common.backAria")}
           className="grid h-8 w-8 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ChevronLeft size={19} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">編輯飼主資料</h1>
+        <h1 className="text-sm font-semibold text-ink">
+          {t("settings.editHeaderTitle")}
+        </h1>
         <button
           type="button"
           onClick={handleSave}
           className="text-xs font-semibold text-[#c9784a] transition hover:text-[#b56a3d]"
         >
-          儲存
+          {t("common.save")}
         </button>
       </div>
 
@@ -213,14 +215,14 @@ export function SettingsEditDrawer() {
             <div className="relative">
               <img
                 src={avatarPhoto ?? ""}
-                alt="使用者頭像"
+                alt={t("settings.userAvatarAlt")}
                 className="h-28 w-28 rounded-full object-cover"
               />
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                aria-label="更換頭像"
+                aria-label={t("settings.changeAvatarAria")}
                 className="absolute bottom-1 right-1 grid h-8 w-8 place-items-center rounded-full bg-[#f0c9a0] text-white shadow-sm transition hover:bg-[#e8bb85] disabled:opacity-60"
               >
                 <Camera size={14} />
@@ -229,9 +231,9 @@ export function SettingsEditDrawer() {
           </div>
 
           <div className="space-y-3">
-            <SectionHeader icon={User} title="基本資料" />
+            <SectionHeader icon={User} title={t("settings.sectionBasicInfo")} />
 
-            <Field label="姓名" required>
+            <Field label={t("settings.fieldName")} required>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -239,7 +241,7 @@ export function SettingsEditDrawer() {
               />
             </Field>
 
-            <Field label="電話" required>
+            <Field label={t("settings.fieldPhone")} required>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -247,7 +249,7 @@ export function SettingsEditDrawer() {
               />
             </Field>
 
-            <Field label="生日" required>
+            <Field label={t("settings.fieldBirthday")} required>
               <div className={inputWrapClass}>
                 <input
                   type="date"
@@ -258,18 +260,18 @@ export function SettingsEditDrawer() {
               </div>
             </Field>
 
-            <Field label="性別">
+            <Field label={t("settings.fieldGender")}>
               <ToggleGroup
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: "生理女", icon: "♀", value: "female" },
-                  { label: "生理男", icon: "♂", value: "male" },
+                  { label: t("settings.genderFemale"), icon: "♀", value: "female" },
+                  { label: t("settings.genderMale"), icon: "♂", value: "male" },
                 ]}
               />
             </Field>
 
-            <Field label="Email">
+            <Field label={t("settings.fieldEmail")}>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -278,7 +280,7 @@ export function SettingsEditDrawer() {
               />
             </Field>
 
-            <Field label="標語">
+            <Field label={t("settings.fieldSlogan")}>
               <input
                 value={slogan}
                 onChange={(e) => setSlogan(e.target.value)}

@@ -1,33 +1,43 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Eye, EyeOff, Lightbulb, Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
 
 const requirements = [
-  { key: "length", label: "至少 8 個字元", test: (v: string) => v.length >= 8 },
+  { key: "length", test: (v: string) => v.length >= 8 },
   {
     key: "case",
-    label: "包含英文大小寫字母",
     test: (v: string) => /[a-z]/.test(v) && /[A-Z]/.test(v),
   },
-  { key: "digit", label: "包含數字", test: (v: string) => /\d/.test(v) },
+  { key: "digit", test: (v: string) => /\d/.test(v) },
   {
     key: "special",
-    label: "包含特殊符號（如 !@#$%）",
     test: (v: string) => /[!@#$%^&*(),.?":{}|<>]/.test(v),
   },
 ];
 
-function strengthOf(v: string) {
+// 跟 ChangePasswordDrawer 同一套密碼強度計算，label 用 t() 現算才能跟著
+// 語言切換
+function strengthOf(v: string, t: TFunction) {
   const passed = requirements.filter((r) => r.test(v)).length;
-  if (!v) return { level: 0, label: "弱", color: "#d9645a" };
-  if (passed <= 1) return { level: 1, label: "弱", color: "#d9645a" };
-  if (passed === 2) return { level: 2, label: "中", color: "#d9834f" };
-  if (passed === 3) return { level: 3, label: "中強", color: "#c9a13f" };
-  return { level: 4, label: "強", color: "#3fa876" };
+  if (!v) return { level: 0, label: t("password.strengthWeak"), color: "#d9645a" };
+  if (passed <= 1)
+    return { level: 1, label: t("password.strengthWeak"), color: "#d9645a" };
+  if (passed === 2)
+    return { level: 2, label: t("password.strengthMedium"), color: "#d9834f" };
+  if (passed === 3)
+    return {
+      level: 3,
+      label: t("password.strengthMediumStrong"),
+      color: "#c9a13f",
+    };
+  return { level: 4, label: t("password.strengthStrong"), color: "#3fa876" };
 }
 
 export function SetPasswordDrawer() {
+  const { t } = useTranslation();
   const open = useAppStore((s) => s.setPasswordOpen);
   const setOpen = useAppStore((s) => s.setSetPasswordOpen);
 
@@ -38,7 +48,7 @@ export function SetPasswordDrawer() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const strength = useMemo(() => strengthOf(newPassword), [newPassword]);
+  const strength = useMemo(() => strengthOf(newPassword, t), [newPassword, t]);
 
   function handleBack() {
     setOpen(false);
@@ -46,7 +56,7 @@ export function SetPasswordDrawer() {
 
   async function handleConfirm() {
     try {
-      const response = await apiFetch("/auth/set-password", {
+      await apiFetch("/auth/set-password", {
         method: "POST",
         body: JSON.stringify({
           password: newPassword,
@@ -76,12 +86,14 @@ export function SetPasswordDrawer() {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="返回"
+          aria-label={t("common.backAria")}
           className="grid h-8 w-8 place-items-center rounded-full text-ink transition hover:bg-cream"
         >
           <ChevronLeft size={19} />
         </button>
-        <h1 className="text-sm font-semibold text-ink">設定密碼</h1>
+        <h1 className="text-sm font-semibold text-ink">
+          {t("password.setHeaderTitle")}
+        </h1>
         <span className="w-8" />
       </div>
 
@@ -97,29 +109,29 @@ export function SetPasswordDrawer() {
               </span>
             </div>
             <h2 className="mt-3 text-base font-bold text-ink">
-              保護您的帳號安全
+              {t("password.protectTitle")}
             </h2>
             <p className="mt-1 text-[12px] text-ink/50">
-              建議您定期變更密碼，以確保帳號安全。
+              {t("password.protectSubtitle")}
             </p>
           </div>
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              新密碼 <span className="text-red-400">*</span>
+              {t("password.newLabel")} <span className="text-red-400">*</span>
             </label>
             <div className={inputWrapClass}>
               <input
                 type={showNew ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="請輸入新密碼"
+                placeholder={t("password.newPlaceholder")}
                 className={inputClass}
               />
               <button
                 type="button"
                 onClick={() => setShowNew((v) => !v)}
-                aria-label="顯示或隱藏密碼"
+                aria-label={t("password.toggleVisibilityAria")}
                 className="text-ink/35 transition hover:text-ink/60"
               >
                 {showNew ? <Eye size={17} /> : <EyeOff size={17} />}
@@ -129,20 +141,20 @@ export function SetPasswordDrawer() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              確認新密碼 <span className="text-red-400">*</span>
+              {t("password.confirmLabel")} <span className="text-red-400">*</span>
             </label>
             <div className={inputWrapClass}>
               <input
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="請再次輸入新密碼"
+                placeholder={t("password.confirmPlaceholder")}
                 className={inputClass}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                aria-label="顯示或隱藏密碼"
+                aria-label={t("password.toggleVisibilityAria")}
                 className="text-ink/35 transition hover:text-ink/60"
               >
                 {showConfirm ? <Eye size={17} /> : <EyeOff size={17} />}
@@ -152,7 +164,7 @@ export function SetPasswordDrawer() {
 
           <div>
             <div className="mb-1.5 text-sm text-ink/70">
-              密碼強度：
+              {t("password.strengthLabel")}
               <span className="font-semibold" style={{ color: strength.color }}>
                 {strength.label}
               </span>
@@ -174,10 +186,10 @@ export function SetPasswordDrawer() {
           <div className="rounded-2xl bg-[#fbf1e6] p-4">
             <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <Lightbulb size={13} />
-              小提醒
+              {t("password.tipTitle")}
             </div>
             <p className="text-[12px] leading-5 text-ink/60">
-              請勿使用與其他網站相同的密碼，避免帳號被盜用。
+              {t("password.tipText")}
             </p>
           </div>
 
@@ -187,14 +199,14 @@ export function SetPasswordDrawer() {
               onClick={handleConfirm}
               className="w-full rounded-full bg-[#d99368] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(217,147,104,.35)] transition hover:bg-[#c98457]"
             >
-              確認設定
+              {t("password.confirmSetButton")}
             </button>
             <button
               type="button"
               onClick={handleBack}
               className="w-full rounded-full border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
             >
-              取消
+              {t("common.cancel")}
             </button>
           </div>
         </div>

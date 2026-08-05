@@ -135,7 +135,7 @@ function SwitchRow({
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const userInfo = useAuthStore((s) => s.userInfo);
   const logout = useAuthStore((s) => s.logout);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
@@ -167,13 +167,11 @@ export function SettingsPage() {
       body: JSON.stringify({ language: nextLanguage }),
     })
       .then(() => {
-        showSuccess("更新語言成功");
+        showSuccess(t("settings.langUpdateSuccess"));
       })
       .catch((err) => {
         console.error("更新語言失敗", err);
-        showError(
-          err instanceof Error ? err.message : "更新語言失敗，請稍後再試",
-        );
+        showError(err instanceof Error ? err.message : t("settings.langUpdateFailed"));
       });
   }
 
@@ -186,7 +184,7 @@ export function SettingsPage() {
         <div className="relative shrink-0">
           <img
             src={userInfo?.picture_url || defaultAvatarPhoto}
-            alt="使用者頭像"
+            alt={t("settings.userAvatarAlt")}
             className="h-16 w-16 rounded-full object-cover"
           />
         </div>
@@ -200,55 +198,59 @@ export function SettingsPage() {
         </div>
       </button>
       <Section
-        title="飼主資訊"
+        title={t("settings.sectionOwnerInfo")}
         action={
           <button
             type="button"
             onClick={() => setSettingsEditOpen(true)}
             className="text-sm font-semibold text-[#c9784a] transition hover:text-[#b56a3d]"
           >
-            編輯
+            {t("common.edit")}
           </button>
         }
       >
         <Row
           icon={User}
-          label="姓名"
+          label={t("settings.fieldName")}
           value={userInfo?.name ?? ""}
           showChevron={false}
         />
         <Row
           icon={Phone}
-          label="電話"
+          label={t("settings.fieldPhone")}
           value={userInfo?.phone ?? ""}
           showChevron={false}
         />
         <Row
           icon={Calendar}
-          label="生日"
+          label={t("settings.fieldBirthday")}
           value={userInfo?.birthday ?? ""}
           showChevron={false}
         />
         <Row
           icon={Transgender}
-          label="性別"
-          value={userInfo?.gender === "female" ? "生理女" : "生理男"}
+          label={t("settings.fieldGender")}
+          value={
+            userInfo?.gender === "female"
+              ? t("settings.genderFemale")
+              : t("settings.genderMale")
+          }
           showChevron={false}
         />
         <Row
           icon={Mail}
-          label="電子郵件"
+          label={t("settings.fieldEmail")}
           value={userInfo?.email ?? ""}
           showChevron={false}
         />
         <Row
           icon={MessageCircle}
-          label="標語"
+          label={t("settings.fieldSlogan")}
           value={userInfo?.slogan ?? ""}
           showChevron={false}
         />
       </Section>
-      <Section title="偏好設定">
+      <Section title={t("settings.sectionPreferences")}>
         <SwitchRow
           icon={Globe}
           label="語言 / Language"
@@ -295,30 +297,30 @@ export function SettingsPage() {
           <ChevronRight size={16} className="shrink-0 text-ink/25" />
         </div> */}
       </Section>
-      <Section title="帳號與安全">
+      <Section title={t("settings.sectionAccountSecurity")}>
         {userInfo?.is_set_password ? (
           <Row
             icon={Lock}
-            label="變更密碼"
+            label={t("settings.changePassword")}
             onClick={() => setChangePasswordOpen(true)}
           />
         ) : (
           <Row
             icon={Lock}
-            label="設定密碼"
+            label={t("settings.setPassword")}
             onClick={() => setSetPasswordOpen(true)}
           />
         )}
       </Section>
-      <Section title="其他">
-        <Row icon={Info} label="關於 Pet Wellness" />
-        <Row icon={FileText} label="使用條款" />
-        <Row icon={HelpCircle} label="常見問題" />
+      <Section title={t("settings.sectionOther")}>
+        <Row icon={Info} label={t("settings.aboutApp")} />
+        <Row icon={FileText} label={t("settings.termsOfService")} />
+        <Row icon={HelpCircle} label={t("settings.faq")} />
       </Section>
       <Section title="">
         <Row
           icon={FileText}
-          label="版本資訊"
+          label={t("settings.versionInfo")}
           value="v1.0.0"
           showChevron={false}
         />
@@ -329,7 +331,7 @@ export function SettingsPage() {
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-3.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
       >
         <LogOut size={16} />
-        登出
+        {t("settings.logout")}
       </button>
     </div>
   );

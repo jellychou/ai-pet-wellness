@@ -64,3 +64,68 @@ export const ReportTypeEnum = {
   "5": "超音波檢查",
   "6": "其他檢查",
 } as const;
+
+// 品種
+export const breedList = [
+  { zh: "米克斯", en: "Mixed Breed", group: "Mixed / Unknown" },
+  { zh: "其他", en: "Other", group: "Mixed / Unknown" },
+
+  { zh: "黃金獵犬", en: "Golden Retriever", group: "Sporting" },
+  { zh: "拉布拉多", en: "Labrador Retriever", group: "Sporting" },
+  { zh: "英國可卡犬", en: "English Cocker Spaniel", group: "Sporting" },
+  { zh: "美國可卡犬", en: "American Cocker Spaniel", group: "Sporting" },
+  { zh: "米格魯", en: "Beagle", group: "Hound" },
+  { zh: "臘腸犬", en: "Dachshund", group: "Hound" },
+  { zh: "阿富汗獵犬", en: "Afghan Hound", group: "Hound" },
+  { zh: "巴吉度獵犬", en: "Basset Hound", group: "Hound" },
+
+  { zh: "柴犬", en: "Shiba Inu", group: "Spitz / Primitive" },
+  { zh: "秋田犬", en: "Akita", group: "Spitz / Primitive" },
+  { zh: "哈士奇", en: "Siberian Husky", group: "Working" },
+  { zh: "阿拉斯加雪橇犬", en: "Alaskan Malamute", group: "Working" },
+  { zh: "薩摩耶", en: "Samoyed", group: "Spitz / Primitive" },
+
+  { zh: "邊境牧羊犬", en: "Border Collie", group: "Herding" },
+  { zh: "澳洲牧羊犬", en: "Australian Shepherd", group: "Herding" },
+  { zh: "德國牧羊犬", en: "German Shepherd Dog", group: "Herding" },
+  { zh: "喜樂蒂牧羊犬", en: "Shetland Sheepdog", group: "Herding" },
+  { zh: "柯基", en: "Welsh Corgi", group: "Herding" },
+
+  { zh: "貴賓犬", en: "Poodle", group: "Companion" },
+  { zh: "瑪爾濟斯", en: "Maltese", group: "Companion" },
+  { zh: "博美犬", en: "Pomeranian", group: "Toy" },
+  { zh: "吉娃娃", en: "Chihuahua", group: "Toy" },
+  { zh: "約克夏", en: "Yorkshire Terrier", group: "Toy" },
+  { zh: "比熊犬", en: "Bichon Frise", group: "Companion" },
+  { zh: "西施犬", en: "Shih Tzu", group: "Companion" },
+  { zh: "巴哥犬", en: "Pug", group: "Companion" },
+  { zh: "法國鬥牛犬", en: "French Bulldog", group: "Companion" },
+  { zh: "英國鬥牛犬", en: "Bulldog", group: "Companion" },
+
+  { zh: "雪納瑞", en: "Schnauzer", group: "Pinscher / Schnauzer" },
+  { zh: "杜賓犬", en: "Doberman Pinscher", group: "Working" },
+  { zh: "羅威納犬", en: "Rottweiler", group: "Working" },
+  { zh: "伯恩山犬", en: "Bernese Mountain Dog", group: "Working" },
+  { zh: "大白熊犬", en: "Great Pyrenees", group: "Working" },
+  { zh: "聖伯納犬", en: "Saint Bernard", group: "Working" },
+  { zh: "大丹犬", en: "Great Dane", group: "Working" },
+
+  { zh: "西高地白梗", en: "West Highland White Terrier", group: "Terrier" },
+  { zh: "傑克羅素梗", en: "Jack Russell Terrier", group: "Terrier" },
+  { zh: "牛頭梗", en: "Bull Terrier", group: "Terrier" },
+  { zh: "波士頓梗", en: "Boston Terrier", group: "Terrier" },
+];
+
+export const allergyList = [
+  { zh: "無", en: "None", value: "0" },
+  { zh: "雞肉、牛肉", en: "Chicken, Beef", value: "1" },
+  { zh: "海鮮", en: "Seafood", value: "2" },
+  { zh: "穀物", en: "Grain", value: "3" },
+  { zh: "其他", en: "Other", value: "4" },
+];
+
+export const activityList = [
+  { zh: "低", en: "Low", value: "1" },
+  { zh: "中等", en: "Medium", value: "2" },
+  { zh: "高", en: "High", value: "3" },
+];

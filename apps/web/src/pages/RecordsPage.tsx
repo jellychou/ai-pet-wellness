@@ -66,10 +66,7 @@ export function RecordsPage() {
 
   return (
     <section className="mx-auto max-w-md space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-ink">
-          {t("healthJournal.pageTitle")}
-        </h1>
+      <div className="flex items-center justify-end">
         <button
           type="button"
           onClick={() => setHealthJournalOpen(true)}

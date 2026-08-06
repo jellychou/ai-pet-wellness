@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
+from app.core.ai_language import language_directive
 from app.core.config import get_settings
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -211,7 +212,23 @@ def analyze_journal(
             max_completion_tokens=1200,
             reasoning_effort="low",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "system",
+                    # 附加語言指示句，讓 summary_points/recommendations 這些
+                    # 自然語言欄位跟著使用者目前的 UI 語言走——見
+                    # app/core/ai_language.py。risk_level 是後端拿來跟固定
+                    # 中文字 "低"/"中"/"高" 比對、存進資料庫、前端也用這幾個
+                    # 字當 key 對照顏色/說明的結構化欄位（不是自然語言敘述），
+                    # 用 enum_note 明確提醒模型這欄不受語言指示影響，維持中文
+                    "content": SYSTEM_PROMPT
+                    + language_directive(
+                        current_user.language,
+                        enum_note=(
+                            'risk_level 欄位仍必須維持 "低"/"中"/"高" 三個'
+                            "中文字其中之一，不要翻譯這個欄位。"
+                        ),
+                    ),
+                },
                 {"role": "user", "content": content},
             ],
         )

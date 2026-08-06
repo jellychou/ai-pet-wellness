@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
+from app.core.ai_language import language_directive
 from app.core.config import get_settings
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -195,7 +196,11 @@ def chat(
     db.refresh(session)
     history = session.messages
 
-    system_content = SYSTEM_PROMPT
+    # 附加語言指示句，讓 message/quick_replies/summary_sections 這些自然
+    # 語言欄位跟著使用者目前的 UI 語言走，不是永遠回中文——見
+    # app/core/ai_language.py。這裡全部欄位都是自由文字，沒有像
+    # health_journal.risk_level 那種要保留原格式的結構化欄位，不用 enum_note
+    system_content = SYSTEM_PROMPT + language_directive(current_user.language)
     if payload.context and is_new_session:
         system_content += (
             "\n\n以下是這次對話一開始就知道的背景資訊，你的開場白要直接引用、"

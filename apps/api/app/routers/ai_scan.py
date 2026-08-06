@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
+from app.core.ai_language import language_directive
 from app.core.config import get_settings
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -182,7 +183,14 @@ def analyze_image(
             max_completion_tokens=900,
             reasoning_effort="low",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "system",
+                    # 附加語言指示句，讓 summary/findings[].condition/
+                    # description/suggestions 這些自然語言欄位跟著使用者
+                    # 目前的 UI 語言走——見 app/core/ai_language.py
+                    "content": SYSTEM_PROMPT
+                    + language_directive(current_user.language),
+                },
                 {
                     "role": "user",
                     "content": [

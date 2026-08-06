@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
+from app.core.ai_language import language_directive
 from app.core.config import get_settings
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -338,7 +339,12 @@ def analyze_food(
         # markdown code fence 或前後贅字的機率變高
         response = client.responses.create(
             model=settings.openai_food_scan_model,
-            instructions=SYSTEM_PROMPT,
+            # 附加語言指示句，讓 food_name/items[].name/note/estimate_note/
+            # suggestions 這些自然語言欄位跟著使用者目前的 UI 語言走，不是
+            # 永遠回中文——見 app/core/ai_language.py 的說明，這裡不用整份
+            # 重寫兩個語言版本的 prompt。suitable_species 是固定的英文字
+            # "dog"/"cat"，不受這句指示影響，不用額外提醒
+            instructions=SYSTEM_PROMPT + language_directive(current_user.language),
             tools=[{"type": "web_search"}],
             reasoning={"effort": "medium"},
             # medium effort 會用掉更多隱藏思考 token，2000 的舊上限留給

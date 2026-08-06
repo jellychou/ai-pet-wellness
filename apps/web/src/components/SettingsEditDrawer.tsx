@@ -1,17 +1,15 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import { Camera, ChevronDown, ChevronLeft, User } from "lucide-react";
+import { Camera, ChevronLeft, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { DatePicker } from "@mui/x-date-pickers";
-import dayjs from "dayjs";
 import { useEffect } from "react";
 import { apiFetch } from "../lib/api";
 import type { AuthUser } from "../store/useAuthStore";
-import defaultAvatarPhoto from "../assets/images/default-avatar.png";
 import { useAlert } from "../hooks/useAlert";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { ImageCropModal } from "../components/ImageCropModal";
+import defaultHeadPhoto from "../assets/images/default-photo.png";
 
 function SectionHeader({
   icon: Icon,
@@ -87,7 +85,9 @@ export function SettingsEditDrawer() {
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [slogan, setSlogan] = useState("");
-  const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
+  const [avatarPhoto, setAvatarPhoto] = useState<string | null>(
+    defaultHeadPhoto,
+  );
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
@@ -99,9 +99,7 @@ export function SettingsEditDrawer() {
   // 只是給裁切畫面暫時顯示用，不會被存進資料庫（那是下面 avatarPhoto 存的
   // Cloudinary 網址才會存），跟上面舊註解說明的「不用 blob: URL」不衝突
   const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
-    null,
-  );
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -182,7 +180,9 @@ export function SettingsEditDrawer() {
       getUserInfo();
     } catch (err) {
       console.error("更新使用者資料失敗", err);
-      showError(err instanceof Error ? err.message : t("settings.updateFailed"));
+      showError(
+        err instanceof Error ? err.message : t("settings.updateFailed"),
+      );
     }
   }
 
@@ -190,7 +190,7 @@ export function SettingsEditDrawer() {
   // 這樣打開時看到的是目前的資料，且 input 是可以正常輸入的「受控元件」
   useEffect(() => {
     if (!open) return;
-    setAvatarPhoto(userInfo?.picture_url ?? defaultAvatarPhoto);
+    setAvatarPhoto(userInfo?.picture_url ?? defaultHeadPhoto);
     setName(userInfo?.name ?? "");
     setPhone(userInfo?.phone ?? "");
     setBirthday(userInfo?.birthday ?? "");
@@ -247,7 +247,7 @@ export function SettingsEditDrawer() {
             />
             <div className="relative">
               <img
-                src={avatarPhoto ?? ""}
+                src={avatarPhoto ?? defaultHeadPhoto}
                 alt={t("settings.userAvatarAlt")}
                 className="h-28 w-28 rounded-full object-cover"
               />
@@ -308,7 +308,11 @@ export function SettingsEditDrawer() {
                 value={gender}
                 onChange={setGender}
                 options={[
-                  { label: t("settings.genderFemale"), icon: "♀", value: "female" },
+                  {
+                    label: t("settings.genderFemale"),
+                    icon: "♀",
+                    value: "female",
+                  },
                   { label: t("settings.genderMale"), icon: "♂", value: "male" },
                 ]}
               />

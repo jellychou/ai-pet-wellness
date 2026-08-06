@@ -17,9 +17,8 @@ import { calculateAge } from "../lib/utils";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
-
-const defaultPetPhoto =
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
+import { ImageCropModal } from "./ImageCropModal";
+import defaultPetAvatar from "../assets/images/default-avatar.png";
 
 // 這幾組都是純前端定義的固定選項，對應後端 Literal 型別——要調整選項
 // 只要改這裡，不用動後端 schema（後端目前就是照這幾個中文字做 Literal 驗證，
@@ -29,7 +28,16 @@ const ENERGY_OPTIONS = ["很好", "正常", "偏差", "不好"];
 const ACTIVITY_OPTIONS = ["多", "正常", "偏少", "很少"];
 const BOWEL_OPTIONS = ["正常", "偏軟", "偏硬", "腹瀉"];
 const VOMIT_OPTIONS = ["無", "1次", "多次"];
-const TAG_OPTIONS = ["皮膚", "耳朵", "眼睛", "口腔", "行為", "環境", "用藥", "其他"];
+const TAG_OPTIONS = [
+  "皮膚",
+  "耳朵",
+  "眼睛",
+  "口腔",
+  "行為",
+  "環境",
+  "用藥",
+  "其他",
+];
 const MAX_PHOTOS = 6;
 const MAX_CUSTOM_SYMPTOMS = 5;
 const MAX_DIARY_LENGTH = 500;
@@ -118,7 +126,9 @@ function ToggleRow({
       <div className="mb-1.5 text-[12px] font-medium text-ink/70">{label}</div>
       <div
         className="grid gap-1.5"
-        style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
+        }}
       >
         {options.map((o) => (
           <button
@@ -165,6 +175,11 @@ export function HealthJournalDrawer() {
   const [photos, setPhotos] = useState<{ file: File; previewUrl: string }[]>(
     [],
   );
+  // 一次選多張照片的話，不是全部直接加進 photos——先排進這個裁切佇列，
+  // 一張一張跳出裁切畫面，裁完（或選擇使用原圖/取消跳過）才真的把那一張
+  // 加進 photos，再繼續處理佇列裡下一張，跟 AddFoodDrawer 是同一套做法
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalyzeJournalResponse | null>(null);
@@ -195,6 +210,7 @@ export function HealthJournalDrawer() {
     setNewSymptom("");
     setDiaryText("");
     setPhotos([]);
+    setCropQueue([]);
     setTags([]);
     setResult(null);
     setAddedToTimeline(false);
@@ -208,6 +224,18 @@ export function HealthJournalDrawer() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 裁切佇列最前面那張才需要產生預覽網址給裁切畫面看，理由跟
+  // AddFoodDrawer 的同一段效果一樣
+  useEffect(() => {
+    if (cropQueue.length === 0) {
+      setCropSrc(null);
+      return;
+    }
+    const url = URL.createObjectURL(cropQueue[0]);
+    setCropSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [cropQueue]);
 
   const limitReached =
     usage != null && !usage.unlimited && usage.used >= usage.limit;
@@ -249,15 +277,45 @@ export function HealthJournalDrawer() {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     if (files.length === 0) return;
-    setPhotos((current) =>
-      [
-        ...current,
-        ...files.map((file) => ({
-          file,
-          previewUrl: URL.createObjectURL(file),
-        })),
-      ].slice(0, MAX_PHOTOS),
+    // 選好的先排進裁切佇列，不是直接加進 photos——見上面 cropQueue 的說明。
+    // 上限還是 MAX_PHOTOS，扣掉已經在 photos 跟已經排隊等裁切的張數
+    const remainingSlots = Math.max(
+      0,
+      MAX_PHOTOS - photos.length - cropQueue.length,
     );
+    setCropQueue((current) => [...current, ...files.slice(0, remainingSlots)]);
+  }
+
+  // 裁切佇列往前推進一張，理由跟 AddFoodDrawer 的同名函式一樣
+  function advanceCropQueue() {
+    setCropQueue((current) => current.slice(1));
+  }
+
+  function handleCropConfirmed(file: File) {
+    setPhotos((current) =>
+      [...current, { file, previewUrl: URL.createObjectURL(file) }].slice(
+        0,
+        MAX_PHOTOS,
+      ),
+    );
+    advanceCropQueue();
+  }
+
+  function handleCropUseOriginal() {
+    const file = cropQueue[0];
+    if (file) {
+      setPhotos((current) =>
+        [...current, { file, previewUrl: URL.createObjectURL(file) }].slice(
+          0,
+          MAX_PHOTOS,
+        ),
+      );
+    }
+    advanceCropQueue();
+  }
+
+  function handleCropCancelOne() {
+    advanceCropQueue();
   }
 
   function handleRemovePhoto(index: number) {
@@ -308,7 +366,9 @@ export function HealthJournalDrawer() {
       bumpHealthJournalRefreshKey();
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : t("healthJournal.analyzeFailed"),
+        error instanceof Error
+          ? error.message
+          : t("healthJournal.analyzeFailed"),
       );
     } finally {
       setAnalyzing(false);
@@ -338,7 +398,9 @@ export function HealthJournalDrawer() {
       navigate("/records");
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : t("healthJournal.addToTimelineFailed"),
+        error instanceof Error
+          ? error.message
+          : t("healthJournal.addToTimelineFailed"),
       );
     } finally {
       setAddingToTimeline(false);
@@ -348,14 +410,12 @@ export function HealthJournalDrawer() {
   const petHeader = selectedPet && (
     <div className="flex items-center gap-3 rounded-2xl bg-[#fbf7f1] p-3">
       <img
-        src={selectedPet.avatar ?? defaultPetPhoto}
+        src={selectedPet.avatar ?? defaultPetAvatar}
         alt={selectedPet.name}
         className="h-12 w-12 shrink-0 rounded-full object-cover"
       />
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-ink">
-          {selectedPet.name}
-        </div>
+        <div className="text-sm font-semibold text-ink">{selectedPet.name}</div>
         <div className="truncate text-[11px] text-ink/45">
           {t("healthJournal.petMeta", {
             breed: selectedPet.breed,
@@ -592,6 +652,16 @@ export function HealthJournalDrawer() {
                   className="hidden"
                   onChange={handlePickPhotos}
                 />
+
+                <ImageCropModal
+                  open={!!cropSrc}
+                  imageSrc={cropSrc}
+                  fileName={cropQueue[0]?.name ?? "health-journal-photo.jpg"}
+                  onCancel={handleCropCancelOne}
+                  onConfirm={handleCropConfirmed}
+                  onUseOriginal={handleCropUseOriginal}
+                />
+
                 <div className="grid grid-cols-5 gap-2">
                   {photos.map((p, i) => (
                     <div
@@ -772,7 +842,10 @@ export function HealthJournalDrawer() {
                         ? result.recommendations.maintain
                         : [t("healthJournal.maintainDefault")]
                       ).map((s, i) => (
-                        <li key={i} className="text-xs leading-5 text-[#2f8a72]">
+                        <li
+                          key={i}
+                          className="text-xs leading-5 text-[#2f8a72]"
+                        >
                           · {s}
                         </li>
                       ))}
@@ -787,7 +860,10 @@ export function HealthJournalDrawer() {
                         ? result.recommendations.watch
                         : [t("healthJournal.watchDefault")]
                       ).map((s, i) => (
-                        <li key={i} className="text-xs leading-5 text-[#a9713f]">
+                        <li
+                          key={i}
+                          className="text-xs leading-5 text-[#a9713f]"
+                        >
                           · {s}
                         </li>
                       ))}
@@ -802,7 +878,10 @@ export function HealthJournalDrawer() {
                         ? result.recommendations.concern
                         : [t("healthJournal.concernDefault")]
                       ).map((s, i) => (
-                        <li key={i} className="text-xs leading-5 text-[#a13c2f]">
+                        <li
+                          key={i}
+                          className="text-xs leading-5 text-[#a13c2f]"
+                        >
                           · {s}
                         </li>
                       ))}

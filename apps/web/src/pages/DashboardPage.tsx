@@ -23,9 +23,7 @@ import {
 } from "../lib/calorie";
 import { calculateDailyWaterTargetMl } from "../lib/water";
 import { apiFetch } from "../lib/api";
-
-const defaultPetPhoto =
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
+import defaultPetAvatar from "../assets/images/default-avatar.png";
 
 function Metric({
   icon: Icon,
@@ -298,9 +296,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
         ) : (
           groups.map((g) => (
             <div key={g.value}>
-              <div className="mb-1 text-[9px] font-medium">
-                {t(g.labelKey)}
-              </div>
+              <div className="mb-1 text-[9px] font-medium">{t(g.labelKey)}</div>
               <div className="space-y-1.5">
                 {g.items.map((item) => (
                   <div
@@ -360,9 +356,7 @@ export function DashboardPage() {
   const setHealthJournalOpen = useAppStore((s) => s.setHealthJournalOpen);
   const setWaterIntakeOpen = useAppStore((s) => s.setWaterIntakeOpen);
   const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
-  const healthJournalRefreshKey = useAppStore(
-    (s) => s.healthJournalRefreshKey,
-  );
+  const healthJournalRefreshKey = useAppStore((s) => s.healthJournalRefreshKey);
   const waterRefreshKey = useAppStore((s) => s.waterRefreshKey);
   const userInfo = useAuthStore((s) => s.userInfo);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -372,9 +366,7 @@ export function DashboardPage() {
   const macros = selectedPet ? calculateMacros(selectedPet) : null;
 
   const [todayCalories, setTodayCalories] = useState<number | null>(null);
-  const [healthScoreToday, setHealthScoreToday] = useState<number | null>(
-    null,
-  );
+  const [healthScoreToday, setHealthScoreToday] = useState<number | null>(null);
   const [waterTodayMl, setWaterTodayMl] = useState<number | null>(null);
 
   // 「今日熱量」跟 FoodCard 抓的是同一支 API，各自獨立打一次——FoodCard
@@ -395,7 +387,9 @@ export function DashboardPage() {
           (r) => toDateKey(new Date(r.fed_at)) === todayKey,
         );
         setTodayCalories(
-          sumCalories(todayRecords.map((r) => ({ calories: r.total_calories }))),
+          sumCalories(
+            todayRecords.map((r) => ({ calories: r.total_calories })),
+          ),
         );
       })
       .catch((err) => console.error(err));
@@ -461,14 +455,17 @@ export function DashboardPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-[1.15fr_1.55fr]">
             <div className="flex items-center gap-3 rounded-xl bg-[#fbf7f1] p-3">
               <img
-                src={selectedPet?.avatar ?? defaultPetPhoto}
+                src={selectedPet?.avatar ?? defaultPetAvatar}
                 className="h-20 w-20 rounded-full object-cover"
               />
               <div>
                 <div className="text-lg font-semibold mb-2">
                   {selectedPet?.name} {selectedPet?.gender === "1" ? "♀" : "♂"}
                 </div>
-                <div className="text-[12px]">{selectedPet?.breed}</div>
+                <div className="text-[12px]">
+                  <span>{t("pets.fieldBreed")}：</span>
+                  {selectedPet?.breed}
+                </div>
                 <div className="text-[12px] text-ink/45">
                   {" "}
                   {t("dashboard.ageWeight", {
@@ -482,7 +479,9 @@ export function DashboardPage() {
               <Metric
                 icon={Heart}
                 title={t("dashboard.healthScore")}
-                value={healthScoreToday != null ? String(healthScoreToday) : "--"}
+                value={
+                  healthScoreToday != null ? String(healthScoreToday) : "--"
+                }
                 unit="/100"
                 tone="peach"
               />
@@ -490,7 +489,9 @@ export function DashboardPage() {
                 icon={Flame}
                 title={t("dashboard.todayCalories")}
                 value={
-                  todayCalories != null ? String(Math.round(todayCalories)) : "--"
+                  todayCalories != null
+                    ? String(Math.round(todayCalories))
+                    : "--"
                 }
                 unit={`/${dailyCalories ?? "--"} kcal`}
                 tone="peach"
@@ -580,12 +581,7 @@ export function DashboardPage() {
                     t("dashboard.qaJournal"),
                     setHealthJournalOpen,
                   ],
-                  [
-                    MessageCircleHeart,
-                    "mentor",
-                    t("dashboard.qaMentor"),
-                    null,
-                  ],
+                  [MessageCircleHeart, "mentor", t("dashboard.qaMentor"), null],
                 ] as const
               ).map(([I, id, label, action]) => (
                 <button

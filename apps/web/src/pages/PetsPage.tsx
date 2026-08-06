@@ -7,10 +7,21 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Pet } from "../data/pets";
 import { usePetStore } from "../store/usePetStore";
-import { calculateDailyCalories } from "../lib/calorie";
+import { calculateDailyCalories, sumCalories } from "../lib/calorie";
+import defaultPetAvatar from "../assets/images/default-avatar.png";
 
-const defaultPetAvatar =
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
+// 跟 DashboardPage 的 FoodCard/todayCalories 是同一支 API、同一份
+// FoodRecordEntry 形狀，這裡只需要 total_calories 跟 fed_at 兩個欄位，
+// 不用整份都定義出來
+type FoodRecordEntry = {
+  total_calories: number;
+  fed_at: string;
+};
+
+function toDateKey(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 // 只定義欄位順序跟標籤 key/格式化邏輯，實際的值要從 API 抓回來的寵物資料算，
 // 不要把假資料寫死在這裡（之前 value 都是寫死的 "Coco"/"Golden Retriever"...）
@@ -134,10 +145,45 @@ export function PetsPage() {
   const selectedPet = usePetStore((s) => s.selectedPet);
   const pets = usePetStore((s) => s.pets);
   const userInfo = useAuthStore((s) => s.userInfo);
+  const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
   const [rows, setRows] = useState<{ label: string; value: string }[]>([]);
+  const [consumedCalories, setConsumedCalories] = useState<number | null>(null);
   const dailyCalories = selectedPet
     ? calculateDailyCalories(selectedPet)
     : null;
+  // 「還可攝取」= 建議熱量 - 今天已吃的量，用 Math.max 卡在 0——已經超標
+  // 的話顯示「還可攝取 0」比顯示負數更直覺，超標與否已經由 FoodCard 那邊
+  // 的「已超標！」提示負責，這裡不用重複做警示樣式
+  const remainingCalories =
+    dailyCalories != null && consumedCalories != null
+      ? Math.max(Math.round(dailyCalories - consumedCalories), 0)
+      : null;
+
+  // 今天已攝取的熱量，跟 DashboardPage 頂部「今日熱量」卡片抓的是同一支
+  // /food/food-records/{pet_id}、同一種前端過濾今天日期的做法——後端這支
+  // API 沒有日期區間參數，量體小、簡單優先，不用另外開一支彙總 API
+  useEffect(() => {
+    const petId = selectedPet?.id;
+    if (!petId) {
+      setConsumedCalories(null);
+      return;
+    }
+    const todayKey = toDateKey(new Date());
+    apiFetch<FoodRecordEntry[]>(`/food/food-records/${petId}`, {
+      method: "GET",
+    })
+      .then((records) => {
+        const todayRecords = records.filter(
+          (r) => toDateKey(new Date(r.fed_at)) === todayKey,
+        );
+        setConsumedCalories(
+          sumCalories(
+            todayRecords.map((r) => ({ calories: r.total_calories })),
+          ),
+        );
+      })
+      .catch((error) => console.error(error));
+  }, [selectedPet?.id, foodRecordRefreshKey]);
 
   useEffect(() => {
     const petFieldDefs = getPetFieldDefs(t);
@@ -234,7 +280,7 @@ export function PetsPage() {
         </div>
         <div className="flex items-center gap-3">
           <img
-            src={selectedPet?.avatar ?? ""}
+            src={selectedPet?.avatar ?? defaultPetAvatar}
             className="h-12 w-12 rounded-full object-cover"
           />
           <div>
@@ -257,18 +303,19 @@ export function PetsPage() {
             </div>
           </div>
         </div>
-        {/* TODO: 已攝取/還可攝取要接真的飲食紀錄（food_records）才能算，
-            現在還沒有那張表，先維持假資料，不要被當成真的算出來的數字 */}
         <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[12px]">
           <div className="rounded-xl bg-[#fbf7f1] p-2">
             {t("pets.consumed")}
             <br />
-            <b>430 kcal</b>
+            <b>
+              {consumedCalories != null ? Math.round(consumedCalories) : "--"}{" "}
+              kcal
+            </b>
           </div>
           <div className="rounded-xl bg-[#fbf7f1] p-2">
             {t("pets.remaining")}
             <br />
-            <b>90 kcal</b>
+            <b>{remainingCalories ?? "--"} kcal</b>
           </div>
         </div>
         <ul className="mt-3 list-disc space-y-1 pl-4 text-[12px]">

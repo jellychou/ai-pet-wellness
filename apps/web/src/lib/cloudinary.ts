@@ -1,4 +1,5 @@
 import i18n from "../i18n/config";
+import { useLoadingStore } from "../store/useLoadingStore";
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
@@ -19,24 +20,32 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    {
-      method: "POST",
-      body: formData,
-    },
-  );
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(
-      body?.error?.message ??
-        i18n.t("common.imageUploadFailedWithStatus", { status: res.status }),
+  // 圖片上傳往往是整個流程裡最慢的一步（不像 apiFetch 打自己的後端，這裡
+  // 是直接傳整張圖給 Cloudinary），也要算進全域 loading 遮罩，理由跟
+  // lib/api.ts 的 apiFetch 一樣——見 store/useLoadingStore.ts
+  useLoadingStore.getState().startLoading();
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      },
     );
-  }
 
-  const data = (await res.json()) as { secure_url: string };
-  return data.secure_url;
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(
+        body?.error?.message ??
+          i18n.t("common.imageUploadFailedWithStatus", { status: res.status }),
+      );
+    }
+
+    const data = (await res.json()) as { secure_url: string };
+    return data.secure_url;
+  } finally {
+    useLoadingStore.getState().stopLoading();
+  }
 }
 
 // 健康檢查報告除了圖片，還可能是 PDF（血檢單、超音波報告等），Cloudinary 的
@@ -52,25 +61,30 @@ export async function uploadFileToCloudinary(file: File): Promise<string> {
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
-    {
-      method: "POST",
-      body: formData,
-    },
-  );
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(
-      body?.error?.message ??
-        i18n.t("common.fileUploadFailedWithStatus", {
-          fileName: file.name,
-          status: res.status,
-        }),
+  useLoadingStore.getState().startLoading();
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
+      {
+        method: "POST",
+        body: formData,
+      },
     );
-  }
 
-  const data = (await res.json()) as { secure_url: string };
-  return data.secure_url;
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(
+        body?.error?.message ??
+          i18n.t("common.fileUploadFailedWithStatus", {
+            fileName: file.name,
+            status: res.status,
+          }),
+      );
+    }
+
+    const data = (await res.json()) as { secure_url: string };
+    return data.secure_url;
+  } finally {
+    useLoadingStore.getState().stopLoading();
+  }
 }

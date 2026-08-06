@@ -17,6 +17,7 @@ import { RecordsPage } from "./pages/RecordsPage";
 import { useAuthStore, type AuthUser } from "./store/useAuthStore";
 import { apiFetch } from "./lib/api";
 import { AlertProvider } from "./hooks/useAlert";
+import { GlobalLoadingOverlay } from "./components/GlobalLoadingOverlay";
 import { usePetStore } from "./store/usePetStore";
 import { Pet } from "./data/pets";
 
@@ -74,6 +75,10 @@ export default function App() {
     // 包在最外層一次，裡面任何元件都可以直接 useAlert() 拿
     // showSuccess/showError 來用，不用各自 import、各自渲染 AlertSlot
     <AlertProvider>
+      {/* 全域 loading 遮罩，同樣掛在最外層一次——涵蓋所有路由（包含 /login、
+          /add-pet），任何頁面呼叫 apiFetch() 都會自動觸發，不用個別頁面
+          自己接 loading 狀態 */}
+      <GlobalLoadingOverlay />
       <Routes>
         <Route
           path="/login"

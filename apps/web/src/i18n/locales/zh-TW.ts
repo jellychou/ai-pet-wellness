@@ -666,6 +666,12 @@ export const zhTW = {
     historyPhotoAlt: "診斷照片",
     historyAddedToTimelineBadge: "已加入時間軸",
   },
+  imageCrop: {
+    title: "裁切圖片",
+    hint: "拖曳或縮放選取範圍，確認後套用",
+    skipButton: "使用原圖",
+    processing: "處理中…",
+  },
 };
 
 export type ZhTWResources = typeof zhTW;

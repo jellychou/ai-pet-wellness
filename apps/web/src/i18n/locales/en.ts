@@ -687,4 +687,10 @@ export const en = {
     historyPhotoAlt: "Diagnosis photo",
     historyAddedToTimelineBadge: "Added to timeline",
   },
+  imageCrop: {
+    title: "Crop Image",
+    hint: "Drag or resize the selection, then confirm to apply",
+    skipButton: "Use Original",
+    processing: "Processing…",
+  },
 };

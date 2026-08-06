@@ -11,6 +11,7 @@ import type { AuthUser } from "../store/useAuthStore";
 import defaultAvatarPhoto from "../assets/images/default-avatar.png";
 import { useAlert } from "../hooks/useAlert";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
+import { ImageCropModal } from "../components/ImageCropModal";
 
 function SectionHeader({
   icon: Icon,
@@ -92,16 +93,37 @@ export function SettingsEditDrawer() {
   const userInfo = useAuthStore((s) => s.userInfo);
   const setUserInfo = useAuthStore((s) => s.setUserInfo);
   const { showSuccess, showError } = useAlert();
+  // 選好照片先不急著上傳，開一個裁切畫面讓使用者調整成正方形頭像——
+  // pendingAvatarFile 留著原始檔案，讓「使用原圖」可以跳過裁切直接上傳。
+  // 注意：這裡的 avatarCropSrc 是 URL.createObjectURL 產生的本地預覽網址，
+  // 只是給裁切畫面暫時顯示用，不會被存進資料庫（那是下面 avatarPhoto 存的
+  // Cloudinary 網址才會存），跟上面舊註解說明的「不用 blob: URL」不衝突
+  const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
+    null,
+  );
 
-  // 不用 URL.createObjectURL：那個 blob: URL 只在當下這個分頁有效，重新整理
-  // 頁面、存到後端再讀回來、或換一台裝置都會失效變成無法顯示的圖片。
-  // 也不用讀成 base64 直接存進 DB：那樣每次抓使用者資料都要整包圖片一起
-  // 傳輸，很快就把 Neon 免費方案的 network transfer 額度用完。改成上傳到
-  // Cloudinary，存的是它回傳的網址，只是一段字串。
-  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    setPendingAvatarFile(file);
+    setAvatarCropSrc(URL.createObjectURL(file));
+  }
+
+  function closeAvatarCrop() {
+    if (avatarCropSrc) URL.revokeObjectURL(avatarCropSrc);
+    setAvatarCropSrc(null);
+    setPendingAvatarFile(null);
+  }
+
+  // 不用 URL.createObjectURL 當「最終存進資料庫」的網址：那個 blob: URL
+  // 只在當下這個分頁有效，重新整理頁面、存到後端再讀回來、或換一台裝置都
+  // 會失效變成無法顯示的圖片。也不用讀成 base64 直接存進 DB：那樣每次抓
+  // 使用者資料都要整包圖片一起傳輸，很快就把 Neon 免費方案的 network
+  // transfer 額度用完。改成上傳到 Cloudinary，存的是它回傳的網址，只是
+  // 一段字串。
+  async function uploadAvatarFile(file: File) {
     setIsUploadingAvatar(true);
     try {
       const url = await uploadImageToCloudinary(file);
@@ -112,6 +134,17 @@ export function SettingsEditDrawer() {
     } finally {
       setIsUploadingAvatar(false);
     }
+  }
+
+  function handleAvatarCropConfirm(file: File) {
+    closeAvatarCrop();
+    uploadAvatarFile(file);
+  }
+
+  function handleAvatarUseOriginal() {
+    const file = pendingAvatarFile;
+    closeAvatarCrop();
+    if (file) uploadAvatarFile(file);
   }
 
   function handleBack() {
@@ -229,6 +262,16 @@ export function SettingsEditDrawer() {
               </button>
             </div>
           </div>
+
+          <ImageCropModal
+            open={!!avatarCropSrc}
+            imageSrc={avatarCropSrc}
+            aspect={1}
+            fileName="avatar.jpg"
+            onCancel={closeAvatarCrop}
+            onConfirm={handleAvatarCropConfirm}
+            onUseOriginal={handleAvatarUseOriginal}
+          />
 
           <div className="space-y-3">
             <SectionHeader icon={User} title={t("settings.sectionBasicInfo")} />

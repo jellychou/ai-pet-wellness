@@ -6,7 +6,6 @@ import {
   useEffect,
 } from "react";
 import {
-  Calendar,
   Camera,
   ChevronDown,
   ChevronLeft,
@@ -33,9 +32,9 @@ import { useAlert } from "../hooks/useAlert";
 import { usePetStore } from "../store/usePetStore";
 import { AuthUser } from "../store/useAuthStore";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
-
-const defaultPetPhoto =
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
+import { ImageCropModal } from "../components/ImageCropModal";
+import { breedList, allergyList, activityList } from "../data/pets";
+import defaultPetAvatar from "../assets/images/default-avatar.png";
 
 function Field({
   label,
@@ -63,7 +62,13 @@ function Select({
 }: {
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: {
+    zh: string;
+    en: string;
+    group?: string;
+    value?: string;
+    label?: string;
+  }[];
 }) {
   return (
     <div className="relative">
@@ -73,8 +78,8 @@ function Select({
         className="w-full appearance-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none"
       >
         {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+          <option key={o.value} value={o.value}>
+            {o.zh}
           </option>
         ))}
       </select>
@@ -139,21 +144,38 @@ export function EditPetDrawer() {
   const [activity, setActivity] = useState("中");
   const [chipNumber, setChipNumber] = useState("");
   const [note, setNote] = useState("");
-  const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
+  const [avatarSrc, setAvatarSrc] = useState(defaultPetAvatar);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const userInfo = useAuthStore((s) => s.userInfo);
   const { showSuccess, showError } = useAlert();
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  // 選好照片先不急著上傳，開一個裁切畫面讓使用者調整成正方形頭像——
+  // pendingAvatarFile 留著原始檔案，讓「使用原圖」可以跳過裁切直接上傳
+  const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
+    null,
+  );
+
+  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPendingAvatarFile(file);
+    setAvatarCropSrc(URL.createObjectURL(file));
+  }
+
+  function closeAvatarCrop() {
+    if (avatarCropSrc) URL.revokeObjectURL(avatarCropSrc);
+    setAvatarCropSrc(null);
+    setPendingAvatarFile(null);
+  }
 
   // 改成直接上傳到 Cloudinary，不再讀成 base64 存進資料庫——base64 版本每次
   // 抓寵物資料都要整包圖片一起傳輸，很快就把 Neon 免費方案的 network
   // transfer 額度用完；現在存的是 Cloudinary 回傳的網址，只是一段字串
-  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  async function uploadAvatarFile(file: File) {
     setIsUploadingAvatar(true);
     try {
       const url = await uploadImageToCloudinary(file);
@@ -164,6 +186,17 @@ export function EditPetDrawer() {
     } finally {
       setIsUploadingAvatar(false);
     }
+  }
+
+  function handleAvatarCropConfirm(file: File) {
+    closeAvatarCrop();
+    uploadAvatarFile(file);
+  }
+
+  function handleAvatarUseOriginal() {
+    const file = pendingAvatarFile;
+    closeAvatarCrop();
+    if (file) uploadAvatarFile(file);
   }
 
   function handleBack() {
@@ -279,7 +312,7 @@ export function EditPetDrawer() {
     setActivity(selectedPet?.activity ?? "");
     setChipNumber(selectedPet?.chipNumber ?? "");
     setNote(selectedPet?.note ?? "");
-    setAvatarSrc(selectedPet?.avatar ?? defaultPetPhoto);
+    setAvatarSrc(selectedPet?.avatar ?? defaultPetAvatar);
     setIsDeleting(
       userInfo?.pets?.length && userInfo?.pets?.length > 1 ? false : true,
     );
@@ -346,6 +379,16 @@ export function EditPetDrawer() {
             </div>
           </div>
 
+          <ImageCropModal
+            open={!!avatarCropSrc}
+            imageSrc={avatarCropSrc}
+            aspect={1}
+            fileName="avatar.jpg"
+            onCancel={closeAvatarCrop}
+            onConfirm={handleAvatarCropConfirm}
+            onUseOriginal={handleAvatarUseOriginal}
+          />
+
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">
               <PawPrint size={13} />
@@ -372,10 +415,10 @@ export function EditPetDrawer() {
             </Field>
 
             <Field label={t("pets.fieldBreed")} required>
-              <input
+              <Select
                 value={breed}
-                onChange={(e) => setBreed(e.target.value)}
-                className={inputClass}
+                onChange={(value) => setBreed(value)}
+                options={breedList}
               />
             </Field>
 
@@ -453,7 +496,7 @@ export function EditPetDrawer() {
               <Select
                 value={allergy}
                 onChange={setAllergy}
-                options={["雞肉、牛肉", "無", "海鮮", "穀物"]}
+                options={allergyList}
               />
             </Field>
 
@@ -461,7 +504,7 @@ export function EditPetDrawer() {
               <Select
                 value={activity}
                 onChange={setActivity}
-                options={["低", "中等", "高"]}
+                options={activityList}
               />
             </Field>
           </div>

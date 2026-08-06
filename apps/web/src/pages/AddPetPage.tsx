@@ -15,10 +15,9 @@ import { apiFetch } from "../lib/api";
 import { usePetStore } from "../store/usePetStore";
 import { Pet } from "../data/pets";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
+import { ImageCropModal } from "../components/ImageCropModal";
 import { useAlert } from "../hooks/useAlert";
-
-const defaultPetPhoto =
-  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=240&h=240&fit=crop";
+import defaultPetAvatar from "../assets/images/default-avatar.png";
 
 function Field({
   label,
@@ -102,11 +101,7 @@ export function AddPetPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const setAllPetsList = usePetStore((s) => s.setAllPetsList);
-  const tips = [
-    t("addPet.tip1"),
-    t("addPet.tip2"),
-    t("addPet.tip3"),
-  ];
+  const tips = [t("addPet.tip1"), t("addPet.tip2"), t("addPet.tip3")];
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -119,16 +114,33 @@ export function AddPetPage() {
   const [activity, setActivity] = useState("中等");
   const [chipNumber, setChipNumber] = useState("");
   const [note, setNote] = useState("");
-  const [avatarSrc, setAvatarSrc] = useState(defaultPetPhoto);
+  const [avatarSrc, setAvatarSrc] = useState(defaultPetAvatar);
   const [error, setError] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const { showError } = useAlert();
+  // 選好照片先不急著上傳，開一個裁切畫面讓使用者調整成正方形頭像——
+  // pendingAvatarFile 留著原始檔案，讓「使用原圖」可以跳過裁切直接上傳
+  const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
+    null,
+  );
 
-  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+  function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    setPendingAvatarFile(file);
+    setAvatarCropSrc(URL.createObjectURL(file));
+  }
+
+  function closeAvatarCrop() {
+    if (avatarCropSrc) URL.revokeObjectURL(avatarCropSrc);
+    setAvatarCropSrc(null);
+    setPendingAvatarFile(null);
+  }
+
+  async function uploadAvatarFile(file: File) {
     setIsUploadingAvatar(true);
     try {
       const url = await uploadImageToCloudinary(file);
@@ -139,6 +151,17 @@ export function AddPetPage() {
     } finally {
       setIsUploadingAvatar(false);
     }
+  }
+
+  function handleAvatarCropConfirm(file: File) {
+    closeAvatarCrop();
+    uploadAvatarFile(file);
+  }
+
+  function handleAvatarUseOriginal() {
+    const file = pendingAvatarFile;
+    closeAvatarCrop();
+    if (file) uploadAvatarFile(file);
   }
 
   async function handleSubmit() {
@@ -162,6 +185,7 @@ export function AddPetPage() {
           activity,
           chipNumber,
           note,
+          avatar: avatarSrc,
         }),
       });
       fetchAllPetsList();
@@ -220,6 +244,16 @@ export function AddPetPage() {
               </button>
             </div>
           </div>
+
+          <ImageCropModal
+            open={!!avatarCropSrc}
+            imageSrc={avatarCropSrc}
+            aspect={1}
+            fileName="avatar.jpg"
+            onCancel={closeAvatarCrop}
+            onConfirm={handleAvatarCropConfirm}
+            onUseOriginal={handleAvatarUseOriginal}
+          />
 
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#d9834f]">

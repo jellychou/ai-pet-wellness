@@ -26,6 +26,7 @@ import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
+import { ImageCropModal } from "./ImageCropModal";
 
 // 純前端產生的暫存 id，不是後端資料
 function makeLocalId(): string {
@@ -447,6 +448,11 @@ export function AddFoodDrawer() {
   const [collectTab, setCollectTab] = useState<CollectTab>("upload");
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
+  // 一次選多張照片的話，不是全部直接加進 pendingPhotos——先排進這個裁切
+  // 佇列，一張一張跳出裁切畫面，裁完（或選擇使用原圖/取消跳過）才真的把
+  // 那一張加進 pendingPhotos，再繼續處理佇列裡下一張
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [historyItems, setHistoryItems] = useState<HistoryFoodItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedHistoryNames, setSelectedHistoryNames] = useState<Set<string>>(
@@ -479,6 +485,7 @@ export function AddFoodDrawer() {
     setStep("choose");
     setCollectTab("upload");
     setPendingPhotos([]);
+    setCropQueue([]);
     setSelectedHistoryNames(new Set());
     setDetailItem(null);
     setMealType("snack");
@@ -498,6 +505,19 @@ export function AddFoodDrawer() {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [pendingPhotos]);
+
+  // 裁切佇列最前面那張才需要產生預覽網址給裁切畫面看，佇列往前推進
+  // （cropQueue 換成新陣列）時舊的網址要記得 revoke，不然選很多張照片
+  // 會累積一堆沒釋放的 blob: URL
+  useEffect(() => {
+    if (cropQueue.length === 0) {
+      setCropSrc(null);
+      return;
+    }
+    const url = URL.createObjectURL(cropQueue[0]);
+    setCropSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [cropQueue]);
 
   // 切到「歷史選擇」分頁才打 API，不用一開始就抓（大多數人可能只走拍照
   // 這條路，沒必要每次打開都先撈一次歷史清單）
@@ -560,9 +580,37 @@ export function AddFoodDrawer() {
       showError(t("healthJournal.selectPetFirst"));
       return;
     }
-    setPendingPhotos((current) =>
-      [...current, ...files.map((file) => ({ file, note: "" }))].slice(0, 10),
+    // 選好的先排進裁切佇列，不是直接加進 pendingPhotos——見上面 cropQueue
+    // 的說明。上限still 是 10 張，這裡要扣掉已經在 pendingPhotos 跟已經
+    // 排隊等裁切的張數，避免選超過上限
+    const remainingSlots = Math.max(
+      0,
+      10 - pendingPhotos.length - cropQueue.length,
     );
+    setCropQueue((current) => [...current, ...files.slice(0, remainingSlots)]);
+  }
+
+  // 裁切佇列往前推進一張——不管這張是被裁切確認、選了使用原圖，還是被
+  // 使用者直接取消跳過，都要讓佇列繼續往下處理，不要卡住還沒裁的其他照片
+  function advanceCropQueue() {
+    setCropQueue((current) => current.slice(1));
+  }
+
+  function handleCropConfirmed(file: File) {
+    setPendingPhotos((current) => [...current, { file, note: "" }].slice(0, 10));
+    advanceCropQueue();
+  }
+
+  function handleCropUseOriginal() {
+    const file = cropQueue[0];
+    if (file) {
+      setPendingPhotos((current) => [...current, { file, note: "" }].slice(0, 10));
+    }
+    advanceCropQueue();
+  }
+
+  function handleCropCancelOne() {
+    advanceCropQueue();
   }
 
   function handleRemovePendingPhoto(index: number) {
@@ -914,6 +962,15 @@ export function AddFoodDrawer() {
             multiple
             className="hidden"
             onChange={handlePickPhotos}
+          />
+
+          <ImageCropModal
+            open={!!cropSrc}
+            imageSrc={cropSrc}
+            fileName={cropQueue[0]?.name ?? "food-photo.jpg"}
+            onCancel={handleCropCancelOne}
+            onConfirm={handleCropConfirmed}
+            onUseOriginal={handleCropUseOriginal}
           />
 
           {/* 1 選擇記錄方式 */}

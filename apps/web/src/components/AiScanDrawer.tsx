@@ -20,6 +20,7 @@ import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { useAlert } from "../hooks/useAlert";
+import { ImageCropModal } from "./ImageCropModal";
 
 type AiScanFinding = {
   condition: string;
@@ -117,6 +118,12 @@ export function AiScanDrawer() {
   // 重複打 API（雖然後端本來就 idempotent），也讓按鈕能顯示「已加入」
   const [addedToTimeline, setAddedToTimeline] = useState(false);
   const [usage, setUsage] = useState<AiScanUsage | null>(null);
+  // 選好照片先開自由裁切畫面（不鎖比例），讓使用者可以先把不相關的背景
+  // 裁掉、聚焦在真正要給 AI 看的部位；裁切完才真的設成 earPhoto/
+  // selectedFile 進入下一步。保留「使用原圖」選項——裁過頭反而可能把 AI
+  // 判斷需要的畫面內容也裁掉，不想裁的話可以直接跳過
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
 
   // 一打開就先問今天用了幾次，這樣按「重新上傳」之前就能看到標語、
   // 額度用完也能直接擋下來，不用浪費一次 Cloudinary 上傳才發現被拒絕
@@ -163,6 +170,9 @@ export function AiScanDrawer() {
     setDescription("");
     setResult(null);
     setAddedToTimeline(false);
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setPendingPhotoFile(null);
   }
 
   function handleReupload() {
@@ -179,8 +189,9 @@ export function AiScanDrawer() {
     setHistoryOpen(true);
   }
 
-  // 選完照片先只做本地預覽 + 記住 File，不立刻上傳分析——讓使用者有機會
-  // 先選部位、填補充說明，按「開始分析」才真的打 API（見 handleStartAnalysis）
+  // 選完照片先開裁切畫面，裁切完（或選擇使用原圖）才真的做本地預覽 + 記住
+  // File，不立刻上傳分析——讓使用者有機會先裁切、選部位、填補充說明，
+  // 按「開始分析」才真的打 API（見 handleStartAnalysis）
   function handlePhotoPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -190,9 +201,30 @@ export function AiScanDrawer() {
       return;
     }
     resetAll();
+    setPendingPhotoFile(file);
+    setCropSrc(URL.createObjectURL(file));
+  }
+
+  function closeCrop() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setPendingPhotoFile(null);
+  }
+
+  function applyPickedPhoto(file: File) {
+    closeCrop();
     const previewUrl = URL.createObjectURL(file);
     setEarPhoto(previewUrl);
     setSelectedFile(file);
+  }
+
+  function handleUseOriginalPhoto() {
+    const file = pendingPhotoFile;
+    if (!file) {
+      closeCrop();
+      return;
+    }
+    applyPickedPhoto(file);
   }
 
   async function handleStartAnalysis() {
@@ -315,6 +347,16 @@ export function AiScanDrawer() {
             className="hidden"
             onChange={handlePhotoPick}
           />
+
+          <ImageCropModal
+            open={!!cropSrc}
+            imageSrc={cropSrc}
+            fileName="ai-scan-photo.jpg"
+            onCancel={closeCrop}
+            onConfirm={applyPickedPhoto}
+            onUseOriginal={handleUseOriginalPhoto}
+          />
+
           {/* 一旦加入健康時間軸，原始照片跟完整分析內容就不再顯示——
               下面會換成精簡的確認卡片，跟設計稿一致 */}
           {!addedToTimeline &&

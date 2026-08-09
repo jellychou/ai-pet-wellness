@@ -20,6 +20,8 @@ import { SettingsEditDrawer } from "../components/SettingsEditDrawer";
 import { ChangePasswordDrawer } from "../components/ChangePasswordDrawer";
 import { SetPasswordDrawer } from "../components/SetPasswordDrawer";
 import { WaterIntakeDrawer } from "../components/WaterIntakeDrawer";
+import { MentorHistoryDrawer } from "../components/MentorHistoryDrawer";
+import { MentorHistoryDetailDrawer } from "../components/MentorHistoryDetailDrawer";
 
 const pageTitleKeys: Record<string, string> = {
   "/": "home",
@@ -70,6 +72,8 @@ export function AppLayout() {
       <ChangePasswordDrawer />
       <SetPasswordDrawer />
       <WaterIntakeDrawer />
+      <MentorHistoryDrawer />
+      <MentorHistoryDetailDrawer />
     </div>
   );
 }

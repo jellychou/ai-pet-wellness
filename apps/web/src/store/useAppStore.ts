@@ -193,6 +193,16 @@ type AppState = {
   // mount，所以用這個數字當訊號，成功就 +1，讓 Dashboard 重新抓一次
   waterRefreshKey: number;
   bumpWaterRefreshKey: () => void;
+  // AI 心靈導師的「歷史對話」列表，比照 aiScanHistoryOpen 疊在 AiScanDrawer
+  // 上面同一種模式——只是 AICenterPage 本身是路由頁面不是 drawer，這個
+  // 歷史列表 drawer 直接疊在整個頁面上面
+  mentorHistoryOpen: boolean;
+  setMentorHistoryOpen: (v: boolean) => void;
+  // 疊在 mentorHistoryOpen 列表上面的第二層 drawer，只存 session id——跟
+  // healthDetailRecord 存整筆記錄不同，因為列表那支 API 沒有回傳逐句訊息
+  // （太重），detail drawer 開啟時要自己另外打 /mentor/sessions/{id} 撈
+  mentorHistoryDetailSessionId: number | null;
+  setMentorHistoryDetailSessionId: (v: number | null) => void;
 };
 export const useAppStore = create<AppState>((set) => ({
   sidebarOpen: false,
@@ -289,4 +299,9 @@ export const useAppStore = create<AppState>((set) => ({
   waterRefreshKey: 0,
   bumpWaterRefreshKey: () =>
     set((s) => ({ waterRefreshKey: s.waterRefreshKey + 1 })),
+  mentorHistoryOpen: false,
+  setMentorHistoryOpen: (mentorHistoryOpen) => set({ mentorHistoryOpen }),
+  mentorHistoryDetailSessionId: null,
+  setMentorHistoryDetailSessionId: (mentorHistoryDetailSessionId) =>
+    set({ mentorHistoryDetailSessionId }),
 }));

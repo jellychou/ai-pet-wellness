@@ -52,3 +52,27 @@ class MentorHistoryMessageOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# 「歷史對話」列表的一筆——不含逐句訊息內容（太重，列表不需要），只給
+# 卡片要顯示的摘要資訊：preview 是第一則使用者訊息的節錄，message_count
+# 純粹讓前端知道這段對話有多長
+class MentorHistorySessionOut(BaseModel):
+    id: int
+    pet_id: int
+    is_finished: bool
+    summary_sections: list[str] | None = None
+    created_at: datetime
+    updated_at: datetime
+    message_count: int
+    preview: str
+
+
+# 點進歷史列表某一筆之後的詳細畫面，帶出這個 session 底下完整的逐句對話
+class MentorSessionDetailOut(BaseModel):
+    id: int
+    pet_id: int
+    is_finished: bool
+    summary_sections: list[str] | None = None
+    created_at: datetime
+    messages: list[MentorHistoryMessageOut]

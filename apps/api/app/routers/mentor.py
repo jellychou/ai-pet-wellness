@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from openai import OpenAI, OpenAIError, RateLimitError
 from sqlalchemy.orm import Session
 
@@ -14,9 +14,12 @@ from app.models.mentor import MentorMessage, MentorSession
 from app.models.pet import Pet
 from app.models.user import User
 from app.schemas.mentor import (
+    MentorHistoryMessageOut,
+    MentorHistorySessionOut,
     MentorMessage as MentorMessageSchema,
     MentorRequest,
     MentorResponse,
+    MentorSessionDetailOut,
     MentorUsageOut,
 )
 
@@ -47,7 +50,7 @@ SYSTEM_PROMPT = (
     "就把 is_finished 設成 true。\n"
     "4. is_finished=true 時，quick_replies 留空陣列，summary_sections 要"
     "給 3-5 條具體的重點整理（分類呈現，例如身體/情緒狀態、習慣改變、"
-    "獨處或特定情境下的反應和具體的建議，例如可以去看醫師，去看醫生的時候要注意什麼），"
+    "獨處或特定情境下的反應和具體的建議，例如可建議是否需要去看醫師，如果需要去看醫生的時候要注意什麼），"
     "每條都要具體、跟這次對話內容有關，不要空泛地說「請多觀察」；message 欄位則是簡短的總結語跟鼓勵。\n"
     "5. is_finished=false 時，summary_sections 給空陣列。\n"
     "請只回傳一個 JSON 物件，格式如下，不要有其他文字：\n"
@@ -114,6 +117,22 @@ def _build_usage(db: Session, user: User) -> MentorUsageOut:
     return MentorUsageOut(used=used, limit=DAILY_LIMIT, unlimited=_is_admin(user))
 
 
+# 歷史列表卡片要顯示的節錄——挑第一則「使用者真的有講話」的訊息，不是
+# AI 的開場白，這樣使用者一看就知道自己當時在問什麼。純圖片沒打字的話
+# 就給一句固定的說明文字，不要顯示空字串
+def _preview_text(messages: list[MentorMessage]) -> str:
+    for m in messages:
+        if m.role != "user":
+            continue
+        text = (m.content or "").strip()
+        if text:
+            return text[:60] + ("…" if len(text) > 60 else "")
+    for m in messages:
+        if m.role == "user" and m.image_url:
+            return "（附上一張照片）"
+    return ""
+
+
 def _to_openai_messages(system_content: str, history: list[MentorMessage]) -> list[dict]:
     messages: list[dict] = [{"role": "system", "content": system_content}]
     for m in history:
@@ -142,6 +161,78 @@ def get_usage_today(
     current_user: User = Depends(get_current_user),
 ):
     return _build_usage(db, current_user)
+
+
+# 「歷史對話」列表：某隻寵物過去開過的每一段對話，最新的排前面。開了
+# 對話但使用者完全沒講話就離開的空對話（例如點進頁面又馬上切走）會被
+# 過濾掉，不值得留在列表裡
+@router.get(
+    "/history/{pet_id}",
+    response_model=list[MentorHistorySessionOut],
+    status_code=status.HTTP_200_OK,
+)
+def get_history(
+    pet_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _get_owned_pet(db, current_user, pet_id)
+    sessions = (
+        db.query(MentorSession)
+        .filter(
+            MentorSession.pet_id == pet_id,
+            MentorSession.user_id == current_user.id,
+        )
+        .order_by(MentorSession.created_at.desc())
+        .all()
+    )
+    result: list[MentorHistorySessionOut] = []
+    for session in sessions:
+        has_real_content = any(
+            m.role == "user" and (m.content.strip() or m.image_url)
+            for m in session.messages
+        )
+        if not has_real_content:
+            continue
+        result.append(
+            MentorHistorySessionOut(
+                id=session.id,
+                pet_id=session.pet_id,
+                is_finished=session.is_finished,
+                summary_sections=session.summary_sections,
+                created_at=session.created_at,
+                updated_at=session.updated_at,
+                message_count=len(session.messages),
+                preview=_preview_text(session.messages),
+            )
+        )
+    return result
+
+
+# 點進歷史列表某一筆之後的詳細畫面：把這個 session 底下完整的逐句對話
+# 撈出來還原成聊天畫面，跟 chat() 組 openai_messages 時用的 session.messages
+# 是同一份關聯，只是這裡直接原樣回給前端顯示，不會再送去給 OpenAI
+@router.get(
+    "/sessions/{session_id}",
+    response_model=MentorSessionDetailOut,
+    status_code=status.HTTP_200_OK,
+)
+def get_session_detail(
+    session_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    session = _get_owned_session(db, current_user, session_id)
+    return MentorSessionDetailOut(
+        id=session.id,
+        pet_id=session.pet_id,
+        is_finished=session.is_finished,
+        summary_sections=session.summary_sections,
+        created_at=session.created_at,
+        messages=[
+            MentorHistoryMessageOut.model_validate(m) for m in session.messages
+        ],
+    )
 
 
 @router.post(

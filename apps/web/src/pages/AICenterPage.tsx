@@ -5,7 +5,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { Image as ImageIcon, Send } from "lucide-react";
+import { History, Image as ImageIcon, Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
@@ -68,6 +68,7 @@ export function AICenterPage() {
   const selectedPet = usePetStore((s) => s.selectedPet);
   const { showError } = useAlert();
   const userInfo = useAuthStore((s) => s.userInfo);
+  const setMentorHistoryOpen = useAppStore((s) => s.setMentorHistoryOpen);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -224,16 +225,28 @@ export function AICenterPage() {
 
   return (
     <div className="mx-auto max-w-md flex-col h-[calc(100dvh-178px)] overflow-y-auto">
-      {usage && (
-        <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[11px] font-medium text-[#688696]">
-          {usage.unlimited
-            ? t("mentor.usageUnlimited", { used: usage.used })
-            : t("mentor.usageLimited", {
-                used: usage.used,
-                limit: usage.limit,
-              })}
-        </div>
-      )}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        {usage ? (
+          <div className="w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[11px] font-medium text-[#688696]">
+            {usage.unlimited
+              ? t("mentor.usageUnlimited", { used: usage.used })
+              : t("mentor.usageLimited", {
+                  used: usage.used,
+                  limit: usage.limit,
+                })}
+          </div>
+        ) : (
+          <span />
+        )}
+        <button
+          type="button"
+          onClick={() => setMentorHistoryOpen(true)}
+          aria-label={t("mentor.historyAria")}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/50 transition hover:bg-cream"
+        >
+          <History size={16} />
+        </button>
+      </div>
       <div className="min-h-[calc(100dvh-191px)] flex-1 space-y-4 overflow-y-auto pb-2">
         {messages.map((m) =>
           m.from === "user" ? (

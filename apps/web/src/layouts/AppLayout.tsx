@@ -1,6 +1,8 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Clock } from "lucide-react";
 import { Sidebar } from "../components/Sidebar";
+import { useAppStore } from "../store/useAppStore";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { AddFoodDrawer } from "../components/AddFoodDrawer";
 import { FoodScanHistoryDrawer } from "../components/FoodScanHistoryDrawer";
@@ -39,15 +41,29 @@ export function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
   const titleKey = pageTitleKeys[location.pathname] ?? "home";
+  const setMentorHistoryOpen = useAppStore((s) => s.setMentorHistoryOpen);
+  const isMentorPage = location.pathname === "/ai";
 
   return (
     <div className="min-h-dvh bg-[#f7f5f2] lg:flex">
       <Sidebar />
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa]/90 px-4 py-3 backdrop-blur lg:hidden">
-          <h1 className="text-lg font-semibold text-ink">
-            {t(`nav.${titleKey}`)}
-          </h1>
+          <span className="flex items-center gap-1.5">
+            <h1 className="text-lg font-semibold text-ink">
+              {t(`nav.${titleKey}`)}
+            </h1>
+          </span>
+          {isMentorPage && (
+            <button
+              type="button"
+              onClick={() => setMentorHistoryOpen(true)}
+              aria-label={t("mentor.historyAria")}
+              className="grid h-7 w-7 place-items-center rounded-full text-ink/50 transition hover:bg-cream"
+            >
+              <Clock size={16} />
+            </button>
+          )}
         </header>
         <main className="p-3 pb-20 sm:p-4 sm:pb-20 lg:pb-5 xl:p-5">
           <Outlet />

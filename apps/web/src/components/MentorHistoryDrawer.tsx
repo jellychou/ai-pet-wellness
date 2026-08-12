@@ -108,7 +108,7 @@ export function MentorHistoryDrawer() {
                     <p className="mt-1 truncate text-sm text-ink/80">
                       {item.preview}
                     </p>
-                    <p className="mt-1 text-[11px] text-ink/40">
+                    <p className="mt-1 text-[12px] text-ink/40">
                       {t("mentor.historyMessageCount", {
                         count: item.message_count,
                       })}

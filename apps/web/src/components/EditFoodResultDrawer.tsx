@@ -228,7 +228,7 @@ export function EditFoodResultDrawer() {
             </div>
           </Field>
 
-          <p className="text-[11px] leading-5 text-ink/40">
+          <p className="text-[12px] leading-5 text-ink/40">
             食物類別與烹調方式只是方便你自己備註，不會影響 AI 辨識結果；
             食物名稱、估計份量與總熱量修改後會套用到這次的辨識結果與後續的
             飲食記錄——AI 是目測估重，覺得估太多或太少都可以在這裡校正。

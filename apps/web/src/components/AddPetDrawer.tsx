@@ -61,7 +61,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none"
+        className="w-full appearance-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[12px] text-ink outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -93,7 +93,7 @@ function ToggleGroup({
           key={o.label}
           type="button"
           onClick={() => onChange(o.value)}
-          className={`rounded-xl border py-2 text-[11px] font-medium transition ${
+          className={`rounded-xl border py-2 text-[12px] font-medium transition ${
             value === o.value
               ? "border-[#f0c9a0] bg-[#fbe9d9] text-[#c9784a]"
               : "border-[#ece4dc] bg-[#f7f4f0] text-ink/45"
@@ -277,7 +277,7 @@ export function AddPetDrawer() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
+    "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[12px] text-ink outline-none";
 
   return (
     <div
@@ -409,7 +409,7 @@ export function AddPetDrawer() {
                   placeholder={t("addPet.fieldWeightPlaceholder")}
                   className={`${inputClass} pr-9`}
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-ink/40">
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-ink/40">
                   kg
                 </span>
               </div>

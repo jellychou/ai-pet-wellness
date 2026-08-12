@@ -94,7 +94,7 @@ function ItemsTable({ items }: { items: FoodScanItem[] }) {
   if (items.length === 0) return null;
   return (
     <div className="overflow-hidden rounded-xl border border-[#eee5da]">
-      <table className="w-full text-left text-[11px]">
+      <table className="w-full text-left text-[12px]">
         <thead>
           <tr className="bg-[#f7f2ea] text-ink/50">
             <th className="px-2.5 py-2 font-medium">
@@ -186,7 +186,7 @@ function ResultCard({ result }: { result: FoodScanResult }) {
     <div className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-4 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
       <div className="flex items-start justify-between">
         <div className="text-xs text-ink/45">{t("food.aiResultLabel")}</div>
-        <span className="rounded-full bg-[#f1e6d8] px-2 py-0.5 text-[11px] font-medium text-ink/60">
+        <span className="rounded-full bg-[#f1e6d8] px-2 py-0.5 text-[12px] font-medium text-ink/60">
           {t("food.confidence", { value: result.confidence })}
         </span>
       </div>
@@ -204,7 +204,7 @@ function ResultCard({ result }: { result: FoodScanResult }) {
       )}
 
       {result.estimate_note && (
-        <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-4 text-ink/40">
+        <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-4 text-ink/40">
           <Info size={12} className="mt-0.5 shrink-0" />
           {result.estimate_note}
         </p>
@@ -1176,7 +1176,7 @@ export function AddFoodDrawer() {
                             <div className="truncate text-sm font-medium text-ink">
                               {item.food_name}
                             </div>
-                            <div className="mt-0.5 text-[11px] text-ink/45">
+                            <div className="mt-0.5 text-[12px] text-ink/45">
                               {t("food.historyItemMeta", {
                                 grams: item.portion_grams,
                                 calories: item.calories,
@@ -1314,7 +1314,7 @@ export function AddFoodDrawer() {
                     ))}
                   </div>
                   {hasItemsWithoutMacro && (
-                    <p className="mt-3 text-[11px] text-ink/35">
+                    <p className="mt-3 text-[12px] text-ink/35">
                       {t("food.macroDisclaimer")}
                     </p>
                   )}

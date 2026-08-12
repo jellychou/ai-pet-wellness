@@ -43,7 +43,7 @@ function formatDisplay(date: Date): string {
 }
 
 const defaultTriggerClass =
-  "flex w-full items-center justify-between rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none transition disabled:cursor-not-allowed disabled:opacity-60";
+  "flex w-full items-center justify-between rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[12px] text-ink outline-none transition disabled:cursor-not-allowed disabled:opacity-60";
 
 // 取代所有 <input type="date">：不同手機/瀏覽器原生日期選擇器的操作方式、
 // 外觀都不一樣（先前為了避免 iOS 自動 zoom 已經修過好幾次字級/邊框問題），

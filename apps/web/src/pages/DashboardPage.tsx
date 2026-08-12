@@ -90,7 +90,7 @@ function Metric({
 //               className={i === 2 ? "text-[#e78154]" : "text-[#8083c9]"}
 //             />
 //             <div className="min-w-0 flex-1">
-//               <div className="text-[11px] font-semibold">{v[0]}</div>
+//               <div className="text-[12px] font-semibold">{v[0]}</div>
 //               <div className="text-[9px] text-ink/45">{v[1]}</div>
 //               <div className="mt-1 text-[9px]">{v[2]}</div>
 //             </div>
@@ -288,17 +288,19 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
       </div>
       <div className="space-y-2">
         {loading ? (
-          <p className="py-6 text-center text-[11px] text-ink/40">
+          <p className="py-6 text-center text-[12px] text-ink/40">
             {t("dashboard.loading")}
           </p>
         ) : groups.length === 0 ? (
-          <p className="py-6 text-center text-[11px] text-ink/40">
+          <p className="py-6 text-center text-[12px] text-ink/40">
             {t("dashboard.noFoodRecordForDay")}
           </p>
         ) : (
           groups.map((g) => (
             <div key={g.value}>
-              <div className="mb-1 text-[9px] font-medium">{t(g.labelKey)}</div>
+              <div className="mb-1 text-[12px] font-medium">
+                {t(g.labelKey)}
+              </div>
               <div className="space-y-1.5">
                 {g.items.map((item) => (
                   <div
@@ -316,7 +318,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
                       <div className="text-[12px] font-medium">
                         {item.food_name}
                       </div>
-                      <div className="text-[9px] text-ink/45">
+                      <div className="text-[12px] text-ink/45">
                         {item.portion_grams} g / {Math.round(item.calories)}{" "}
                         kcal
                       </div>
@@ -329,7 +331,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
         )}
       </div>
       <div className="mt-3 rounded-xl bg-[#fbf7f1] p-3">
-        <div className="mb-1 flex items-center justify-between text-[9px] font-medium">
+        <div className="mb-1 flex items-center justify-between text-[12px] font-medium">
           <div>
             {t("dashboard.todayIntake")}
             {totalCalories > (dailyCalories ?? 0) && (
@@ -532,7 +534,7 @@ export function DashboardPage() {
               <div className="text-[12px] font-semibold">
                 {t("dashboard.todaySuggestionTitle")}
               </div>
-              <p className="mt-1 text-[9px] text-ink/55">
+              <p className="mt-1 text-[12px] text-ink/55">
                 {t("dashboard.todaySuggestionText")}
               </p>
             </div>
@@ -548,7 +550,7 @@ export function DashboardPage() {
             <div className="mb-2 text-[12px] font-semibold">
               {t("dashboard.nutrientTitle")}
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-[9px]">
+            <div className="grid grid-cols-3 gap-2 text-center text-[12px]">
               <div>
                 <div>{t("dashboard.protein")}</div>
                 <b className="text-xs">
@@ -606,7 +608,7 @@ export function DashboardPage() {
                   className="soft-card p-2 text-center hover:-translate-y-0.5"
                 >
                   <I size={17} className="mx-auto text-[#7591a2]" />
-                  <span className="mt-1 block text-[8px]">{label}</span>
+                  <span className="mt-1 block text-[12px]">{label}</span>
                 </button>
               ))}
             </div>

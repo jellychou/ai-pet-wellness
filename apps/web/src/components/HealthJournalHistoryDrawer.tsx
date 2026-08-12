@@ -104,7 +104,7 @@ export function HealthJournalHistoryDrawer() {
                       {formatDate(item.log_date, weekdays)}
                     </span>
                     <span
-                      className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                      className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
                       style={{
                         color: RISK_COLOR[item.risk_level] ?? "#8a8a8a",
                         backgroundColor: `${RISK_COLOR[item.risk_level] ?? "#8a8a8a"}1a`,
@@ -124,7 +124,7 @@ export function HealthJournalHistoryDrawer() {
                         /100
                       </span>
                     </span>
-                    <span className="text-[11px] text-ink/40">
+                    <span className="text-[12px] text-ink/40">
                       {t("healthJournal.fieldAppetite")}{" "}
                       {t(`healthJournal.option.${item.appetite}`, {
                         defaultValue: item.appetite,
@@ -140,7 +140,7 @@ export function HealthJournalHistoryDrawer() {
                     </span>
                   </div>
                   {item.summary_points.length > 0 && (
-                    <p className="mt-1.5 truncate text-[11px] text-ink/50">
+                    <p className="mt-1.5 truncate text-[12px] text-ink/50">
                       {item.summary_points[0]}
                     </p>
                   )}

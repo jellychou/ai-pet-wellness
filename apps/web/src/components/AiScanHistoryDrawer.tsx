@@ -1,27 +1,9 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, CalendarCheck } from "lucide-react";
+import { ArrowLeft, CalendarCheck, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useAppStore } from "../store/useAppStore";
+import { useAppStore, type AiScanHistoryItem } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { apiFetch } from "../lib/api";
-
-type AiScanFinding = {
-  condition: string;
-  confidence: number;
-  description: string;
-};
-
-type AiScanHistoryItem = {
-  id: number;
-  pet_id: number;
-  image_url: string;
-  body_part: string | null;
-  summary: string;
-  findings: AiScanFinding[] | null;
-  suggestions: string[] | null;
-  created_at: string;
-  added_to_timeline: boolean;
-};
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -39,6 +21,7 @@ export function AiScanHistoryDrawer() {
   const { t } = useTranslation();
   const open = useAppStore((s) => s.aiScanHistoryOpen);
   const setOpen = useAppStore((s) => s.setAiScanHistoryOpen);
+  const setDetailItem = useAppStore((s) => s.setAiScanHistoryDetailItem);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const [items, setItems] = useState<AiScanHistoryItem[]>([]);
 
@@ -86,9 +69,11 @@ export function AiScanHistoryDrawer() {
           ) : (
             <div className="space-y-3">
               {items.map((item) => (
-                <div
+                <button
                   key={item.id}
-                  className="flex gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-3"
+                  type="button"
+                  onClick={() => setDetailItem(item)}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa] p-3 text-left transition hover:bg-[#fbf7f1]"
                 >
                   <img
                     src={item.image_url}
@@ -110,34 +95,12 @@ export function AiScanHistoryDrawer() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-ink/80">{item.summary}</p>
-                    {item.findings && item.findings.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {item.findings.map((f) => (
-                          <span
-                            key={f.condition}
-                            className="rounded-full bg-[#eef4f6] px-2 py-0.5 text-[10px] font-medium text-[#688696]"
-                          >
-                            {f.condition} {f.confidence}%
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {item.suggestions && item.suggestions.length > 0 && (
-                      <ul className="mt-1.5 space-y-0.5">
-                        {item.suggestions.map((s, i) => (
-                          <li
-                            key={i}
-                            className="flex gap-1 text-[11px] text-ink/45"
-                          >
-                            <span className="text-mist">•</span>
-                            {s}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <p className="mt-1 truncate text-sm text-ink/80">
+                      {item.summary}
+                    </p>
                   </div>
-                </div>
+                  <ChevronRight size={16} className="shrink-0 text-ink/30" />
+                </button>
               ))}
             </div>
           )}

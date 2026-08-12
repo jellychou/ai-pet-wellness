@@ -53,7 +53,7 @@ function Stepper({ step }: { step: 1 | 2 }) {
               {item.n}
             </div>
             <span
-              className={`text-[11px] ${
+              className={`text-[12px] ${
                 item.n === step ? "font-medium text-ink/80" : "text-ink/40"
               }`}
             >
@@ -288,7 +288,7 @@ export function AddVaccineFormDrawer() {
           {targetPet?.name ?? t("vaccine.selectPetFallback")}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
-        <div className="truncate text-[11px] text-ink/45">
+        <div className="truncate text-[12px] text-ink/45">
           {targetPet?.birthday &&
             t("vaccine.petAgePrefix", {
               age: calculateAge(targetPet.birthday),

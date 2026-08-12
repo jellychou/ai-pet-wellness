@@ -413,6 +413,7 @@ export const zhTW = {
     addFailed: "記錄飲水量失敗，請稍後再試",
   },
   settings: {
+    requiredFieldsEmpty: "請完整填寫所有欄位",
     userAvatarAlt: "使用者頭像",
     sectionOwnerInfo: "飼主資訊",
     fieldName: "姓名",
@@ -756,6 +757,8 @@ export const zhTW = {
     historyEmptyState: "{{name}} 還沒有 AI 診斷記錄",
     historyPhotoAlt: "診斷照片",
     historyAddedToTimelineBadge: "已加入時間軸",
+    detailBackAria: "返回 AI 診斷記錄",
+    detailTitle: "診斷詳情",
   },
   imageCrop: {
     title: "裁切圖片",

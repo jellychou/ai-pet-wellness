@@ -88,6 +88,27 @@ export type AiScanReferenceForMentor = {
   petId: number;
 };
 
+// AiScanHistoryDrawer 列表項目的完整形狀，對應 /ai-scan/history/{pet_id}
+// 回傳的單筆紀錄——列表本身只顯示部分資料（照片/日期/摘要），點下去才用
+// aiScanHistoryDetailItem 帶去 AiScanHistoryDetailDrawer 看完整內容
+export type AiScanFinding = {
+  condition: string;
+  confidence: number;
+  description: string;
+};
+
+export type AiScanHistoryItem = {
+  id: number;
+  pet_id: number;
+  image_url: string;
+  body_part: string | null;
+  summary: string;
+  findings: AiScanFinding[] | null;
+  suggestions: string[] | null;
+  created_at: string;
+  added_to_timeline: boolean;
+};
+
 type AppState = {
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
@@ -145,6 +166,11 @@ type AppState = {
   // EditHealthDrawer 上面是同一個模式，各自獨立開關
   aiScanHistoryOpen: boolean;
   setAiScanHistoryOpen: (v: boolean) => void;
+  // 疊在 AiScanHistoryDrawer 上面的第三層 drawer，點列表某一筆卡片才開——
+  // 存整筆資料，理由跟 healthDetailRecord/healthJournalDetailItem 一樣：
+  // 列表 API 已經回傳完整欄位，不用再開一支「用 id 查單筆」的 API
+  aiScanHistoryDetailItem: AiScanHistoryItem | null;
+  setAiScanHistoryDetailItem: (v: AiScanHistoryItem | null) => void;
   // AiScanDrawer 按「詢問 AI 心靈導師」時把這次分析結果存進來，帶去 /ai
   // 頁面顯示「已引用今日影像分析」——AICenterPage 讀到之後就會清掉，
   // 只消費一次，不是永久跟著使用者的全域狀態
@@ -275,6 +301,9 @@ export const useAppStore = create<AppState>((set) => ({
   setAiScanOpen: (aiScanOpen) => set({ aiScanOpen }),
   aiScanHistoryOpen: false,
   setAiScanHistoryOpen: (aiScanHistoryOpen) => set({ aiScanHistoryOpen }),
+  aiScanHistoryDetailItem: null,
+  setAiScanHistoryDetailItem: (aiScanHistoryDetailItem) =>
+    set({ aiScanHistoryDetailItem }),
   aiScanReferenceForMentor: null,
   setAiScanReferenceForMentor: (aiScanReferenceForMentor) =>
     set({ aiScanReferenceForMentor }),

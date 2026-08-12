@@ -171,7 +171,7 @@ export function LoginPage() {
                   <Mail size={16} />
                 </span>
                 <span className="flex-1">
-                  <span className="block text-[11px] text-ink/45">
+                  <span className="block text-[12px] text-ink/45">
                     {t("login.email")}
                   </span>
                   <input
@@ -191,7 +191,7 @@ export function LoginPage() {
                   <Lock size={16} />
                 </span>
                 <span className="flex-1">
-                  <span className="block text-[11px] text-ink/45">
+                  <span className="block text-[12px] text-ink/45">
                     {t("login.password")}
                   </span>
                   <input

@@ -81,7 +81,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
               {item.n}
             </div>
             <span
-              className={`text-[11px] ${
+              className={`text-[12px] ${
                 item.n === step ? "font-medium text-ink/80" : "text-ink/40"
               }`}
             >
@@ -373,7 +373,7 @@ export function AddPendingVaccineDrawer() {
           {targetPet?.name ?? t("vaccine.selectPetFallback")}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
-        <div className="truncate text-[11px] text-ink/45">
+        <div className="truncate text-[12px] text-ink/45">
           {targetPet?.birthday &&
             t("vaccine.petAgePrefix", {
               age: calculateAge(targetPet.birthday),
@@ -445,7 +445,7 @@ export function AddPendingVaccineDrawer() {
                   {t("vaccine.pendingInfoTitle")}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] leading-5 text-ink/70">
+                  <p className="text-[12px] leading-5 text-ink/70">
                     {t("vaccine.pendingInfoBody")}
                   </p>
                   <span className="shrink-0 text-3xl">🐶</span>
@@ -515,7 +515,7 @@ export function AddPendingVaccineDrawer() {
                   {t("vaccine.scheduleReminderTitle")}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] leading-5 text-ink/70">
+                  <p className="text-[12px] leading-5 text-ink/70">
                     {t("vaccine.scheduleReminderBody")}
                   </p>
                   <span className="shrink-0 text-3xl">📅🔔</span>

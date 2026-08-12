@@ -125,12 +125,12 @@ export function FoodScanHistoryDrawer() {
                           <p className="text-sm font-medium text-ink/80">
                             {item.food_name}
                           </p>
-                          <span className="shrink-0 text-[11px] font-medium text-ink/60">
+                          <span className="shrink-0 text-[12px] font-medium text-ink/60">
                             {item.calories} kcal
                           </span>
                         </div>
                         {item.items.length > 0 && (
-                          <p className="mt-0.5 truncate text-[11px] text-ink/40">
+                          <p className="mt-0.5 truncate text-[12px] text-ink/40">
                             {item.items
                               .filter((entry) => entry.included)
                               .map((entry) => entry.name)
@@ -138,12 +138,12 @@ export function FoodScanHistoryDrawer() {
                           </p>
                         )}
                         {item.user_note && (
-                          <p className="mt-0.5 truncate text-[11px] text-ink/35">
+                          <p className="mt-0.5 truncate text-[12px] text-ink/35">
                             {t("food.userNotePrefix", { note: item.user_note })}
                           </p>
                         )}
                         {(item.calories_low > 0 || item.calories_high > 0) && (
-                          <p className="mt-0.5 text-[11px] text-ink/35">
+                          <p className="mt-0.5 text-[12px] text-ink/35">
                             {t("food.approxRange", {
                               grams: item.estimated_grams,
                               low: item.calories_low,

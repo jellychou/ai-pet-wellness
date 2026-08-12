@@ -42,7 +42,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
               {item.n < step ? <Check size={14} /> : item.n}
             </div>
             <span
-              className={`text-[11px] ${
+              className={`text-[12px] ${
                 item.n === step ? "font-medium text-ink/80" : "text-ink/40"
               }`}
             >
@@ -376,7 +376,13 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                   <DatePickerField
                     value={birthday}
                     onChange={setBirthday}
-                    className={`${inputWrapClass} justify-between`}
+                    // 其他欄位是「外層 inputWrapClass（邊框/padding）＋內層
+                    // <input className={inputClass}>（text-sm）」兩層結構，
+                    // 字級是內層那個 input 給的。DatePickerField 只有單層
+                    // button，只套 inputWrapClass 的話文字會落回瀏覽器預設
+                    // 字級（比 text-sm 大），連帶讓按鈕比旁邊欄位高一截，
+                    // 這裡要另外補上 text-sm 才會跟其他欄位同樣高
+                    className={`${inputWrapClass} justify-between text-sm`}
                     fromYear={1930}
                     toYear={new Date().getFullYear()}
                   />

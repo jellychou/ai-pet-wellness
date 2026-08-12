@@ -247,7 +247,7 @@ export function TimelineDrawer() {
                 {weekdays[selectedDate.getDay()]}）
               </strong>
               {isToday && (
-                <span className="rounded-full bg-[#f1e6d8] px-2 py-0.5 text-[11px] font-medium text-[#b98a5c]">
+                <span className="rounded-full bg-[#f1e6d8] px-2 py-0.5 text-[12px] font-medium text-[#b98a5c]">
                   {t("timeline.todayPill")}
                 </span>
               )}
@@ -292,7 +292,7 @@ export function TimelineDrawer() {
                           {item.title}
                         </span>
                         {item.time && (
-                          <span className="shrink-0 text-[11px] text-ink/35">
+                          <span className="shrink-0 text-[12px] text-ink/35">
                             {item.time}
                           </span>
                         )}

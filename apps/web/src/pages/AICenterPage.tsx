@@ -280,7 +280,7 @@ export function AICenterPage() {
           欄寬對齊 */}
       <div className="fixed inset-x-0 top-14 z-20 px-3 sm:px-3 lg:left-[250px] lg:top-4 xl:px-5">
         {usage && (
-          <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[11px] font-medium text-[#688696]">
+          <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[12px] font-medium text-[#688696]">
             {usage.unlimited
               ? t("mentor.usageUnlimited", { used: usage.used })
               : t("mentor.usageLimited", {

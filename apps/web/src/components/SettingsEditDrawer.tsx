@@ -62,7 +62,7 @@ function ToggleGroup({
           key={o.label}
           type="button"
           onClick={() => onChange(o.value)}
-          className={`rounded-xl border py-2 text-[11px] font-medium transition ${
+          className={`rounded-xl border py-2 text-[12px] font-medium transition ${
             value === o.value
               ? "border-[#f0c9a0] bg-[#fbe9d9] text-[#c9784a]"
               : "border-[#ece4dc] bg-[#f7f4f0] text-ink/45"
@@ -163,6 +163,10 @@ export function SettingsEditDrawer() {
   }
 
   async function handleSave() {
+    if (!name || !phone || !birthday || !gender || !email || !slogan) {
+      showError(t("settings.requiredFieldsEmpty"));
+      return;
+    }
     try {
       await apiFetch<{ message: string }>("/user/update-user-info", {
         method: "PUT",
@@ -201,7 +205,7 @@ export function SettingsEditDrawer() {
   }, [open, userInfo]);
 
   const inputClass =
-    "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
+    "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[12px] text-ink outline-none";
 
   return (
     <div

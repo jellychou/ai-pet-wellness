@@ -37,6 +37,29 @@ export type VaccineRecord = {
   status: string | "all" | "1" | "0";
 };
 
+// RecordsPage 健康日誌列表 + 點擊後開啟的詳情 drawer 共用的資料形狀，
+// 對應 /health-journal/history/{pet_id} 回傳的單筆日誌
+export type HealthJournalHistoryItem = {
+  id: number;
+  pet_id: number;
+  log_date: string;
+  appetite: string;
+  energy: string;
+  activity_level: string;
+  bowel_movement: string;
+  vomiting: string;
+  other_symptoms: string[];
+  diary_text: string | null;
+  photo_urls: string[];
+  tags: string[];
+  health_score: number;
+  risk_level: string;
+  summary_points: string[];
+  recommendations: { maintain: string[]; watch: string[]; concern: string[] };
+  added_to_timeline: boolean;
+  created_at: string;
+};
+
 export type HealthRecord = {
   id: number;
   pet_id: number;

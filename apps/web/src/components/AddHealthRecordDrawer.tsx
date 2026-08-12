@@ -208,7 +208,7 @@ export function AddHealthRecordDrawer() {
           {targetPet?.name ?? t("vaccine.selectPetFallback")}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
-        <div className="truncate text-[11px] text-ink/45">
+        <div className="truncate text-[12px] text-ink/45">
           {targetPet?.birthday &&
             t("vaccine.petAgePrefix", {
               age: calculateAge(targetPet.birthday),
@@ -316,7 +316,7 @@ export function AddHealthRecordDrawer() {
                         )}
                       </span>
                       <span
-                        className={`text-[11px] font-medium ${
+                        className={`text-[12px] font-medium ${
                           selected ? "text-[#c9784a]" : "text-ink/60"
                         }`}
                       >

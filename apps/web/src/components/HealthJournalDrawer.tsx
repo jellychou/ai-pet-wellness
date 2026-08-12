@@ -416,7 +416,7 @@ export function HealthJournalDrawer() {
       />
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold text-ink">{selectedPet.name}</div>
-        <div className="truncate text-[11px] text-ink/45">
+        <div className="truncate text-[12px] text-ink/45">
           {t("healthJournal.petMeta", {
             breed: selectedPet.breed,
             age: calculateAge(selectedPet.birthday),
@@ -764,7 +764,7 @@ export function HealthJournalDrawer() {
                         {mood.emoji} {t(mood.key)}
                       </div>
                       {result.score_delta !== null && (
-                        <div className="mt-0.5 text-[11px] text-ink/45">
+                        <div className="mt-0.5 text-[12px] text-ink/45">
                           {result.score_delta >= 0
                             ? t("healthJournal.scoreDeltaUp", {
                                 delta: result.score_delta,
@@ -801,7 +801,7 @@ export function HealthJournalDrawer() {
                           level: t(`healthJournal.risk.${result.risk_level}`),
                         })}
                       </div>
-                      <div className="mt-0.5 text-[11px] text-ink/45">
+                      <div className="mt-0.5 text-[12px] text-ink/45">
                         {t(`healthJournal.riskNote.${result.risk_level}`)}
                       </div>
                     </div>
@@ -890,7 +890,7 @@ export function HealthJournalDrawer() {
                 </div>
               </div>
 
-              <p className="text-center text-[11px] text-ink/35">
+              <p className="text-center text-[12px] text-ink/35">
                 {result.disclaimer}
               </p>
             </div>

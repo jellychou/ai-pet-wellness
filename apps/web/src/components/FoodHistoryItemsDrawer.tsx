@@ -139,7 +139,7 @@ export function FoodHistoryItemsDrawer() {
                     <div className="truncate text-sm font-medium text-ink">
                       {item.food_name}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-ink/45">
+                    <div className="mt-0.5 text-[12px] text-ink/45">
                       上次約 {item.portion_grams}g / {item.calories} kcal · 吃過{" "}
                       {item.times_used} 次
                     </div>

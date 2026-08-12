@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
@@ -195,6 +200,7 @@ export function RecordsPage() {
         </p>
       )}
 
+      {/* 每一篇日誌直接把完整內容顯示在列表上，不用再點進去看詳情 */}
       <div className="space-y-3">
         {itemsForDate.map((item) => (
           <div
@@ -209,7 +215,7 @@ export function RecordsPage() {
                 </span>
               </span>
               <span
-                className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
                 style={{
                   color: RISK_COLOR[item.risk_level] ?? "#8a8a8a",
                   backgroundColor: `${RISK_COLOR[item.risk_level] ?? "#8a8a8a"}1a`,
@@ -240,7 +246,7 @@ export function RecordsPage() {
                   className="rounded-lg bg-cream/60 px-1 py-1.5 text-center"
                 >
                   <div className="text-[9px] text-ink/40">{label}</div>
-                  <div className="mt-0.5 text-[11px] font-medium text-ink/75">
+                  <div className="mt-0.5 text-[12px] font-medium text-ink/75">
                     {t(`healthJournal.option.${value}`, {
                       defaultValue: value,
                     })}

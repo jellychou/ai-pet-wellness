@@ -75,7 +75,8 @@ export const en = {
     loggingIn: "Signing in…",
     noAccount: "Don't have an account?",
     signUp: "Sign up",
-    serverError: "Unable to reach the server, please check the backend is running",
+    serverError:
+      "Unable to reach the server, please check the backend is running",
     showPasswordAria: "Show password",
     hidePasswordAria: "Hide password",
   },
@@ -107,8 +108,7 @@ export const en = {
     qaCheckup: "Health Check",
     qaJournal: "Health Journal",
     qaTimeline: "Health Timeline",
-    footerTagline:
-      "🐾 Pet・Wellness — caring for your pet, and for you ♡",
+    footerTagline: "🐾 Pet・Wellness — caring for your pet, and for you ♡",
     ageWeight: "{{age}} yrs / {{weight}} kg",
     foodRecordTitle: "Food Record",
     prevDay: "Previous day",
@@ -251,7 +251,8 @@ export const en = {
     historyInProgressBadge: "In progress",
     historyMessageCount: "{{count}} messages",
     historyDetailTitle: "Conversation",
-    historyDetailLoadFailed: "Failed to load conversation, please try again later",
+    historyDetailLoadFailed:
+      "Failed to load conversation, please try again later",
   },
   pets: {
     addAria: "Add pet",
@@ -423,6 +424,7 @@ export const en = {
     addFailed: "Failed to log water intake, please try again later",
   },
   settings: {
+    requiredFieldsEmpty: "Please fill in all fields",
     userAvatarAlt: "User avatar",
     sectionOwnerInfo: "Owner Info",
     fieldName: "Name",
@@ -649,7 +651,8 @@ export const en = {
     batchNumberPendingPlaceholder: "Add this later if not available yet",
     hospitalPlaceholder: "Enter the animal hospital name",
     vetPlaceholder: "Enter the vet's name",
-    notePlaceholderDone: "You can note how your pet reacted or anything to watch for...",
+    notePlaceholderDone:
+      "You can note how your pet reacted or anything to watch for...",
     notePlaceholderPending: "You can note anything about this vaccine...",
     locationHospital: "Animal Hospital",
     locationHome: "Self-administered (elsewhere)",
@@ -743,8 +746,7 @@ export const en = {
     },
     bodyPartLabel: "Select the area to analyze (optional)",
     descriptionLabel: "Additional notes (optional)",
-    descriptionPlaceholder:
-      "E.g. Keeps licking its paw, skin looks a bit red…",
+    descriptionPlaceholder: "E.g. Keeps licking its paw, skin looks a bit red…",
     resultTitle: "AI Diagnosis Result",
     noAbnormalFound: "No obvious abnormalities observed.",
     suggestionsTitle: "Suggestions",
@@ -771,6 +773,8 @@ export const en = {
     historyEmptyState: "{{name}} doesn't have any AI diagnosis records yet",
     historyPhotoAlt: "Diagnosis photo",
     historyAddedToTimelineBadge: "Added to timeline",
+    detailBackAria: "Back to AI Diagnosis History",
+    detailTitle: "Diagnosis Detail",
   },
   imageCrop: {
     title: "Crop Image",

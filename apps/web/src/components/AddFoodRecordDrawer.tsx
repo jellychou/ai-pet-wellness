@@ -181,7 +181,7 @@ export function AddFoodRecordDrawer() {
           {targetPet?.name ?? "選擇寵物"}
           <ChevronDown size={14} className="text-ink/40" />
         </button>
-        <div className="truncate text-[11px] text-ink/45">
+        <div className="truncate text-[12px] text-ink/45">
           {targetPet?.birthday && `${calculateAge(targetPet.birthday)}歲 · `}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>

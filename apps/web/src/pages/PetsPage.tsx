@@ -123,7 +123,7 @@ function PetAvatarSwitcher({
             />
           </span>
           <span
-            className={`text-[11px] ${
+            className={`text-[12px] ${
               selected === pet.id
                 ? "font-semibold text-[#8ca4b3]"
                 : "text-ink/50"
@@ -142,7 +142,7 @@ function PetAvatarSwitcher({
         <span className="grid h-14 w-14 place-items-center rounded-full bg-[#fbe9d9] text-[#c9784a] transition hover:bg-[#f6ddc2]">
           <Plus size={22} />
         </span>
-        <span className="text-[11px] text-ink/50">{t("pets.add")}</span>
+        <span className="text-[12px] text-ink/50">{t("pets.add")}</span>
       </button>
     </div>
   );

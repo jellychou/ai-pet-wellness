@@ -131,9 +131,7 @@ export function AddPetPage() {
   // 選好照片先不急著上傳，開一個裁切畫面讓使用者調整成正方形頭像——
   // pendingAvatarFile 留著原始檔案，讓「使用原圖」可以跳過裁切直接上傳
   const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
-    null,
-  );
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -180,7 +178,7 @@ export function AddPetPage() {
     }
     setError("");
     try {
-      await apiFetch("/pet/add-pet", {
+      const res = await apiFetch("/pet/add-pet", {
         method: "POST",
         body: JSON.stringify({
           name,
@@ -198,15 +196,18 @@ export function AddPetPage() {
           avatar: avatarSrc,
         }),
       });
-      fetchAllPetsList();
-      navigate("/", { replace: true });
+      if (res) {
+        fetchAllPetsList();
+        navigate("/", { replace: true });
+      }
     } catch (error) {
       console.error(error);
+      showError(t("addPet.submitFailed"));
     }
   }
 
   function fetchAllPetsList() {
-    apiFetch("/pet/get-all-pets", {
+    apiFetch("/pet/get-pets", {
       method: "GET",
     }).then((res) => {
       setAllPetsList(res as Pet[]);
@@ -360,7 +361,11 @@ export function AddPetPage() {
             </Field>
 
             <Field label={t("pets.fieldAllergy")}>
-              <Select value={allergy} onChange={setAllergy} options={allergyList} />
+              <Select
+                value={allergy}
+                onChange={setAllergy}
+                options={allergyList}
+              />
             </Field>
 
             <Field label={t("pets.fieldActivity")}>

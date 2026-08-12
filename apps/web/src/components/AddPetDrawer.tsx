@@ -224,7 +224,7 @@ export function AddPetDrawer() {
       return;
     }
     setError("");
-    await apiFetch("/pet/add-pet", {
+    const res = await apiFetch("/pet/add-pet", {
       method: "POST",
       body: JSON.stringify({
         name,
@@ -242,13 +242,15 @@ export function AddPetDrawer() {
         avatar: avatarSrc,
       }),
     });
-    resetForm();
-    fetchAllPetsList();
-    setOpen(false);
+    if (res) {
+      resetForm();
+      fetchAllPetsList();
+      setOpen(false);
+    }
   }
 
   function fetchAllPetsList() {
-    apiFetch("/pet/get-all-pets", {
+    apiFetch("/pet/get-pets", {
       method: "GET",
     }).then((res) => {
       setAllPetsList(res as Pet[]);
@@ -425,7 +427,11 @@ export function AddPetDrawer() {
             </Field>
 
             <Field label={t("pets.fieldAllergy")}>
-              <Select value={allergy} onChange={setAllergy} options={allergyList} />
+              <Select
+                value={allergy}
+                onChange={setAllergy}
+                options={allergyList}
+              />
             </Field>
 
             <Field label={t("pets.fieldActivity")}>

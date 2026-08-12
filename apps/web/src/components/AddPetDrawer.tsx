@@ -18,6 +18,7 @@ import { useAlert } from "../hooks/useAlert";
 import { usePetStore } from "../store/usePetStore";
 import { Pet } from "../data/pets";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
+import { breedList, allergyList, activityList } from "../data/pets";
 
 function Field({
   label,
@@ -45,7 +46,13 @@ function Select({
 }: {
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: {
+    zh: string;
+    en: string;
+    group?: string;
+    value?: string;
+    label?: string;
+  }[];
 }) {
   return (
     <div className="relative">
@@ -55,8 +62,8 @@ function Select({
         className="w-full appearance-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none"
       >
         {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+          <option key={o.value} value={o.value}>
+            {o.zh}
           </option>
         ))}
       </select>
@@ -106,8 +113,10 @@ const initialState = {
   weight: "",
   coatColor: "",
   neutered: "0",
-  allergy: "無",
-  activity: "中等",
+  // 跟 EditPetDrawer 一樣存 allergyList/activityList 的 value 代碼
+  // （"0"="無過敏"、"2"="中等活動量"），不是存中文標籤本身
+  allergy: "0",
+  activity: "2",
   chipNumber: "",
   note: "",
 };
@@ -139,9 +148,7 @@ export function AddPetDrawer() {
   // 選好照片先不急著上傳，開一個裁切畫面讓使用者調整成正方形頭像——
   // pendingAvatarFile 留著原始檔案，讓「使用原圖」可以跳過裁切直接上傳
   const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
-    null,
-  );
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
   function resetForm() {
     setName(initialState.name);
@@ -346,11 +353,10 @@ export function AddPetDrawer() {
             </Field>
 
             <Field label={t("pets.fieldBreed")} required>
-              <input
+              <Select
                 value={breed}
-                onChange={(e) => setBreed(e.target.value)}
-                placeholder={t("addPet.fieldBreedPlaceholder")}
-                className={inputClass}
+                onChange={(value) => setBreed(value)}
+                options={breedList}
               />
             </Field>
 
@@ -419,23 +425,14 @@ export function AddPetDrawer() {
             </Field>
 
             <Field label={t("pets.fieldAllergy")}>
-              <input
-                value={allergy}
-                onChange={(e) => setAllergy(e.target.value)}
-                placeholder={t("addPet.fieldAllergyPlaceholder")}
-                className={inputClass}
-              />
+              <Select value={allergy} onChange={setAllergy} options={allergyList} />
             </Field>
 
             <Field label={t("pets.fieldActivity")}>
               <Select
                 value={activity}
                 onChange={setActivity}
-                options={[
-                  "低(很少，偶而散步)",
-                  "中等(偶爾跑跳)",
-                  "高(經常運動)",
-                ]}
+                options={activityList}
               />
             </Field>
           </div>

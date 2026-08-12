@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "../lib/api";
 import { usePetStore } from "../store/usePetStore";
-import { Pet } from "../data/pets";
+import { Pet, breedList, allergyList, activityList } from "../data/pets";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { ImageCropModal } from "../components/ImageCropModal";
 import { useAlert } from "../hooks/useAlert";
@@ -45,7 +45,13 @@ function Select({
 }: {
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: {
+    zh: string;
+    en: string;
+    group?: string;
+    value?: string;
+    label?: string;
+  }[];
 }) {
   return (
     <div className="relative">
@@ -55,8 +61,8 @@ function Select({
         className="w-full appearance-none rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none"
       >
         {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+          <option key={o.value} value={o.value}>
+            {o.zh}
           </option>
         ))}
       </select>
@@ -104,14 +110,17 @@ export function AddPetPage() {
   const tips = [t("addPet.tip1"), t("addPet.tip2"), t("addPet.tip3")];
 
   const [name, setName] = useState("");
+  const [species, setSpecies] = useState("dog");
   const [breed, setBreed] = useState("");
   const [gender, setGender] = useState("Female");
   const [birthday, setBirthday] = useState("");
   const [weight, setWeight] = useState("");
   const [coatColor, setCoatColor] = useState("");
-  const [neutered, setNeutered] = useState("已絕育");
-  const [allergy, setAllergy] = useState("無");
-  const [activity, setActivity] = useState("中等");
+  // 跟 EditPetDrawer 一樣存 ToggleGroup/allergyList/activityList 的 value
+  // 代碼（"0"="未絕育"／"無過敏"、"2"="中等活動量"），不是存中文標籤本身
+  const [neutered, setNeutered] = useState("0");
+  const [allergy, setAllergy] = useState("0");
+  const [activity, setActivity] = useState("2");
   const [chipNumber, setChipNumber] = useState("");
   const [note, setNote] = useState("");
   const [avatarSrc, setAvatarSrc] = useState(defaultPetAvatar);
@@ -175,6 +184,7 @@ export function AddPetPage() {
         method: "POST",
         body: JSON.stringify({
           name,
+          species,
           breed,
           gender,
           birthday,
@@ -270,13 +280,19 @@ export function AddPetPage() {
               />
             </Field>
 
-            <Field label={t("pets.fieldBreed")} required>
-              <input
-                value={breed}
-                onChange={(e) => setBreed(e.target.value)}
-                placeholder={t("addPet.fieldBreedPlaceholder")}
-                className={inputClass}
+            <Field label={t("pets.fieldSpecies")} required>
+              <ToggleGroup
+                value={species}
+                onChange={setSpecies}
+                options={[
+                  { label: t("pets.speciesDog"), icon: "🐶", value: "dog" },
+                  { label: t("pets.speciesCat"), icon: "🐱", value: "cat" },
+                ]}
               />
+            </Field>
+
+            <Field label={t("pets.fieldBreed")} required>
+              <Select value={breed} onChange={setBreed} options={breedList} />
             </Field>
 
             <Field label={t("pets.fieldGender")} required>
@@ -344,23 +360,14 @@ export function AddPetPage() {
             </Field>
 
             <Field label={t("pets.fieldAllergy")}>
-              <input
-                value={allergy}
-                onChange={(e) => setAllergy(e.target.value)}
-                placeholder={t("addPet.fieldAllergyPlaceholder")}
-                className={inputClass}
-              />
+              <Select value={allergy} onChange={setAllergy} options={allergyList} />
             </Field>
 
             <Field label={t("pets.fieldActivity")}>
               <Select
                 value={activity}
                 onChange={setActivity}
-                options={[
-                  "低(很少，偶而散步)",
-                  "中等(偶爾跑跳)",
-                  "高(經常運動)",
-                ]}
+                options={activityList}
               />
             </Field>
           </div>

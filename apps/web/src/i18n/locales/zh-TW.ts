@@ -393,6 +393,7 @@ export const zhTW = {
     addItemsButton: "加入 {{count}} 項",
     selectItemsFirst: "請先選擇食材",
     nextToPortions: "下一步：調整份量",
+    cancelRecognition: "上一步：取消辨識",
     calcTotalCalories: "計算總熱量",
     saveRecord: "儲存記錄",
     totalCaloriesLabel: "總熱量",

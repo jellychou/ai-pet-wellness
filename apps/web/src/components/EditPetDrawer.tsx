@@ -439,7 +439,14 @@ export function EditPetDrawer() {
                   type="date"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
-                  className={`${inputClass} pr-9 [color-scheme:light]`}
+                  // 手機版原生日期選擇器：字級一定要 >=16px，不然 iOS Safari
+                  // 會判定「使用者可能看不清楚」自動把整個頁面 zoom-in 對準
+                  // 這個欄位，畫面上就會看起來像這個欄位「超出去」；用 inline
+                  // style 蓋掉 inputClass 的 text-[11px]，比疊 Tailwind class
+                  // 保險（同層級 utility class 疊加，最後生效的由 Tailwind
+                  // 產出的 CSS 順序決定，不一定是 text-[11px] 會輸）
+                  style={{ fontSize: 16 }}
+                  className={`${inputClass} [color-scheme:light]`}
                 />
               </div>
             </Field>

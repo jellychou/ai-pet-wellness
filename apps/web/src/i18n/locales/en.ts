@@ -403,6 +403,7 @@ export const en = {
     addItemsButton: "Add {{count}} item(s)",
     selectItemsFirst: "Please select items first",
     nextToPortions: "Next: Adjust Portions",
+    cancelRecognition: "Back: Cancel Recognition",
     calcTotalCalories: "Calculate Total Calories",
     saveRecord: "Save Record",
     totalCaloriesLabel: "Total Calories",

@@ -76,6 +76,9 @@ export function AddHealthRecordDrawer() {
   const { t } = useTranslation();
   const open = useAppStore((s) => s.addHealthRecordOpen);
   const setOpen = useAppStore((s) => s.setAddHealthRecordOpen);
+  const bumpHealthRecordRefreshKey = useAppStore(
+    (s) => s.bumpHealthRecordRefreshKey,
+  );
   const navigate = useNavigate();
   const pets = usePetStore((s) => s.pets);
   const selectedPet = usePetStore((s) => s.selectedPet);
@@ -172,6 +175,10 @@ export function AddHealthRecordDrawer() {
         }),
       });
       showSuccess(t("health.addSuccess"));
+      // 跟 vaccineRefreshKey/foodRecordRefreshKey 同樣的道理：EditHealthDrawer
+      // 只在自己 mount/切換寵物時打一次 API 抓列表，這裡新增成功關掉不會
+      // 觸發它重新 mount，所以要手動 +1 讓列表重新抓一次
+      bumpHealthRecordRefreshKey();
       handleBack();
     } catch (error) {
       console.error(error);

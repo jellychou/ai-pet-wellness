@@ -553,7 +553,9 @@ export function AddFoodDrawer() {
       return;
     }
     if (step === "results") {
-      setStep("collect");
+      // 跟下面「上一步：取消辨識」按鈕同一個行為——不是切回上一個畫面
+      // （collect），是整個放棄這輪辨識結果，回到最初的選擇畫面
+      handleCancelRecognition();
       return;
     }
     if (step === "portions") {
@@ -748,6 +750,16 @@ export function AddFoodDrawer() {
   function handleAddMore() {
     setPendingPhotos([]);
     setStep("collect");
+  }
+
+  // 「上一步：取消辨識」——不是單純切回上一個畫面（那是 handleBack 的
+  // collect），是整個放棄這輪辨識結果，回到最初的「新增飲食記錄」選擇畫面，
+  // 所以要把已經辨識出來的 draftItems 也一起清掉，不然使用者以為取消了，
+  // 其實這幾筆還留在暫存清單裡
+  function handleCancelRecognition() {
+    clearFoodDraftItems();
+    setPendingPhotos([]);
+    setStep("choose");
   }
 
   function handleGoToPortions() {
@@ -1405,14 +1417,16 @@ export function AddFoodDrawer() {
             ))}
 
           {step === "results" && (
-            <button
-              type="button"
-              onClick={handleGoToPortions}
-              disabled={draftItems.length === 0}
-              className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-            >
-              {t("food.nextToPortions")}
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleGoToPortions}
+                disabled={draftItems.length === 0}
+                className="w-full rounded-2xl bg-[#688696] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              >
+                {t("food.nextToPortions")}
+              </button>
+            </div>
           )}
 
           {step === "portions" && (

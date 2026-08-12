@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
+import { useAlert } from "../hooks/useAlert";
 
 const requirements = [
   { key: "length", test: (v: string) => v.length >= 8 },
@@ -22,7 +23,8 @@ const requirements = [
 // 語言切換
 function strengthOf(v: string, t: TFunction) {
   const passed = requirements.filter((r) => r.test(v)).length;
-  if (!v) return { level: 0, label: t("password.strengthWeak"), color: "#d9645a" };
+  if (!v)
+    return { level: 0, label: t("password.strengthWeak"), color: "#d9645a" };
   if (passed <= 1)
     return { level: 1, label: t("password.strengthWeak"), color: "#d9645a" };
   if (passed === 2)
@@ -47,11 +49,18 @@ export function SetPasswordDrawer() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { showSuccess, showError } = useAlert();
 
   const strength = useMemo(() => strengthOf(newPassword, t), [newPassword, t]);
 
   function handleBack() {
     setOpen(false);
+  }
+
+  function resetForm() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
   }
 
   async function handleConfirm() {
@@ -61,8 +70,13 @@ export function SetPasswordDrawer() {
         body: JSON.stringify({
           password: newPassword,
         }),
+      }).then((res) => {
+        if (res) {
+          showSuccess(t("password.changeSuccess"));
+          resetForm();
+          handleBack();
+        }
       });
-      handleBack();
     } catch (error) {
       console.error(error);
     }
@@ -141,7 +155,8 @@ export function SetPasswordDrawer() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              {t("password.confirmLabel")} <span className="text-red-400">*</span>
+              {t("password.confirmLabel")}{" "}
+              <span className="text-red-400">*</span>
             </label>
             <div className={inputWrapClass}>
               <input

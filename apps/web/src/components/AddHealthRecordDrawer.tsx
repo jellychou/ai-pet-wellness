@@ -129,17 +129,19 @@ export function AddHealthRecordDrawer() {
       return;
     }
     const parsedWeight = Number(weight);
-    const parsedTemp = Number(temp);
-    const parsedHeartRate = Number(heartRate);
-    if (
-      !weight ||
-      !temp ||
-      !heartRate ||
-      Number.isNaN(parsedWeight) ||
-      Number.isNaN(parsedTemp) ||
-      Number.isNaN(parsedHeartRate)
-    ) {
+    if (!weight || Number.isNaN(parsedWeight)) {
       showError(t("health.validationVitalsError"));
+      return;
+    }
+    // 體溫/心跳改成選填：留空就送 null，不擋送出；只有「有填但填的不是
+    // 數字」才擋下來，跟體重那種一定要填的必填錯誤訊息分開
+    const parsedTemp = temp.trim() ? Number(temp) : null;
+    const parsedHeartRate = heartRate.trim() ? Number(heartRate) : null;
+    if (
+      (parsedTemp !== null && Number.isNaN(parsedTemp)) ||
+      (parsedHeartRate !== null && Number.isNaN(parsedHeartRate))
+    ) {
+      showError(t("health.validationOptionalVitalsError"));
       return;
     }
 
@@ -173,9 +175,7 @@ export function AddHealthRecordDrawer() {
       handleBack();
     } catch (error) {
       console.error(error);
-      showError(
-        error instanceof Error ? error.message : t("health.addFailed"),
-      );
+      showError(error instanceof Error ? error.message : t("health.addFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -202,7 +202,9 @@ export function AddHealthRecordDrawer() {
         </button>
         <div className="truncate text-[11px] text-ink/45">
           {targetPet?.birthday &&
-            t("vaccine.petAgePrefix", { age: calculateAge(targetPet.birthday) })}
+            t("vaccine.petAgePrefix", {
+              age: calculateAge(targetPet.birthday),
+            })}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>
       </div>
@@ -263,7 +265,8 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                {t("health.fieldExamDate")} <span className="text-red-400">*</span>
+                {t("health.fieldExamDate")}{" "}
+                <span className="text-red-400">*</span>
               </label>
               <input
                 type="date"
@@ -275,7 +278,8 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                {t("health.fieldExamType")} <span className="text-red-400">*</span>
+                {t("health.fieldExamType")}{" "}
+                <span className="text-red-400">*</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {examTypes.map((et) => {
@@ -369,7 +373,8 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                {t("health.fieldTemperature")}
+                {t("health.fieldTemperature")}{" "}
+                <span className="text-ink/35">{t("health.optionalHint")}</span>
               </label>
               <div className="relative">
                 <input
@@ -386,7 +391,8 @@ export function AddHealthRecordDrawer() {
 
             <div>
               <label className="mb-1.5 block text-sm text-ink/70">
-                {t("health.fieldHeartRate")}
+                {t("health.fieldHeartRate")}{" "}
+                <span className="text-ink/35">{t("health.optionalHint")}</span>
               </label>
               <div className="relative">
                 <input
@@ -510,14 +516,14 @@ export function AddHealthRecordDrawer() {
           </div>
         </div>
 
-        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
           <div className="mx-auto max-w-md">
             <button
               type="submit"
               onClick={handleSubmit}
               disabled={isSubmitting}
               aria-label={t("common.save")}
-              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? t("common.saving") : t("common.save")}
             </button>

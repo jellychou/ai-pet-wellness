@@ -665,6 +665,7 @@ export const zhTW = {
     fieldWeight: "體重",
     fieldTemperature: "體溫",
     fieldHeartRate: "心跳",
+    optionalHint: "（選填）",
     fieldHospital: "醫院",
     fieldVet: "醫師",
     fieldNote: "備註",
@@ -700,7 +701,10 @@ export const zhTW = {
     uploadCta: "點擊上傳或拖曳檔案到此處",
     uploadHint: "支援 JPG、PNG、PDF（單檔上限 10MB）",
     removeFileAria: "移除檔案",
-    validationVitalsError: "請填寫正確的體重、體溫、心跳數值",
+    validationVitalsError: "請填寫正確的體重數值",
+    // 體溫/心跳改成選填欄位，留空可以直接送出；只有「有填但填的不是數字」
+    // 才擋下來，跟體重那種「一定要填」的必填錯誤訊息分開
+    validationOptionalVitalsError: "體溫、心跳請填寫正確的數字，或留空不填",
     addSuccess: "新增健康檢查紀錄成功",
     addFailed: "新增健康檢查紀錄失敗，請稍後再試",
   },

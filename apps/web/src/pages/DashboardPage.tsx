@@ -248,6 +248,7 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
             food_name: item.food_name,
             portion_grams: item.portion_grams,
             calories: item.calories,
+            image_url: item.image_url,
           })),
         ),
     }))
@@ -304,9 +305,13 @@ function FoodCard({ onAddFood }: { onAddFood: () => void }) {
                     key={item.key}
                     className="flex items-center gap-2 rounded-xl bg-[#fbf7f1] p-2"
                   >
-                    <span className="grid h-7 w-7 place-items-center rounded-full bg-white">
-                      {g.icon}
-                    </span>
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt={item.food_name}
+                        className="w-7 h-7 object-cover rounded-sm"
+                      />
+                    )}
                     <div>
                       <div className="text-[12px] font-medium">
                         {item.food_name}

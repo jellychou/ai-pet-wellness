@@ -49,7 +49,7 @@ function getPetFieldDefs(t: TFunction): PetFieldDef[] {
       label: t("pets.fieldGender"),
       key: "gender",
       format: (value) =>
-        value === "male" ? t("common.male") : t("common.female"),
+        value === "Male" ? t("common.male") : t("common.female"),
     },
     {
       label: t("pets.fieldAge"),

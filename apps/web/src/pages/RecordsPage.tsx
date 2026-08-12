@@ -327,7 +327,7 @@ export function RecordsPage() {
         type="button"
         onClick={() => setHealthJournalOpen(true)}
         aria-label={t("timeline.addAria")}
-        className="fixed bottom-24 right-5 z-40 grid h-10 w-10 place-items-center rounded-full bg-[#caa06f] text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] lg:bottom-8"
+        className="fixed bottom-24 right-5 z-40 grid h-10 w-10 place-items-center rounded-full bg-[#688696] text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] lg:bottom-8"
       >
         <Plus size={18} />
       </button>

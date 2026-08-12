@@ -1394,7 +1394,7 @@ export function AddFoodDrawer() {
                 type="button"
                 onClick={handleAddSelectedHistory}
                 disabled={selectedHistoryNames.size === 0}
-                className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                className="w-full rounded-2xl bg-[#688696] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
               >
                 {selectedHistoryNames.size > 0
                   ? t("food.addItemsButton", {
@@ -1409,7 +1409,7 @@ export function AddFoodDrawer() {
               type="button"
               onClick={handleGoToPortions}
               disabled={draftItems.length === 0}
-              className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
               {t("food.nextToPortions")}
             </button>

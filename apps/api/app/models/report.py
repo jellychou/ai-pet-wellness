@@ -28,8 +28,11 @@ class ReportRecord(Base):
     report_type: Mapped[ReportType] = mapped_column(String(100), nullable=False)
     report_result: Mapped[str] = mapped_column(String(100), nullable=False)
     report_weight: Mapped[float] = mapped_column(Float, nullable=False)
-    report_temperature: Mapped[float] = mapped_column(Float, nullable=False)
-    report_heart_rate: Mapped[int] = mapped_column(Integer, nullable=False)
+    # 體溫/心跳改成選填——量體溫心跳需要器材，很多人在家記錄時量不到，
+    # 不該卡住整筆健檢紀錄無法送出，所以欄位跟 report_note/report_files
+    # 一樣是 nullable
+    report_temperature: Mapped[float | None] = mapped_column(Float, nullable=True)
+    report_heart_rate: Mapped[int | None] = mapped_column(Integer, nullable=True)
     report_hospital: Mapped[str] = mapped_column(String(100), nullable=False)
     report_vet: Mapped[str] = mapped_column(String(100), nullable=False)
     # 備註/附件都是選填，nullable=True 就要搭配 Optional 型別，不然跟

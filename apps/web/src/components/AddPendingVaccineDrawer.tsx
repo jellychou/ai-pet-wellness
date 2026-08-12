@@ -374,7 +374,9 @@ export function AddPendingVaccineDrawer() {
         </button>
         <div className="truncate text-[11px] text-ink/45">
           {targetPet?.birthday &&
-            t("vaccine.petAgePrefix", { age: calculateAge(targetPet.birthday) })}
+            t("vaccine.petAgePrefix", {
+              age: calculateAge(targetPet.birthday),
+            })}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>
       </div>
@@ -588,7 +590,7 @@ export function AddPendingVaccineDrawer() {
             <button
               type="button"
               onClick={handleNext}
-              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
+              className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
             >
               {t("common.next")}
             </button>
@@ -599,7 +601,7 @@ export function AddPendingVaccineDrawer() {
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSaving ? t("common.saving") : t("vaccine.saveAndFinish")}
               </button>
@@ -607,7 +609,7 @@ export function AddPendingVaccineDrawer() {
                 type="button"
                 onClick={() => setStep(1)}
                 disabled={isSaving}
-                className="w-full rounded-full border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full border border-[#e8c9a3] py-2.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t("common.previous")}
               </button>

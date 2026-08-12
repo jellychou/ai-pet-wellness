@@ -44,8 +44,9 @@ export type HealthRecord = {
   report_type: string;
   report_result: string;
   report_weight: number;
-  report_temperature: number;
-  report_heart_rate: number;
+  // 體溫/心跳改成選填，後端可能回 null——在家記錄健檢時不一定量得到
+  report_temperature: number | null;
+  report_heart_rate: number | null;
   report_hospital: string;
   report_vet: string;
   report_note: string;

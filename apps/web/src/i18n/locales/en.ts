@@ -678,6 +678,7 @@ export const en = {
     fieldWeight: "Weight",
     fieldTemperature: "Temperature",
     fieldHeartRate: "Heart Rate",
+    optionalHint: "(optional)",
     fieldHospital: "Hospital",
     fieldVet: "Vet",
     fieldNote: "Note",
@@ -715,8 +716,9 @@ export const en = {
     uploadCta: "Click to upload or drag files here",
     uploadHint: "Supports JPG, PNG, PDF (max 10MB per file)",
     removeFileAria: "Remove file",
-    validationVitalsError:
-      "Please enter valid weight, temperature, and heart rate values",
+    validationVitalsError: "Please enter a valid weight value",
+    validationOptionalVitalsError:
+      "Please enter valid temperature/heart rate values, or leave them blank",
     addSuccess: "Health check record added",
     addFailed: "Failed to add health check record, please try again later",
   },

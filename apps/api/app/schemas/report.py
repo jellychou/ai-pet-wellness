@@ -11,8 +11,9 @@ class AddReportRecordRequest(BaseModel):
     report_type: ReportType
     report_result: str
     report_weight: float
-    report_temperature: float
-    report_heart_rate: int
+    # 體溫/心跳改成選填：在家記錄健檢時不一定量得到，不該卡住整筆送出
+    report_temperature: float | None = None
+    report_heart_rate: int | None = None
     report_hospital: str
     report_vet: str
     report_note: str | None = None
@@ -25,8 +26,9 @@ class UpdateReportRecordRequest(BaseModel):
     report_type: ReportType
     report_result: str
     report_weight: float
-    report_temperature: float
-    report_heart_rate: int
+    # 體溫/心跳改成選填：在家記錄健檢時不一定量得到，不該卡住整筆送出
+    report_temperature: float | None = None
+    report_heart_rate: int | None = None
     report_hospital: str
     report_vet: str
     report_note: str | None = None
@@ -42,8 +44,9 @@ class ReportRecordOut(BaseModel):
     report_type: ReportType
     report_result: str
     report_weight: float
-    report_temperature: float
-    report_heart_rate: int
+    # 體溫/心跳改成選填：在家記錄健檢時不一定量得到，不該卡住整筆送出
+    report_temperature: float | None = None
+    report_heart_rate: int | None = None
     report_hospital: str
     report_vet: str
     report_note: str | None = None

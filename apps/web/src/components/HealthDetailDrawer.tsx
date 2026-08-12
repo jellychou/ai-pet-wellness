@@ -123,8 +123,18 @@ export function HealthDetailDrawer() {
   const rows = record
     ? [
         [t("health.fieldWeight"), `${record.report_weight} kg`],
-        [t("health.fieldTemperature"), `${record.report_temperature} °C`],
-        [t("health.fieldHeartRate"), `${record.report_heart_rate} bpm`],
+        [
+          t("health.fieldTemperature"),
+          record.report_temperature != null
+            ? `${record.report_temperature} °C`
+            : "—",
+        ],
+        [
+          t("health.fieldHeartRate"),
+          record.report_heart_rate != null
+            ? `${record.report_heart_rate} bpm`
+            : "—",
+        ],
         [t("health.fieldHospital"), record.report_hospital],
         [t("health.fieldVet"), record.report_vet],
         [t("health.fieldNote"), record.report_note || "—"],

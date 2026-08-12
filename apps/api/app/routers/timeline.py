@@ -26,6 +26,14 @@ _REPORT_TYPE_LABELS: dict[str, str] = {
     "6": "其他檢查",
 }
 
+# 跟 AddHealthRecordDrawer.tsx 的 summaries 保持一致——體溫/心跳都缺的時候
+# 拿這個當時間軸摘要的退路，不要直接顯示 "1" 這種代碼給使用者看
+_REPORT_RESULT_LABELS: dict[str, str] = {
+    "1": "狀況正常",
+    "2": "建議觀察",
+    "3": "數值異常",
+}
+
 # 跟 AddFoodRecordDrawer.tsx 的 mealTypeOptions 保持一致
 _MEAL_TYPE_LABELS: dict[str, str] = {
     "breakfast": "早餐",
@@ -92,13 +100,21 @@ def get_timeline(
         db.query(ReportRecord).filter(ReportRecord.pet_id == pet_id).all()
     )
     for r in report_records:
+        # 體溫/心跳現在是選填欄位，可能是 None——沒量到就不要硬湊一句
+        # "體溫 None°C" 出來，兩個都缺就退回用 report_result 當摘要
+        vitals_parts = []
+        if r.report_temperature is not None:
+            vitals_parts.append(f"體溫 {r.report_temperature}°C")
+        if r.report_heart_rate is not None:
+            vitals_parts.append(f"心跳 {r.report_heart_rate} bpm")
         items.append(
             TimelineItemOut(
                 type="report",
                 id=r.id,
                 date=r.report_date,
                 title=_REPORT_TYPE_LABELS.get(r.report_type, "健康檢查紀錄"),
-                summary=f"體溫 {r.report_temperature}°C，心跳 {r.report_heart_rate} bpm",
+                summary="，".join(vitals_parts)
+                or _REPORT_RESULT_LABELS.get(r.report_result, r.report_result),
             )
         )
 

@@ -289,7 +289,9 @@ export function AddVaccineFormDrawer() {
         </button>
         <div className="truncate text-[11px] text-ink/45">
           {targetPet?.birthday &&
-            t("vaccine.petAgePrefix", { age: calculateAge(targetPet.birthday) })}
+            t("vaccine.petAgePrefix", {
+              age: calculateAge(targetPet.birthday),
+            })}
           {targetPet?.breed} · {targetPet?.weight} kg
         </div>
       </div>
@@ -468,14 +470,14 @@ export function AddVaccineFormDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md space-y-2">
           {step === 1 && (
             <button
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? t("common.saving") : t("vaccine.saveAndFinish")}
             </button>

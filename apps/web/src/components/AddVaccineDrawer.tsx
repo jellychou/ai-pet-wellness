@@ -158,19 +158,19 @@ export function AddVaccineDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
-        <div className="mx-auto max-w-md flex gap-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
+        <div className="mx-auto max-w-md flex flex-col gap-2">
           <button
             type="button"
             onClick={() => setAddVaccineFormOpen(true)}
-            className="w-1/2 rounded-2xl bg-[#ead3ba] py-3.5 text-sm font-semibold text-ink transition hover:bg-[#e4c6a5]"
+            className="w-full rounded-2xl bg-[#ead3ba] py-2.5 text-sm font-semibold text-ink transition hover:bg-[#e4c6a5]"
           >
             {t("vaccine.addVaccineButton")}
           </button>
           <button
             type="button"
             onClick={() => setAddPendingVaccineFormOpen(true)}
-            className="w-1/2 rounded-2xl border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
+            className="w-full rounded-2xl border border-[#e8c9a3] py-2.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
           >
             {t("vaccine.addPendingVaccineButton")}
           </button>

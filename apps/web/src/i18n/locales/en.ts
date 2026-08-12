@@ -105,9 +105,9 @@ export const en = {
     qaVaccine: "Vaccines",
     qaCheckup: "Health Check",
     qaJournal: "Health Journal",
-    qaMentor: "AI Mentor",
+    qaTimeline: "Health Timeline",
     footerTagline:
-      "🐾 Food・Heart・Vaccine — caring for your pet, and for you ♡",
+      "🐾 Pet・Wellness — caring for your pet, and for you ♡",
     ageWeight: "{{age}} yrs / {{weight}} kg",
     foodRecordTitle: "Food Record",
     prevDay: "Previous day",
@@ -450,6 +450,73 @@ export const en = {
     updateSuccess: "Profile updated",
     updateFailed: "Failed to update profile, please try again later",
   },
+  settingsInfo: {
+    backAria: "Back",
+    aboutTitle: "About Pet Wellness",
+    aboutIntro:
+      "Pet Wellness is an app that helps you track and understand your pet's health — bringing food records, health checks, vaccines, and AI image analysis together in one place.",
+    aboutTagline: "🐾 Pet・Wellness — caring for your pet, and for you ♡",
+    aboutFeaturesTitle: "Key Features",
+    aboutFeatures: [
+      "AI Diagnosis: take a photo to get an initial read on ears, skin, and more",
+      "Food Log: scan or manually log meals, with calorie and nutrition estimates",
+      "Health Journal: log appetite, energy, and activity daily for an AI health score",
+      "AI Mentor: chat about your pet's recent behavior or mood changes",
+      "Vaccine & Checkup Records: track vaccination dates and health check reports",
+      "Health Timeline: all your records organized chronologically",
+    ],
+    aboutDisclaimer:
+      "All AI analysis in this app is for reference only and does not replace a veterinarian's professional diagnosis.",
+    aboutVersion: "Version",
+    termsTitle: "Terms of Service",
+    termsIntro:
+      "Please read the following terms before using Pet Wellness. Continued use means you agree to these terms.",
+    termsSections: [
+      {
+        title: "Service Description",
+        body: "Pet Wellness helps you organize your pet's food, health, and vaccine records, and provides AI-assisted analysis to help you understand your pet's daily condition.",
+      },
+      {
+        title: "AI Analysis Is for Reference Only",
+        body: "All AI photo diagnosis, health journal scores, and mentor suggestions in this app are preliminary observations based on the information you provide — not medical diagnoses. If your pet shows clear signs of distress (e.g. persistent vomiting, injury, severe lethargy), please take them to a veterinarian directly rather than relying solely on the app's suggestions.",
+      },
+      {
+        title: "Account & Data Security",
+        body: "Please keep your account password safe. Pet data and photos you upload are used only to provide and improve the service, and are not sold or publicly shared.",
+      },
+      {
+        title: "User Responsibility",
+        body: "Please make sure the pet and owner information you enter is accurate, as incorrect information can affect calorie recommendations and health assessments.",
+      },
+      {
+        title: "Service Changes",
+        body: "We may adjust the service as features evolve. We'll try to notify you in-app in advance of any significant changes.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        q: "How accurate is AI Diagnosis? Can it replace a vet visit?",
+        a: "AI analysis is for preliminary reference only, not a medical diagnosis. If the photo shows clear abnormalities, or your pet seems unwell, please see a veterinarian.",
+      },
+      {
+        q: "How many AI Mentor conversations can I start per day?",
+        a: "You can start up to 5 new conversations per day. Continuing an existing conversation doesn't count against this limit. Admin accounts have no daily limit.",
+      },
+      {
+        q: "How are food log calories calculated?",
+        a: "You can photograph food for AI recognition and portion/calorie estimation, or pick from previously logged items — the system converts calories based on the portion you set.",
+      },
+      {
+        q: "What if I forget my password?",
+        a: 'On the login page, tap "Forgot Password" and enter the email linked to your account. We\'ll send you a password reset link.',
+      },
+      {
+        q: "Can I track multiple pets?",
+        a: 'Yes. Add each pet\'s info under "My Pets", then switch between them anytime from the top of the screen.',
+      },
+    ],
+  },
   password: {
     changeHeaderTitle: "Change Password",
     setHeaderTitle: "Set Password",
@@ -529,11 +596,16 @@ export const en = {
     emailInvalidError: "Please enter a valid email address",
   },
   timeline: {
-    pageTitle: "History Log",
-    emptyState: "No records yet",
-    today: "Today",
-    yesterday: "Yesterday",
-    daysAgo: "{{days}} days ago",
+    headerTitle: "Timeline",
+    calendarAria: "Pick a date",
+    notificationsAria: "Notifications",
+    todayPill: "Today",
+    prevDayAria: "Previous day",
+    nextDayAria: "Next day",
+    switchPetAria: "Switch pet",
+    ageBreedWeight: "{{age}} yrs・{{breed}}・{{weight}} kg",
+    emptyState: "No records for this day yet",
+    addAria: "Add record",
   },
   resetLinkSent: {
     title: "Reset link sent!",

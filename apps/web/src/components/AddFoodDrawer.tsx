@@ -597,14 +597,18 @@ export function AddFoodDrawer() {
   }
 
   function handleCropConfirmed(file: File) {
-    setPendingPhotos((current) => [...current, { file, note: "" }].slice(0, 10));
+    setPendingPhotos((current) =>
+      [...current, { file, note: "" }].slice(0, 10),
+    );
     advanceCropQueue();
   }
 
   function handleCropUseOriginal() {
     const file = cropQueue[0];
     if (file) {
-      setPendingPhotos((current) => [...current, { file, note: "" }].slice(0, 10));
+      setPendingPhotos((current) =>
+        [...current, { file, note: "" }].slice(0, 10),
+      );
     }
     advanceCropQueue();
   }
@@ -1104,7 +1108,7 @@ export function AddFoodDrawer() {
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={limitReached}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1] py-3 text-sm font-medium text-[#b98a5c] transition disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#d8c9b4] bg-[#fbf7f1] py-2.5 text-sm font-medium text-[#b98a5c] transition disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Plus size={16} />
                           {t("food.addPhotoButton")}
@@ -1368,7 +1372,7 @@ export function AddFoodDrawer() {
               <button
                 type="button"
                 disabled
-                className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white opacity-60"
+                className="w-full rounded-2xl bg-[#688696] py-2.5 text-sm font-semibold text-white opacity-60"
               >
                 {t("food.analyzingButton")}
               </button>
@@ -1377,10 +1381,12 @@ export function AddFoodDrawer() {
                 type="button"
                 onClick={handleStartAnalysis}
                 disabled={pendingPhotos.length === 0 || limitReached}
-                className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                className="w-full rounded-2xl bg-[#688696] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
               >
                 {pendingPhotos.length > 0
-                  ? t("food.startAnalysisButton", { count: pendingPhotos.length })
+                  ? t("food.startAnalysisButton", {
+                      count: pendingPhotos.length,
+                    })
                   : t("food.selectPhotosFirst")}
               </button>
             ) : (

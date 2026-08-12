@@ -378,7 +378,7 @@ export function HealthJournalDrawer() {
   async function handleSaveOnly() {
     // 分析成功的當下後端就已經存進 health_journal_logs 了，這裡不用再打
     // 一次 API，純粹是「看完了，關掉」的動作——跟「加入健康日誌」的差別
-    // 只在於要不要順便把這篇加進健康時間軸
+    // 只在於要不要順便把這篇加進時間軸
     showSuccess(t("healthJournal.saveSuccess"));
     setOpen(false);
     navigate("/records");
@@ -898,14 +898,14 @@ export function HealthJournalDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md">
           {!result ? (
             <button
               type="button"
               onClick={handleAnalyze}
               disabled={analyzing || limitReached}
-              className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {analyzing
                 ? t("healthJournal.analyzing")

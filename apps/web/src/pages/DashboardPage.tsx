@@ -7,7 +7,7 @@ import {
   Flame,
   Heart,
   HeartPulse,
-  MessageCircleHeart,
+  History,
   NotebookPen,
   Syringe,
 } from "lucide-react";
@@ -24,6 +24,7 @@ import {
 import { calculateDailyWaterTargetMl } from "../lib/water";
 import { apiFetch } from "../lib/api";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
+import petEat from "../assets/images/pet-eat.png";
 
 function Metric({
   icon: Icon,
@@ -355,6 +356,7 @@ export function DashboardPage() {
   const setEditHealthOpen = useAppStore((s) => s.setEditHealthOpen);
   const setHealthJournalOpen = useAppStore((s) => s.setHealthJournalOpen);
   const setWaterIntakeOpen = useAppStore((s) => s.setWaterIntakeOpen);
+  const setTimelineOpen = useAppStore((s) => s.setTimelineOpen);
   const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
   const healthJournalRefreshKey = useAppStore((s) => s.healthJournalRefreshKey);
   const waterRefreshKey = useAppStore((s) => s.waterRefreshKey);
@@ -529,7 +531,11 @@ export function DashboardPage() {
                 {t("dashboard.todaySuggestionText")}
               </p>
             </div>
-            <span className="text-3xl">🐕🥣</span>
+            <img
+              src={petEat}
+              alt="pet-eat"
+              className="w-16 h-16 object-cover"
+            />
           </div>
           {/* 依每日建議熱量 + 物種（狗/貓比例不同）換算出來的建議攝取量，
               是簡化過的參考值，不是精確的個體營養需求 */}
@@ -581,7 +587,12 @@ export function DashboardPage() {
                     t("dashboard.qaJournal"),
                     setHealthJournalOpen,
                   ],
-                  [MessageCircleHeart, "mentor", t("dashboard.qaMentor"), null],
+                  [
+                    History,
+                    "timeline",
+                    t("dashboard.qaTimeline"),
+                    () => setTimelineOpen(true),
+                  ],
                 ] as const
               ).map(([I, id, label, action]) => (
                 <button

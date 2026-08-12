@@ -131,8 +131,8 @@ export function EditHealthDrawer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
-        <div className="mx-auto max-w-md flex gap-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
+        <div className="mx-auto max-w-md flex gap-3">
           <button
             type="button"
             onClick={() => setAddHealthRecordOpen(true)}

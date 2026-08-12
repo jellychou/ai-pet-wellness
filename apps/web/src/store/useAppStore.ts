@@ -77,13 +77,15 @@ export type FoodDraftItem = {
 };
 
 // 從 AiScanDrawer 帶去 AICenterPage（AI 心靈導師）的分析結果摘要，讓那頁
-// 一開始就能顯示「已引用今日影像分析」——目前 AICenterPage 還是純前端假
-// 資料（罐頭回覆），這裡只是把 context 遞過去顯示，還沒接真的後端對話
+// 開場白可以直接引用這次的影像分析內容。petId 是這次掃描的那隻寵物，
+// AICenterPage 的寵物切換器要預設選到這隻，而不是永遠跟著全域
+// selectedPet（使用者可能在別的畫面已經切換到別隻寵物）
 export type AiScanReferenceForMentor = {
   summary: string;
   bodyPart: string | null;
   suggestions: string[];
   imageUrl: string;
+  petId: number;
 };
 
 type AppState = {
@@ -203,6 +205,15 @@ type AppState = {
   // （太重），detail drawer 開啟時要自己另外打 /mentor/sessions/{id} 撈
   mentorHistoryDetailSessionId: number | null;
   setMentorHistoryDetailSessionId: (v: number | null) => void;
+  // SettingsPage 底部「關於 Pet Wellness／使用條款／常見問題」三個 Row 共用
+  // 同一個 drawer，用這個欄位決定要顯示哪一種內容——跟
+  // mentorHistoryDetailSessionId 同樣是「單一狀態決定要開哪個畫面」的模式
+  settingsInfoOpen: "about" | "terms" | "faq" | null;
+  setSettingsInfoOpen: (v: "about" | "terms" | "faq" | null) => void;
+  // 健康時間軸原本是 /timeline 路由頁面，現在改成跟其他主要功能一樣的
+  // fixed 全頁 drawer，比照 healthJournalOpen/aiScanOpen 同一套開關模式
+  timelineOpen: boolean;
+  setTimelineOpen: (v: boolean) => void;
 };
 export const useAppStore = create<AppState>((set) => ({
   sidebarOpen: false,
@@ -304,4 +315,8 @@ export const useAppStore = create<AppState>((set) => ({
   mentorHistoryDetailSessionId: null,
   setMentorHistoryDetailSessionId: (mentorHistoryDetailSessionId) =>
     set({ mentorHistoryDetailSessionId }),
+  settingsInfoOpen: null,
+  setSettingsInfoOpen: (settingsInfoOpen) => set({ settingsInfoOpen }),
+  timelineOpen: false,
+  setTimelineOpen: (timelineOpen) => set({ timelineOpen }),
 }));

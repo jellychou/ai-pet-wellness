@@ -46,7 +46,7 @@ class AiScanLog(Base):
     # 具體建議/注意事項的字串陣列，最多 3 條——跟 food_scan_logs 的
     # suggestions 是同樣的概念與用法
     suggestions: Mapped[list | None] = mapped_column(JSONB, nullable=True)
-    # 使用者按下「加入健康時間軸」才會是 True——不是每次分析都自動算一筆
+    # 使用者按下「加入時間軸」才會是 True——不是每次分析都自動算一筆
     # 時間軸事件（隨手拍的照片不一定值得留在時間軸上）。/timeline/{pet_id}
     # 只會撈這個欄位是 True 的紀錄，做法跟 vaccine_records/report_records
     # 被 timeline.py 攤平讀取是同一套邏輯，差別只在多了這層「使用者選擇性

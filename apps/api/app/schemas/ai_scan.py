@@ -35,7 +35,7 @@ class AiScanUsageOut(BaseModel):
 
 
 class AnalyzeImageResponse(BaseModel):
-    # 這次分析在 ai_scan_logs 裡的 id——「加入健康時間軸」要靠這個 id
+    # 這次分析在 ai_scan_logs 裡的 id——「加入時間軸」要靠這個 id
     # 呼叫 /ai-scan/{id}/add-to-timeline，前端不用另外再打一次 API 才拿得到
     id: int
     body_part: str | None = None

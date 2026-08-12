@@ -21,9 +21,11 @@ import { AddHealthRecordDrawer } from "../components/AddHealthRecordDrawer";
 import { SettingsEditDrawer } from "../components/SettingsEditDrawer";
 import { ChangePasswordDrawer } from "../components/ChangePasswordDrawer";
 import { SetPasswordDrawer } from "../components/SetPasswordDrawer";
+import { SettingsInfoDrawer } from "../components/SettingsInfoDrawer";
 import { WaterIntakeDrawer } from "../components/WaterIntakeDrawer";
 import { MentorHistoryDrawer } from "../components/MentorHistoryDrawer";
 import { MentorHistoryDetailDrawer } from "../components/MentorHistoryDetailDrawer";
+import { TimelineDrawer } from "../pages/TimelinePage";
 
 const pageTitleKeys: Record<string, string> = {
   "/": "home",
@@ -31,7 +33,6 @@ const pageTitleKeys: Record<string, string> = {
   "/food": "food",
   "/health": "health",
   "/ai": "ai",
-  "/timeline": "timeline",
   "/stats": "stats",
   "/settings": "settings",
   "/records": "records",
@@ -70,6 +71,7 @@ export function AppLayout() {
         </main>
       </div>
       <MobileBottomNav />
+      <TimelineDrawer />
       <AddFoodDrawer />
       <FoodScanHistoryDrawer />
       <AddVaccineDrawer />
@@ -87,6 +89,7 @@ export function AppLayout() {
       <SettingsEditDrawer />
       <ChangePasswordDrawer />
       <SetPasswordDrawer />
+      <SettingsInfoDrawer />
       <WaterIntakeDrawer />
       <MentorHistoryDrawer />
       <MentorHistoryDetailDrawer />

@@ -142,6 +142,7 @@ export function SettingsPage() {
   const setSettingsEditOpen = useAppStore((s) => s.setSettingsEditOpen);
   const setChangePasswordOpen = useAppStore((s) => s.setChangePasswordOpen);
   const setSetPasswordOpen = useAppStore((s) => s.setSetPasswordOpen);
+  const setSettingsInfoOpen = useAppStore((s) => s.setSettingsInfoOpen);
   const { showSuccess, showError } = useAlert();
 
   const isEnglish = i18n.language === "en";
@@ -171,7 +172,9 @@ export function SettingsPage() {
       })
       .catch((err) => {
         console.error("更新語言失敗", err);
-        showError(err instanceof Error ? err.message : t("settings.langUpdateFailed"));
+        showError(
+          err instanceof Error ? err.message : t("settings.langUpdateFailed"),
+        );
       });
   }
 
@@ -313,9 +316,21 @@ export function SettingsPage() {
         )}
       </Section>
       <Section title={t("settings.sectionOther")}>
-        <Row icon={Info} label={t("settings.aboutApp")} />
-        <Row icon={FileText} label={t("settings.termsOfService")} />
-        <Row icon={HelpCircle} label={t("settings.faq")} />
+        <Row
+          icon={Info}
+          label={t("settings.aboutApp")}
+          onClick={() => setSettingsInfoOpen("about")}
+        />
+        <Row
+          icon={FileText}
+          label={t("settings.termsOfService")}
+          onClick={() => setSettingsInfoOpen("terms")}
+        />
+        <Row
+          icon={HelpCircle}
+          label={t("settings.faq")}
+          onClick={() => setSettingsInfoOpen("faq")}
+        />
       </Section>
       <Section title="">
         <Row
@@ -328,7 +343,7 @@ export function SettingsPage() {
       <button
         type="button"
         onClick={handleLogout}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-3.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd]"
       >
         <LogOut size={16} />
         {t("settings.logout")}

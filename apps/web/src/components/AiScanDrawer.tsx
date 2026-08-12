@@ -54,7 +54,7 @@ const BODY_PART_OPTIONS = [
   "其他",
 ];
 
-// 「已加入健康時間軸」確認畫面下方的「相關記錄」清單——目前只有飲食紀錄
+// 「已加入時間軸」確認畫面下方的「相關記錄」清單——目前只有飲食紀錄
 // 後端真的有資料，行為紀錄/活動量/心情日記都還沒做，所以這裡故意不做成
 // 可以點擊跳轉的連結（沒有對應頁面可以跳，做成假的可點擊反而誤導使用者），
 // 純粹是跟設計稿一致的靜態展示
@@ -114,7 +114,7 @@ export function AiScanDrawer() {
   // 在做這幾個獨立步驟
   const [loadingStep, setLoadingStep] = useState(0);
   const [result, setResult] = useState<AnalyzeImageResponse | null>(null);
-  // 「加入健康時間軸」按下去之後的本地確認狀態，純 UI 用——避免同一筆
+  // 「加入時間軸」按下去之後的本地確認狀態，純 UI 用——避免同一筆
   // 重複打 API（雖然後端本來就 idempotent），也讓按鈕能顯示「已加入」
   const [addedToTimeline, setAddedToTimeline] = useState(false);
   const [usage, setUsage] = useState<AiScanUsage | null>(null);
@@ -253,7 +253,9 @@ export function AiScanDrawer() {
       }
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : t("healthJournal.analyzeFailed"),
+        error instanceof Error
+          ? error.message
+          : t("healthJournal.analyzeFailed"),
       );
     } finally {
       setAnalyzing(false);
@@ -269,20 +271,24 @@ export function AiScanDrawer() {
       setAddedToTimeline(true);
     } catch (error) {
       showError(
-        error instanceof Error ? error.message : t("aiScan.addToTimelineFailed"),
+        error instanceof Error
+          ? error.message
+          : t("aiScan.addToTimelineFailed"),
       );
     }
   }
 
-  // 目前 AI 心靈導師（AICenterPage）還是純前端假資料，這裡只把這次分析的
-  // 摘要存進 store 帶過去顯示「已引用今日影像分析」，不是真的串接對話後端
+  // 把這次分析的摘要存進 store 帶去 AICenterPage，讓那頁開場白可以直接
+  // 引用「已引用今日影像分析」；petId 一併帶過去，AICenterPage 的寵物
+  // 切換器會預設選到這隻，而不是永遠跟著全域 selectedPet
   function handleAskMentor() {
-    if (!result) return;
+    if (!result || !selectedPet) return;
     setAiScanReferenceForMentor({
       summary: result.summary,
       bodyPart: result.body_part,
       suggestions: result.suggestions,
       imageUrl: earPhoto ?? "",
+      petId: selectedPet.id,
     });
     resetAll();
     setOpen(false);
@@ -357,7 +363,7 @@ export function AiScanDrawer() {
             onUseOriginal={handleUseOriginalPhoto}
           />
 
-          {/* 一旦加入健康時間軸，原始照片跟完整分析內容就不再顯示——
+          {/* 一旦加入時間軸，原始照片跟完整分析內容就不再顯示——
               下面會換成精簡的確認卡片，跟設計稿一致 */}
           {!addedToTimeline &&
             (analyzing ? (
@@ -545,6 +551,18 @@ export function AiScanDrawer() {
                 <CalendarPlus size={16} />
                 {t("aiScan.addToTimelineButton")}
               </button>
+
+              {/* 不強迫使用者一定要先「加入時間軸」才能問心靈導師——
+                  結果一出來就可以直接跳過去問，跟加入時間軸後確認畫面上
+                  的那顆是同一個 handleAskMentor，行為完全一樣 */}
+              <button
+                type="button"
+                onClick={handleAskMentor}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] bg-white py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-[#f7f2ea]"
+              >
+                <Sparkles size={16} />
+                {t("aiScan.askMentorButton")}
+              </button>
             </>
           )}
 
@@ -674,7 +692,7 @@ export function AiScanDrawer() {
                 type="button"
                 onClick={handleReupload}
                 disabled={limitReached || analyzing}
-                className="w-full rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                className="w-full rounded-2xl border border-mist py-2.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 {t("aiScan.uploadCta")}
               </button>

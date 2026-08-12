@@ -47,7 +47,7 @@ SYSTEM_PROMPT = (
     "同時給 3-4 個簡短（8 個字以內）的選項放進 quick_replies，讓使用者"
     "可以直接點選，不用自己打字。\n"
     "3. 如果問了3-4 輪就就要挑出要結束嗎的選項；如果使用者選擇結束，"
-    "就把 is_finished 設成 true，如果每有就繼續和使用者聊天，等到使用者選擇結束，才把 is_finished 設成 true。\n"
+    "就把 is_finished 設成 true，如果沒有就繼續和使用者聊天，等到使用者選擇結束，才把 is_finished 設成 true。\n"
     "4. is_finished=true 時，quick_replies 留空陣列，summary_sections 要"
     "給 3-5 條具體的重點整理（分類呈現，例如身體/情緒狀態、習慣改變、"
     "獨處或特定情境下的反應和具體的建議，例如可建議是否需要去看醫師，如果需要去看醫生的時候要注意什麼），"

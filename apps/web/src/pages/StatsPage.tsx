@@ -1,8 +1,8 @@
 export function StatsPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto space-y-6">
       <h1 className="text-3xl font-semibold">Analytics</h1>
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4">
         {[
           ["Weight", "25.4 kg"],
           ["Calories", "430 kcal"],
@@ -15,7 +15,7 @@ export function StatsPage() {
           </div>
         ))}
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
         <div className="card p-5">
           <h2 className="font-semibold">Weight trend</h2>
           <div className="mt-6 flex h-56 items-end gap-3">

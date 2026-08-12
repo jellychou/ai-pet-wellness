@@ -112,7 +112,10 @@ export function AICenterPage() {
   }, [targetPet, aiScanReference, selectedPet, pets]);
 
   useEffect(() => {
-    listEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // block: "end"——預設的 "start" 會把 listEndRef（訊息列表最後那個空 div）
+    // 捲到可視區域「頂部」，等於把上面的訊息本體推到可視區域外面、被上方
+    // 固定的寵物資訊卡蓋住。改成 "end" 才是捲到底部，訊息本身完整露出
+    listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, aiTyping]);
 
   function applyResponse(res: MentorChatResponse) {
@@ -274,11 +277,10 @@ export function AICenterPage() {
       {/* 真的 position: fixed 釘在畫面上——跟在一般文件流裡（不管是
           relative 還是 sticky）都會被上層頁面本身的捲動帶走不一樣，fixed
           是相對整個視窗定位，捲再多也不會動。top 要避開 AppLayout.tsx 的
-          手機版 sticky header（約 56px 高，桌機版 lg:hidden 沒有這條，
-          所以 lg 用比較小的 top），left 在桌機要讓開 Sidebar 的 250px，
+          sticky header（約 56px 高）。全站固定手機版型後不再有桌機側欄，
           裡面再包一層 mx-auto max-w-md，水平位置才會跟下面捲動內容的
           欄寬對齊 */}
-      <div className="fixed inset-x-0 top-14 z-20 px-3 sm:px-3 lg:left-[250px] lg:top-4 xl:px-5">
+      <div className="fixed inset-x-0 top-14 z-20 px-3">
         {usage && (
           <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[12px] font-medium text-[#688696]">
             {usage.unlimited
@@ -464,7 +466,10 @@ export function AICenterPage() {
       {!isFinished && (
         <form
           onSubmit={handleSubmit}
-          className="flex shrink-0 items-center gap-2 pt-2 fixed left-[6px] right-[6px] bottom-[70px]"
+          // 跟上面寵物資訊卡同樣的邏輯：fixed 定位會脫離 mx-auto max-w-md
+          // 的欄寬限制，直接吃整個視窗寬度，所以要自己補一層 mx-auto
+          // max-w-md，寬螢幕下才會跟其他內容一樣置中、維持手機欄寬
+          className="fixed inset-x-0 bottom-[70px] z-20 mx-auto flex max-w-md shrink-0 items-center gap-2 px-[6px] pt-2"
         >
           <input
             ref={fileInputRef}

@@ -443,10 +443,15 @@ export function DashboardPage() {
       ? Math.min(100, Math.round((waterTodayMl / waterTargetMl) * 100))
       : null;
 
+  // 這頁原本有一份「桌機側欄旁邊的寬版 4 欄」設計（xl:grid-cols-[...]／
+  // md:grid-cols-[...]），是給桌機版 Sidebar 排版用的。現在全站固定手機
+  // 版型（AppLayout 的 <main> 已經 max-w-md 置中），這些桌機斷點只看
+  // 實際視窗寬度、不管外層容器多窄都會被觸發，留著反而會在寬螢幕上把
+  // 內容硬擠成好幾欄，所以拿掉，永遠維持單欄直向排列
   return (
-    <div className="mx-auto max-w-[1500px] space-y-3">
-      <section className="grid gap-3 xl:grid-cols-[1.55fr_.95fr_.95fr_.95fr]">
-        <div className="card p-4 xl:col-span-1">
+    <div className="mx-auto space-y-3">
+      <section className="grid gap-3">
+        <div className="card p-4">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-semibold">
@@ -461,7 +466,7 @@ export function DashboardPage() {
               </p>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-[1.15fr_1.55fr]">
+          <div className="mt-4 grid gap-3">
             <div className="flex items-center gap-3 rounded-xl bg-[#fbf7f1] p-3">
               <img
                 src={selectedPet?.avatar ?? defaultPetAvatar}
@@ -620,7 +625,7 @@ export function DashboardPage() {
       </section>
       <footer className="flex items-center justify-between rounded-xl px-5 text-[12px] text-[#78A4CB]">
         <span>{t("dashboard.footerTagline")}</span>
-        <span className="hidden sm:inline">
+        <span className="hidden">
           React · TypeScript · Tailwind · Zustand · i18n
         </span>
       </footer>

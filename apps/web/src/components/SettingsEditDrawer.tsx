@@ -202,9 +202,6 @@ export function SettingsEditDrawer() {
   const inputClass =
     "w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2 text-[11px] text-ink outline-none";
 
-  const inputWrapClass =
-    "flex items-center rounded-2xl border border-[#ece0d2] bg-white px-4 py-3";
-
   return (
     <div
       className={`fixed inset-0 z-[60] flex flex-col bg-[#fbf8f4] transition-transform duration-300 ${
@@ -293,14 +290,15 @@ export function SettingsEditDrawer() {
             </Field>
 
             <Field label={t("settings.fieldBirthday")} required>
-              <div className={inputWrapClass}>
-                <input
-                  type="date"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  className={`${inputClass} [color-scheme:light]`}
-                />
-              </div>
+              <input
+                type="date"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面 zoom-in
+                // 對準這個欄位，原生 iOS 日期選擇器反而跑版
+                style={{ fontSize: 16 }}
+                className={`${inputClass} [color-scheme:light]`}
+              />
             </Field>
 
             <Field label={t("settings.fieldGender")}>

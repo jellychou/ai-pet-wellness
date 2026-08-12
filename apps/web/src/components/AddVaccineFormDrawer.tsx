@@ -393,7 +393,10 @@ export function AddVaccineFormDrawer() {
                     type="date"
                     value={vaccinationDate}
                     onChange={(e) => setVaccinationDate(e.target.value)}
-                    className={`${inputClass} pr-9 [color-scheme:light]`}
+                    // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面
+                    // zoom-in 對準這個欄位，原生 iOS 日期選擇器反而跑版
+                    style={{ fontSize: 16 }}
+                    className={`${inputClass} [color-scheme:light]`}
                   />
                 </div>
               </Field>

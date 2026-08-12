@@ -1351,7 +1351,10 @@ export function AddFoodDrawer() {
                   type="datetime-local"
                   value={fedAt}
                   onChange={(e) => setFedAt(e.target.value)}
-                  className="w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2.5 text-[12px] text-ink outline-none [color-scheme:light]"
+                  // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面 zoom-in
+                  // 對準這個欄位，原生 iOS 時間選擇器反而跑版
+                  style={{ fontSize: 16 }}
+                  className="w-full rounded-xl border border-[#ece0d2] bg-white px-3 py-2.5 text-ink outline-none [color-scheme:light]"
                 />
               </div>
 

@@ -357,6 +357,10 @@ export function AddFoodRecordDrawer() {
               type="datetime-local"
               value={fedAt}
               onChange={(e) => setFedAt(e.target.value)}
+              // 字級一定要 >=16px，不然 iOS Safari 會判定「使用者可能看不清楚」
+              // 自動把整個頁面 zoom-in 對準這個欄位，原生的 iOS 時間選擇器
+              // 反而會被這個自動縮放搞得跑版
+              style={{ fontSize: 16 }}
               className={`${inputClass} [color-scheme:light]`}
             />
           </div>

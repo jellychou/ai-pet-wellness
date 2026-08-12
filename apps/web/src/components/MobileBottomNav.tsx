@@ -13,7 +13,7 @@ const links = [
 export function MobileBottomNav() {
   const { t } = useTranslation();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#ece4dc] bg-[#fffdfa]/95 backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#ece4dc] bg-[#fffdfa]/95 backdrop-blur lg:hidden">
       <div
         className="mx-auto flex max-w-md items-center justify-between px-2 pt-2"
         style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}

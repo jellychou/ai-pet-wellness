@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Clock } from "lucide-react";
+import { Sidebar } from "../components/Sidebar";
 import { useAppStore } from "../store/useAppStore";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { AddFoodDrawer } from "../components/AddFoodDrawer";
@@ -45,14 +46,11 @@ export function AppLayout() {
   const setMentorHistoryOpen = useAppStore((s) => s.setMentorHistoryOpen);
   const isMentorPage = location.pathname === "/ai";
 
-  // 不管螢幕多寬都固定顯示手機版型：拿掉原本 lg: 斷點切換的桌機側欄
-  // 版面，永遠是「頂部標題列 + 底部導覽列」這一套，內容欄寬固定
-  // max-w-md（跟各頁面/drawer 既有的手機欄寬一致），在寬螢幕上會置中、
-  // 兩側留白，不會整個拉寬變成桌機排版
   return (
-    <div className="min-h-dvh bg-[#f7f5f2]">
+    <div className="min-h-dvh bg-[#f7f5f2] lg:flex">
+      <Sidebar />
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa]/90 px-3 py-3 backdrop-blur">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa]/90 px-3 py-3 backdrop-blur lg:hidden">
           <span className="flex items-center gap-1.5">
             <h1 className="text-lg font-semibold text-ink">
               {t(`nav.${titleKey}`)}
@@ -69,7 +67,7 @@ export function AppLayout() {
             </button>
           )}
         </header>
-        <main className="mx-auto max-w-md p-3 pb-20 sm:p-4 sm:pb-20">
+        <main className="p-3 pb-20 sm:p-4 sm:pb-20 lg:pb-5 xl:p-5">
           <Outlet />
         </main>
       </div>

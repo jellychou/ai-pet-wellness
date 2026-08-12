@@ -274,10 +274,11 @@ export function AICenterPage() {
       {/* 真的 position: fixed 釘在畫面上——跟在一般文件流裡（不管是
           relative 還是 sticky）都會被上層頁面本身的捲動帶走不一樣，fixed
           是相對整個視窗定位，捲再多也不會動。top 要避開 AppLayout.tsx 的
-          sticky header（約 56px 高）。全站固定手機版型後不再有桌機側欄，
+          手機版 sticky header（約 56px 高，桌機版 lg:hidden 沒有這條，
+          所以 lg 用比較小的 top），left 在桌機要讓開 Sidebar 的 250px，
           裡面再包一層 mx-auto max-w-md，水平位置才會跟下面捲動內容的
           欄寬對齊 */}
-      <div className="fixed inset-x-0 top-14 z-20 px-3">
+      <div className="fixed inset-x-0 top-14 z-20 px-3 sm:px-3 lg:left-[250px] lg:top-4 xl:px-5">
         {usage && (
           <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[12px] font-medium text-[#688696]">
             {usage.unlimited

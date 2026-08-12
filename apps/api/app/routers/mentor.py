@@ -30,7 +30,7 @@ logger = logging.getLogger("uvicorn.error")
 # 跟 ai_scan.py/health_journal.py 同樣的帳號層級花費控管，但這裡限制的是
 # 「今天開了幾段新對話」，不是「今天講了幾句話」——同一段對話裡繼續追問
 # 不應該被每日次數卡住，不然使用者聊到一半就被擋會很奇怪
-DAILY_LIMIT = 5
+DAILY_LIMIT = 20
 
 MAX_TURNS_BEFORE_FORCE_FINISH = 6
 

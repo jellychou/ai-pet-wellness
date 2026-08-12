@@ -19,6 +19,7 @@ import { usePetStore } from "../store/usePetStore";
 import { Pet } from "../data/pets";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
 import { breedList, allergyList, activityList } from "../data/pets";
+import { useAuthStore, type AuthUser } from "../store/useAuthStore";
 
 function Field({
   label,
@@ -126,6 +127,8 @@ export function AddPetDrawer() {
   const open = useAppStore((s) => s.addPetOpen);
   const setOpen = useAppStore((s) => s.setAddPetOpen);
   const setAllPetsList = usePetStore((s) => s.setAllPetsList);
+  const setUserInfo = useAuthStore((s) => s.setUserInfo);
+  const setSelectedPet = usePetStore((s) => s.setSelectedPet);
   const tips = [t("addPet.tip1"), t("addPet.tip2"), t("addPet.tip3")];
 
   const [name, setName] = useState(initialState.name);
@@ -245,9 +248,24 @@ export function AddPetDrawer() {
     if (res) {
       resetForm();
       fetchAllPetsList();
+      getUserInfo();
       setOpen(false);
     }
   }
+
+  const getUserInfo = () => {
+    apiFetch<AuthUser>("/user/user-info", {
+      method: "GET",
+    }).then((user) => {
+      setUserInfo(user);
+      setAllPetsList(user.pets as Pet[]);
+      const activePet =
+        user.pets.find((pet) => pet.id === user.active_pet_id) ??
+        user.pets[0] ??
+        null;
+      setSelectedPet(activePet as Pet);
+    });
+  };
 
   function fetchAllPetsList() {
     apiFetch("/pet/get-pets", {

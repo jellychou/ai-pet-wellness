@@ -18,6 +18,7 @@ import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { ImageCropModal } from "../components/ImageCropModal";
 import { useAlert } from "../hooks/useAlert";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
+import { useAuthStore, type AuthUser } from "../store/useAuthStore";
 
 function Field({
   label,
@@ -107,6 +108,8 @@ export function AddPetPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const setAllPetsList = usePetStore((s) => s.setAllPetsList);
+  const setUserInfo = useAuthStore((s) => s.setUserInfo);
+  const setSelectedPet = usePetStore((s) => s.setSelectedPet);
   const tips = [t("addPet.tip1"), t("addPet.tip2"), t("addPet.tip3")];
 
   const [name, setName] = useState("");
@@ -198,6 +201,7 @@ export function AddPetPage() {
       });
       if (res) {
         fetchAllPetsList();
+        getUserInfo();
         navigate("/", { replace: true });
       }
     } catch (error) {
@@ -205,6 +209,20 @@ export function AddPetPage() {
       showError(t("addPet.submitFailed"));
     }
   }
+
+  const getUserInfo = () => {
+    apiFetch<AuthUser>("/user/user-info", {
+      method: "GET",
+    }).then((user) => {
+      setUserInfo(user);
+      setAllPetsList(user.pets as Pet[]);
+      const activePet =
+        user.pets.find((pet) => pet.id === user.active_pet_id) ??
+        user.pets[0] ??
+        null;
+      setSelectedPet(activePet as Pet);
+    });
+  };
 
   function fetchAllPetsList() {
     apiFetch("/pet/get-pets", {

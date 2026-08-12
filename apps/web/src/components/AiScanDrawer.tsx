@@ -304,7 +304,7 @@ export function AiScanDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex items-center justify-between">
             <button
@@ -546,7 +546,7 @@ export function AiScanDrawer() {
               <button
                 type="button"
                 onClick={handleAddToTimeline}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
               >
                 <CalendarPlus size={16} />
                 {t("aiScan.addToTimelineButton")}
@@ -558,7 +558,7 @@ export function AiScanDrawer() {
               <button
                 type="button"
                 onClick={handleAskMentor}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] bg-white py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-[#f7f2ea]"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] bg-white py-2.5 text-sm font-semibold text-[#688696] transition hover:bg-[#f7f2ea]"
               >
                 <Sparkles size={16} />
                 {t("aiScan.askMentorButton")}
@@ -572,7 +572,7 @@ export function AiScanDrawer() {
               真的資料，直接從確認頁跳到心靈導師） */}
           {result && addedToTimeline && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 rounded-2xl bg-[#e8f5f0] px-4 py-3 text-sm font-semibold text-[#3fa88f]">
+              <div className="flex items-center gap-2 rounded-2xl bg-[#e8f5f0] px-3 py-3 text-sm font-semibold text-[#3fa88f]">
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#3fa88f] text-white">
                   <Check size={13} strokeWidth={3} />
                 </span>
@@ -627,7 +627,7 @@ export function AiScanDrawer() {
                   <button
                     type="button"
                     onClick={handleAskMentor}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(104,134,150,.3)] transition hover:bg-[#5a7684]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#688696] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(104,134,150,.3)] transition hover:bg-[#5a7684]"
                   >
                     <Sparkles size={16} />
                     {t("aiScan.askMentorButton")}
@@ -635,7 +635,7 @@ export function AiScanDrawer() {
                   <button
                     type="button"
                     onClick={resetAll}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] py-3.5 text-sm font-semibold text-ink/60 transition hover:bg-[#f7f2ea]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#eee5da] py-2.5 text-sm font-semibold text-ink/60 transition hover:bg-[#f7f2ea]"
                   >
                     {t("aiScan.notNowButton")}
                   </button>
@@ -666,7 +666,7 @@ export function AiScanDrawer() {
       </div>
 
       {!result && (
-        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
           <div className="mx-auto grid max-w-md  gap-3">
             {earPhoto && !result ? (
               <>
@@ -674,7 +674,7 @@ export function AiScanDrawer() {
                   type="button"
                   onClick={handleReupload}
                   disabled={limitReached || analyzing}
-                  className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                  className="rounded-2xl border border-mist py-2.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 >
                   {t("aiScan.reuploadButton")}
                 </button>
@@ -682,7 +682,7 @@ export function AiScanDrawer() {
                   type="button"
                   onClick={handleStartAnalysis}
                   disabled={limitReached || analyzing}
-                  className="rounded-2xl  py-3.5 text-sm font-semibold bg-[#688696] text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                  className="rounded-2xl  py-2.5 text-sm font-semibold bg-[#688696] text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#688696] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 >
                   {t("aiScan.startAnalysisButton")}
                 </button>

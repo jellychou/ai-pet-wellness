@@ -46,7 +46,7 @@ export function SettingsInfoDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleBack}
@@ -59,7 +59,7 @@ export function SettingsInfoDrawer() {
         <span className="w-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-3 py-6">
         <div className="mx-auto max-w-md space-y-5">
           {type === "about" && (
             <>
@@ -79,7 +79,7 @@ export function SettingsInfoDrawer() {
                   {aboutFeatures.map((feature) => (
                     <li
                       key={feature}
-                      className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] px-4 py-3 text-[13px] leading-5 text-ink/70"
+                      className="rounded-2xl border border-[#ece0d2] bg-[#fffdfa] px-3 py-3 text-[13px] leading-5 text-ink/70"
                     >
                       {feature}
                     </li>

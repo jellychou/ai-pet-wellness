@@ -5,7 +5,7 @@ import { useAppStore } from "../store/useAppStore";
 import { apiFetch } from "../lib/api";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Pet } from "../data/pets";
+import { Pet, formatAllergyValue, formatActivityValue } from "../data/pets";
 import { usePetStore } from "../store/usePetStore";
 import { calculateDailyCalories, sumCalories } from "../lib/calorie";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
@@ -35,7 +35,7 @@ type PetFieldDef = {
   format?: (value: Pet[keyof Pet]) => string;
 };
 
-function getPetFieldDefs(t: TFunction): PetFieldDef[] {
+function getPetFieldDefs(t: TFunction, language: string): PetFieldDef[] {
   return [
     { label: t("pets.fieldName"), key: "name" },
     {
@@ -62,7 +62,11 @@ function getPetFieldDefs(t: TFunction): PetFieldDef[] {
       },
     },
     { label: t("pets.fieldBirthday"), key: "birthday" },
-    { label: t("pets.fieldWeight"), key: "weight" },
+    {
+      label: t("pets.fieldWeight"),
+      key: "weight",
+      format: (value) => `${value} kg`,
+    },
     { label: t("pets.fieldCoatColor"), key: "coatColor" },
     {
       label: t("pets.fieldNeutered"),
@@ -71,8 +75,16 @@ function getPetFieldDefs(t: TFunction): PetFieldDef[] {
         value === "1" ? t("pets.neuteredYes") : t("pets.neuteredNo"),
     },
     { label: t("pets.fieldChipNumber"), key: "chipNumber" },
-    { label: t("pets.fieldAllergy"), key: "allergy" },
-    { label: t("pets.fieldActivity"), key: "activity" },
+    {
+      label: t("pets.fieldAllergy"),
+      key: "allergy",
+      format: (value) => formatAllergyValue(String(value ?? ""), language),
+    },
+    {
+      label: t("pets.fieldActivity"),
+      key: "activity",
+      format: (value) => formatActivityValue(String(value ?? ""), language),
+    },
   ];
 }
 
@@ -137,14 +149,13 @@ function PetAvatarSwitcher({
 }
 
 export function PetsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const setEditPetOpen = useAppStore((s) => s.setEditPetOpen);
   const allPetsList = usePetStore((s) => s.allPetsList);
   const setAddPetOpen = useAppStore((s) => s.setAddPetOpen);
   const setSelectedPet = usePetStore((s) => s.setSelectedPet);
   const selectedPet = usePetStore((s) => s.selectedPet);
   const pets = usePetStore((s) => s.pets);
-  const userInfo = useAuthStore((s) => s.userInfo);
   const foodRecordRefreshKey = useAppStore((s) => s.foodRecordRefreshKey);
   const [rows, setRows] = useState<{ label: string; value: string }[]>([]);
   const [consumedCalories, setConsumedCalories] = useState<number | null>(null);
@@ -186,7 +197,7 @@ export function PetsPage() {
   }, [selectedPet?.id, foodRecordRefreshKey]);
 
   useEffect(() => {
-    const petFieldDefs = getPetFieldDefs(t);
+    const petFieldDefs = getPetFieldDefs(t, i18n.language);
     setRows(
       selectedPet
         ? petFieldDefs.map(({ label, key, format }) => ({
@@ -205,7 +216,7 @@ export function PetsPage() {
       await apiFetch(`/pet/set-active-pet/${petId}`, { method: "PUT" });
       const activePet = pets.find((pet) => pet.id === petId) ?? null;
       setSelectedPet(activePet);
-      const petFieldDefs = getPetFieldDefs(t);
+      const petFieldDefs = getPetFieldDefs(t, i18n.language);
       setRows(
         activePet
           ? petFieldDefs.map(({ label, key, format }) => ({
@@ -223,7 +234,7 @@ export function PetsPage() {
 
   useEffect(() => {
     if (selectedPet) {
-      const petFieldDefs = getPetFieldDefs(t);
+      const petFieldDefs = getPetFieldDefs(t, i18n.language);
       setRows(
         petFieldDefs.map(({ label, key, format }) => ({
           label,

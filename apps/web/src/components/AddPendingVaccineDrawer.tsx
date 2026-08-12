@@ -12,6 +12,7 @@ import { useAppStore } from "../store/useAppStore";
 import { usePetStore } from "../store/usePetStore";
 import { calculateAge } from "../lib/utils";
 import { apiFetch } from "../lib/api";
+import { DatePickerField } from "./DatePickerField";
 import type { Pet } from "../data/pets";
 
 const defaultPetPhoto =
@@ -66,7 +67,7 @@ const steps = [
 function Stepper({ step }: { step: 1 | 2 | 3 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-center py-4">
+    <div className="flex items-center justify-center py-3">
       {steps.map((item, i) => (
         <div key={item.n} className="flex items-center">
           <div className="flex flex-col items-center gap-1">
@@ -415,7 +416,7 @@ export function AddPendingVaccineDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleClose}
@@ -432,7 +433,7 @@ export function AddPendingVaccineDrawer() {
 
       <Stepper step={step} />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-5">
+      <div className="flex-1 overflow-y-auto px-3 pb-5">
         <div className="mx-auto max-w-md">
           {petHeader}
 
@@ -522,17 +523,13 @@ export function AddPendingVaccineDrawer() {
               </div>
 
               <Field label={t("vaccine.fieldNextDate")} required>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={nextDate}
-                    onChange={(e) => setNextDate(e.target.value)}
-                    // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面
-                    // zoom-in 對準這個欄位，原生 iOS 日期選擇器反而跑版
-                    style={{ fontSize: 16 }}
-                    className={`${inputClass} [color-scheme:light]`}
-                  />
-                </div>
+                <DatePickerField
+                  value={nextDate}
+                  onChange={setNextDate}
+                  className={`flex items-center justify-between ${inputClass}`}
+                  fromYear={new Date().getFullYear()}
+                  toYear={new Date().getFullYear() + 5}
+                />
               </Field>
 
               <Field label={t("vaccine.fieldReminderLead")}>
@@ -587,7 +584,7 @@ export function AddPendingVaccineDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md space-y-2">
           {step === 1 && (
             <button
@@ -622,7 +619,7 @@ export function AddPendingVaccineDrawer() {
             <button
               type="button"
               onClick={handleClose}
-              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
+              className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
             >
               {t("vaccine.finish")}
             </button>

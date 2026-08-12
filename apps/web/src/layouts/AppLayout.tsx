@@ -49,7 +49,7 @@ export function AppLayout() {
     <div className="min-h-dvh bg-[#f7f5f2] lg:flex">
       <Sidebar />
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa]/90 px-4 py-3 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa]/90 px-3 py-3 backdrop-blur lg:hidden">
           <span className="flex items-center gap-1.5">
             <h1 className="text-lg font-semibold text-ink">
               {t(`nav.${titleKey}`)}

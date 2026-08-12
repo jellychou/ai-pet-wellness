@@ -7,6 +7,7 @@ import logo from "../assets/images/logo.png";
 import { apiFetch, ApiError } from "../lib/api";
 import { useAuthStore, type AuthUser } from "../store/useAuthStore";
 import { strengthOf } from "../lib/passwordStrength";
+import { DatePickerField } from "./DatePickerField";
 
 // strengthOf() 回傳的 label 是純中文字串（"弱"/"中"/"強"），跟共用的
 // lib/passwordStrength.ts 綁在一起，這裡不改那個共用檔（避免影響其他還
@@ -58,7 +59,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
 }
 
 const inputWrapClass =
-  "flex items-center rounded-2xl border border-[#ece0d2] bg-white px-4 py-3";
+  "flex items-center rounded-2xl border border-[#ece0d2] bg-white px-3 py-3";
 const inputClass =
   "flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/30";
 const cardClass =
@@ -158,9 +159,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
       setPendingAuth({ token: data.access_token, user: data.user });
       setStep(3);
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : t("login.serverError"),
-      );
+      setError(err instanceof ApiError ? err.message : t("login.serverError"));
     } finally {
       setLoading(false);
     }
@@ -307,7 +306,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
               <button
                 type="button"
                 onClick={handleAccountNext}
-                className="mt-5 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
+                className="mt-5 w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
               >
                 {t("common.next")}
               </button>
@@ -374,17 +373,13 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                   <label className="mb-1.5 block text-sm font-medium text-ink/80">
                     {t("register.birthdayLabel")}
                   </label>
-                  <div className={inputWrapClass}>
-                    <input
-                      type="date"
-                      value={birthday}
-                      onChange={(e) => setBirthday(e.target.value)}
-                      // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面
-                      // zoom-in 對準這個欄位，原生 iOS 日期選擇器反而跑版
-                      style={{ fontSize: 16 }}
-                      className={`${inputClass} [color-scheme:light]`}
-                    />
-                  </div>
+                  <DatePickerField
+                    value={birthday}
+                    onChange={setBirthday}
+                    className={`${inputWrapClass} justify-between`}
+                    fromYear={1930}
+                    toYear={new Date().getFullYear()}
+                  />
                 </div>
               </div>
 
@@ -396,7 +391,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 rounded-2xl border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
+                  className="flex-1 rounded-2xl border border-[#e8c9a3] py-2.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
                 >
                   {t("common.previous")}
                 </button>
@@ -404,7 +399,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
                   type="button"
                   onClick={handleProfileNext}
                   disabled={loading}
-                  className="flex-1 rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
+                  className="flex-1 rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
                 >
                   {loading ? t("healthJournal.processing") : t("common.next")}
                 </button>
@@ -438,7 +433,7 @@ export function RegisterDrawer({ open, onClose }: RegisterDrawerProps) {
               <button
                 type="button"
                 onClick={handleFinish}
-                className="mt-10 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
+                className="mt-10 w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
               >
                 {t("register.startButton")}
               </button>

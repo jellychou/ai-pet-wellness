@@ -80,9 +80,7 @@ export function LoginPage() {
         navigate(freshUserInfo.pets.length > 0 ? "/" : "/add-pet");
       } catch (err) {
         setGoogleError(
-          err instanceof ApiError
-            ? err.message
-            : t("login.serverError"),
+          err instanceof ApiError ? err.message : t("login.serverError"),
         );
       } finally {
         setGoogleLoading(false);
@@ -132,9 +130,7 @@ export function LoginPage() {
       await setUserInfo(freshUserInfo);
       navigate(freshUserInfo.pets.length > 0 ? "/" : "/add-pet");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : t("login.serverError"),
-      );
+      setError(err instanceof ApiError ? err.message : t("login.serverError"));
     } finally {
       setLoading(false);
     }
@@ -170,7 +166,7 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-7">
             <div className="space-y-4">
-              <label className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-4 py-2 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
+              <label className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-3 py-2 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#dbe7f4] text-[#5b83ab]">
                   <Mail size={16} />
                 </span>
@@ -190,7 +186,7 @@ export function LoginPage() {
                 </span>
               </label>
 
-              <label className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-4 py-2 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
+              <label className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-3 py-2 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#dbe7f4] text-[#5b83ab]">
                   <Lock size={16} />
                 </span>
@@ -236,7 +232,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
+              className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
             >
               {loading ? t("login.loggingIn") : t("login.submit")}
             </button>
@@ -256,7 +252,7 @@ export function LoginPage() {
             <button
               type="button"
               disabled={googleLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ece0d2] bg-white py-3.5 text-sm font-medium text-ink shadow-[0_4px_16px_rgba(120,96,84,.06)] transition hover:bg-[#faf6f0] disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ece0d2] bg-white py-2.5 text-sm font-medium text-ink shadow-[0_4px_16px_rgba(120,96,84,.06)] transition hover:bg-[#faf6f0] disabled:opacity-60"
             >
               <GoogleIcon />
               {googleLoading ? t("login.loggingIn") : t("login.google")}

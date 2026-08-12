@@ -106,9 +106,8 @@ export function AddFoodRecordDrawer() {
   }, [open, selectedPet]);
 
   const totalCalories =
-    Math.round(
-      draftItems.reduce((sum, item) => sum + item.calories, 0) * 10,
-    ) / 10;
+    Math.round(draftItems.reduce((sum, item) => sum + item.calories, 0) * 10) /
+    10;
 
   function handleClose() {
     setOpen(false);
@@ -222,7 +221,7 @@ export function AddFoodRecordDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleClose}
@@ -235,7 +234,7 @@ export function AddFoodRecordDrawer() {
         <span className="w-9" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           {petHeader}
 
@@ -384,19 +383,17 @@ export function AddFoodRecordDrawer() {
             </div>
           </div>
 
-          {error && (
-            <p className="text-center text-xs text-red-500">{error}</p>
-          )}
+          {error && <p className="text-center text-xs text-red-500">{error}</p>}
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md">
           <button
             type="button"
             onClick={handleSave}
             disabled={isSaving || draftItems.length === 0}
-            className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? "儲存中…" : "加入飲食記錄"}
           </button>

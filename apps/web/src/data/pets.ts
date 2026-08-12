@@ -130,3 +130,26 @@ export const activityList = [
   { zh: "中等", en: "Medium", value: "2" },
   { zh: "高", en: "High", value: "3" },
 ];
+
+// 過敏/運動量顯示用的格式化：兩者都是多選代碼（不是二元的有/無），
+// 統一從 allergyList/activityList 查表轉成對應語言文字，取回來的值要
+// 顯示在哪個頁面都呼叫這裡，不要各自寫 if/else 或當成二元值處理
+export function formatAllergyValue(
+  value: string | undefined,
+  language: string,
+): string {
+  if (!value) return "";
+  const option = allergyList.find((o) => o.value === value);
+  if (!option) return value;
+  return language === "en" ? option.en : option.zh;
+}
+
+export function formatActivityValue(
+  value: string | undefined,
+  language: string,
+): string {
+  if (!value) return "";
+  const option = activityList.find((o) => o.value === value);
+  if (!option) return value;
+  return language === "en" ? option.en : option.zh;
+}

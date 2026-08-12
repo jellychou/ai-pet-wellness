@@ -23,7 +23,8 @@ const requirements = [
 // 不是 module 常數——跟 requirements 拆開存 key 是同一個理由
 function strengthOf(v: string, t: TFunction) {
   const passed = requirements.filter((r) => r.test(v)).length;
-  if (!v) return { level: 0, label: t("password.strengthWeak"), color: "#d9645a" };
+  if (!v)
+    return { level: 0, label: t("password.strengthWeak"), color: "#d9645a" };
   if (passed <= 1)
     return { level: 1, label: t("password.strengthWeak"), color: "#d9645a" };
   if (passed === 2)
@@ -75,7 +76,7 @@ export function ChangePasswordDrawer() {
   }
 
   const inputWrapClass =
-    "flex items-center rounded-2xl border border-[#ece0d2] bg-white px-4 py-3";
+    "flex items-center rounded-2xl border border-[#ece0d2] bg-white px-3 py-3";
   const inputClass =
     "flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/30";
 
@@ -88,7 +89,7 @@ export function ChangePasswordDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleBack}
@@ -103,7 +104,7 @@ export function ChangePasswordDrawer() {
         <span className="w-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-3 py-6">
         <div className="mx-auto max-w-md space-y-5">
           <div className="flex flex-col items-center text-center">
             <div className="relative">
@@ -124,7 +125,8 @@ export function ChangePasswordDrawer() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              {t("password.currentLabel")} <span className="text-red-400">*</span>
+              {t("password.currentLabel")}{" "}
+              <span className="text-red-400">*</span>
             </label>
             <div className={inputWrapClass}>
               <input
@@ -170,7 +172,8 @@ export function ChangePasswordDrawer() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
-              {t("password.confirmLabel")} <span className="text-red-400">*</span>
+              {t("password.confirmLabel")}{" "}
+              <span className="text-red-400">*</span>
             </label>
             <div className={inputWrapClass}>
               <input
@@ -226,14 +229,14 @@ export function ChangePasswordDrawer() {
             <button
               type="button"
               onClick={handleConfirm}
-              className="w-full rounded-full bg-[#d99368] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(217,147,104,.35)] transition hover:bg-[#c98457]"
+              className="w-full rounded-full bg-[#d99368] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(217,147,104,.35)] transition hover:bg-[#c98457]"
             >
               {t("password.confirmChangeButton")}
             </button>
             <button
               type="button"
               onClick={handleBack}
-              className="w-full rounded-full border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
+              className="w-full rounded-full border border-[#e8c9a3] py-2.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40"
             >
               {t("common.cancel")}
             </button>

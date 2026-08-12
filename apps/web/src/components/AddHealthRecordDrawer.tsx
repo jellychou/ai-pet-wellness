@@ -32,6 +32,7 @@ import { apiFetch } from "../lib/api";
 import { useAlert } from "../hooks/useAlert";
 import { calculateAge } from "../lib/utils";
 import { uploadFileToCloudinary } from "../lib/cloudinary";
+import { DatePickerField } from "./DatePickerField";
 import type { Pet } from "../data/pets";
 
 const defaultPetPhoto =
@@ -189,7 +190,7 @@ export function AddHealthRecordDrawer() {
   };
 
   const inputClass =
-    "w-full rounded-2xl border border-[#ece0d2] bg-white px-4 py-3 text-sm text-ink outline-none";
+    "w-full rounded-2xl border border-[#ece0d2] bg-white px-3 py-3 text-sm text-ink outline-none";
 
   const petHeader = (
     <div className="relative mb-4 flex items-center gap-3 rounded-2xl bg-[#fbf7f1] p-3">
@@ -250,7 +251,7 @@ export function AddHealthRecordDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleBack}
@@ -266,7 +267,7 @@ export function AddHealthRecordDrawer() {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-4 py-5">
+        <div className="flex-1 overflow-y-auto px-3 py-5">
           <div className="mx-auto max-w-md space-y-5">
             {petHeader}
 
@@ -275,14 +276,12 @@ export function AddHealthRecordDrawer() {
                 {t("health.fieldExamDate")}{" "}
                 <span className="text-red-400">*</span>
               </label>
-              <input
-                type="date"
+              <DatePickerField
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面 zoom-in
-                // 對準這個欄位，原生 iOS 日期選擇器反而跑版
-                style={{ fontSize: 16 }}
-                className={`${inputClass} [color-scheme:light]`}
+                onChange={setDate}
+                className={`flex items-center justify-between ${inputClass}`}
+                fromYear={new Date().getFullYear() - 25}
+                toYear={new Date().getFullYear()}
               />
             </div>
 

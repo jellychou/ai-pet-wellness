@@ -69,11 +69,7 @@ export function ResetPasswordPage() {
       });
       navigate("/login");
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : t("login.serverError"),
-      );
+      setError(err instanceof ApiError ? err.message : t("login.serverError"));
     } finally {
       setLoading(false);
     }
@@ -115,7 +111,7 @@ export function ResetPasswordPage() {
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
               {t("password.newLabel")}
             </label>
-            <div className="flex items-center rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-4 py-3">
+            <div className="flex items-center rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-3 py-3">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -139,7 +135,7 @@ export function ResetPasswordPage() {
             <label className="mb-1.5 block text-sm font-medium text-ink/80">
               {t("password.confirmLabel")}
             </label>
-            <div className="flex items-center rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-4 py-3">
+            <div className="flex items-center rounded-2xl border border-[#ece0d2] bg-[#fffdfa]/90 px-3 py-3">
               <input
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
@@ -163,9 +159,15 @@ export function ResetPasswordPage() {
             <div className="mb-1.5 text-sm text-ink/70">
               {t("password.strengthLabel")}
               {password && (
-                <span className="font-semibold" style={{ color: strength.color }}>
+                <span
+                  className="font-semibold"
+                  style={{ color: strength.color }}
+                >
                   {" "}
-                  {t(STRENGTH_LABEL_KEY[strength.label] ?? "password.strengthWeak")}
+                  {t(
+                    STRENGTH_LABEL_KEY[strength.label] ??
+                      "password.strengthWeak",
+                  )}
                 </span>
               )}
             </div>
@@ -190,7 +192,10 @@ export function ResetPasswordPage() {
                 return (
                   <div key={r.key} className="flex items-center gap-2">
                     {passed ? (
-                      <CheckCircle2 size={15} className="shrink-0 text-[#3fa876]" />
+                      <CheckCircle2
+                        size={15}
+                        className="shrink-0 text-[#3fa876]"
+                      />
                     ) : (
                       <Circle size={15} className="shrink-0 text-ink/25" />
                     )}
@@ -215,7 +220,10 @@ export function ResetPasswordPage() {
         <div className="relative mt-8 flex flex-1 items-end justify-between px-2 pb-4">
           <Cat size={56} className="text-[#c9a06f]/80" />
           <Fish size={22} className="text-[#a9c2da]" />
-          <Bone size={20} className="absolute left-1/2 top-4 -translate-x-1/2 text-[#c9a06f]/50" />
+          <Bone
+            size={20}
+            className="absolute left-1/2 top-4 -translate-x-1/2 text-[#c9a06f]/50"
+          />
           <Dog size={64} className="text-[#c9a06f]" />
         </div>
 
@@ -223,7 +231,7 @@ export function ResetPasswordPage() {
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="mt-4 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
+          className="mt-4 w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
         >
           {loading ? t("resetPassword.updating") : t("resetPassword.submit")}
         </button>

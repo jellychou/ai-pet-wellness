@@ -9,6 +9,7 @@ import type { AuthUser } from "../store/useAuthStore";
 import { useAlert } from "../hooks/useAlert";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { ImageCropModal } from "../components/ImageCropModal";
+import { DatePickerField } from "../components/DatePickerField";
 import defaultHeadPhoto from "../assets/images/default-photo.png";
 
 function SectionHeader({
@@ -211,7 +212,7 @@ export function SettingsEditDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleBack}
@@ -232,7 +233,7 @@ export function SettingsEditDrawer() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-5">
           <div className="flex flex-col items-center">
             <input
@@ -290,14 +291,12 @@ export function SettingsEditDrawer() {
             </Field>
 
             <Field label={t("settings.fieldBirthday")} required>
-              <input
-                type="date"
+              <DatePickerField
                 value={birthday}
-                onChange={(e) => setBirthday(e.target.value)}
-                // 字級一定要 >=16px，不然 iOS Safari 會自動把頁面 zoom-in
-                // 對準這個欄位，原生 iOS 日期選擇器反而跑版
-                style={{ fontSize: 16 }}
-                className={`${inputClass} [color-scheme:light]`}
+                onChange={setBirthday}
+                className={`flex items-center justify-between ${inputClass}`}
+                fromYear={1930}
+                toYear={new Date().getFullYear()}
               />
             </Field>
 

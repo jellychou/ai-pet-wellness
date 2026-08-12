@@ -33,6 +33,7 @@ import { usePetStore } from "../store/usePetStore";
 import { AuthUser } from "../store/useAuthStore";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { ImageCropModal } from "../components/ImageCropModal";
+import { DatePickerField } from "../components/DatePickerField";
 import { breedList, allergyList, activityList } from "../data/pets";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
 
@@ -154,9 +155,7 @@ export function EditPetDrawer() {
   // 選好照片先不急著上傳，開一個裁切畫面讓使用者調整成正方形頭像——
   // pendingAvatarFile 留著原始檔案，讓「使用原圖」可以跳過裁切直接上傳
   const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(
-    null,
-  );
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
   function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -330,7 +329,7 @@ export function EditPetDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleBack}
@@ -351,7 +350,7 @@ export function EditPetDrawer() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex flex-col items-center">
             <input
@@ -434,21 +433,11 @@ export function EditPetDrawer() {
             </Field>
 
             <Field label={t("pets.fieldBirthday")} required>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  // 手機版原生日期選擇器：字級一定要 >=16px，不然 iOS Safari
-                  // 會判定「使用者可能看不清楚」自動把整個頁面 zoom-in 對準
-                  // 這個欄位，畫面上就會看起來像這個欄位「超出去」；用 inline
-                  // style 蓋掉 inputClass 的 text-[11px]，比疊 Tailwind class
-                  // 保險（同層級 utility class 疊加，最後生效的由 Tailwind
-                  // 產出的 CSS 順序決定，不一定是 text-[11px] 會輸）
-                  style={{ fontSize: 16 }}
-                  className={`${inputClass} [color-scheme:light]`}
-                />
-              </div>
+              <DatePickerField
+                value={birthday}
+                onChange={setBirthday}
+                className={`flex items-center justify-between ${inputClass}`}
+              />
             </Field>
 
             <Field label={t("pets.fieldWeight")} required>

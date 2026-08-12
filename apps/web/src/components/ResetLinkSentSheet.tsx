@@ -104,7 +104,7 @@ export function ResetLinkSentSheet({
               type="button"
               onClick={handleResend}
               disabled={countdown > 0}
-              className="w-full rounded-full border border-[#e8c9a3] py-3.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-full border border-[#e8c9a3] py-2.5 text-sm font-semibold text-[#c9784a] transition hover:bg-[#fbe9d9]/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {countdown > 0
                 ? t("resetLinkSent.resendWithCountdown", { seconds: countdown })

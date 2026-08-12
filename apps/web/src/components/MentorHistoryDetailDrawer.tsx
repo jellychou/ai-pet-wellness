@@ -77,7 +77,7 @@ export function MentorHistoryDetailDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center gap-2 border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={handleBack}
@@ -91,7 +91,7 @@ export function MentorHistoryDetailDrawer() {
         </h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           {loadFailed && (
             <p className="py-10 text-center text-sm text-ink/40">
@@ -110,7 +110,7 @@ export function MentorHistoryDetailDrawer() {
                       className="max-h-56 w-full rounded-2xl rounded-br-sm object-cover"
                     />
                   ) : (
-                    <div className="whitespace-pre-line rounded-2xl rounded-br-sm bg-[#dde6fb] px-4 py-3 text-sm leading-6 text-ink">
+                    <div className="whitespace-pre-line rounded-2xl rounded-br-sm bg-[#dde6fb] px-3 py-3 text-sm leading-6 text-ink">
                       {m.content}
                     </div>
                   )}
@@ -132,7 +132,7 @@ export function MentorHistoryDetailDrawer() {
                   className="h-8 w-8 shrink-0 rounded-full object-cover"
                 />
                 <div className="max-w-[85%]">
-                  <div className="whitespace-pre-line rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-4 py-3 text-sm leading-6 text-ink">
+                  <div className="whitespace-pre-line rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-3 py-3 text-sm leading-6 text-ink">
                     {m.content}
                   </div>
                   <div className="mt-1 text-[10px] text-ink/35">

@@ -16,6 +16,7 @@ import { usePetStore } from "../store/usePetStore";
 import { Pet, breedList, allergyList, activityList } from "../data/pets";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 import { ImageCropModal } from "../components/ImageCropModal";
+import { DatePickerField } from "../components/DatePickerField";
 import { useAlert } from "../hooks/useAlert";
 import defaultPetAvatar from "../assets/images/default-avatar.png";
 import { useAuthStore, type AuthUser } from "../store/useAuthStore";
@@ -237,7 +238,7 @@ export function AddPetPage() {
 
   return (
     <div className="min-h-dvh bg-[#fbf8f4]">
-      <div className="sticky top-0 z-10 border-b border-[#ece4dc] bg-[#fffdfa]/90 px-4 py-3 text-center backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-[#ece4dc] bg-[#fffdfa]/90 px-3 py-3 text-center backdrop-blur">
         <h1 className="text-sm font-semibold text-ink">
           {t("addPet.headerTitle")}
         </h1>
@@ -246,7 +247,7 @@ export function AddPetPage() {
         </p>
       </div>
 
-      <div className="px-4 py-5">
+      <div className="px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex flex-col items-center">
             <input
@@ -326,21 +327,11 @@ export function AddPetPage() {
             </Field>
 
             <Field label={t("pets.fieldBirthday")} required>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  // 手機版原生日期選擇器：字級一定要 >=16px，不然 iOS Safari
-                  // 會判定「使用者可能看不清楚」自動把整個頁面 zoom-in 對準
-                  // 這個欄位，畫面上就會看起來像這個欄位「超出去」；用 inline
-                  // style 蓋掉 inputClass 的 text-[11px]，比疊 Tailwind class
-                  // 保險（同層級 utility class 疊加，最後生效的由 Tailwind
-                  // 產出的 CSS 順序決定，不一定是 text-[11px] 會輸）
-                  style={{ fontSize: 16 }}
-                  className={`${inputClass} [color-scheme:light]`}
-                />
-              </div>
+              <DatePickerField
+                value={birthday}
+                onChange={setBirthday}
+                className={`flex items-center justify-between ${inputClass}`}
+              />
             </Field>
 
             <Field label={t("pets.fieldWeight")} required>
@@ -459,7 +450,7 @@ export function AddPetPage() {
           <button
             type="button"
             onClick={handleSubmit}
-            className="w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
+            className="w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260]"
           >
             {t("addPet.submit")}
           </button>

@@ -26,7 +26,9 @@ export function WaterIntakeDrawer() {
   const [customAmount, setCustomAmount] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const targetMl = selectedPet ? calculateDailyWaterTargetMl(selectedPet) : null;
+  const targetMl = selectedPet
+    ? calculateDailyWaterTargetMl(selectedPet)
+    : null;
   const percent =
     targetMl && targetMl > 0
       ? Math.min(100, Math.round((totalMl / targetMl) * 100))
@@ -84,7 +86,7 @@ export function WaterIntakeDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex items-center gap-2">
             <button
@@ -108,7 +110,9 @@ export function WaterIntakeDrawer() {
               {t("water.todayTotal", { total: totalMl })}
             </div>
             <div className="mt-1 text-xs text-ink/45">
-              {targetMl ? t("water.targetLine", { target: targetMl }) : t("water.noTarget")}
+              {targetMl
+                ? t("water.targetLine", { target: targetMl })
+                : t("water.noTarget")}
             </div>
             {percent != null && (
               <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#eee5da]">
@@ -157,7 +161,7 @@ export function WaterIntakeDrawer() {
                 type="button"
                 onClick={handleCustomAdd}
                 disabled={saving || !customAmount}
-                className="flex shrink-0 items-center gap-1 rounded-xl bg-[#688696] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex shrink-0 items-center gap-1 rounded-xl bg-[#688696] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plus size={15} />
                 {t("water.addButton")}
@@ -167,12 +171,12 @@ export function WaterIntakeDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md">
           <button
             type="button"
             onClick={handleClose}
-            className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
+            className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d]"
           >
             {t("water.doneButton")}
           </button>

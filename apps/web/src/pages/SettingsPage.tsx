@@ -73,7 +73,7 @@ function Row({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-cream/50"
+      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-cream/50"
     >
       <Icon size={17} className="shrink-0 text-ink/45" />
       <span className="flex-1 text-sm text-ink">{label}</span>
@@ -124,7 +124,7 @@ function SwitchRow({
   onChange: () => void;
 }) {
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+    <div className="flex w-full items-center gap-3 px-3 py-2.5">
       <Icon size={17} className="shrink-0 text-ink/45" />
       <span className="flex-1 text-sm text-ink">{label}</span>
       {value && <span className="text-sm text-ink/40">{value}</span>}
@@ -262,7 +262,7 @@ export function SettingsPage() {
           onChange={handleToggleLanguage}
         />
         {/* <Row icon={Bell} label="通知設定" value="已開啟" /> */}
-        {/* <div className="flex items-center gap-3 px-4 py-3.5">
+        {/* <div className="flex items-center gap-3 px-3 py-2.5">
           <Moon size={17} className="shrink-0 text-ink/45" />
           <span className="flex-1 text-sm text-ink">深色模式</span>
           <button
@@ -280,7 +280,7 @@ export function SettingsPage() {
             />
           </button>
         </div> */}
-        {/* <div className="flex items-center gap-3 px-4 py-3.5">
+        {/* <div className="flex items-center gap-3 px-3 py-2.5">
           <Palette size={17} className="shrink-0 text-ink/45" />
           <span className="flex-1 text-sm text-ink">主題顏色</span>
           <div className="flex items-center gap-1.5">

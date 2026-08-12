@@ -48,9 +48,7 @@ export function ForgotPasswordDrawer({
       });
       setSent(true);
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : t("login.serverError"),
-      );
+      setError(err instanceof ApiError ? err.message : t("login.serverError"));
     } finally {
       setLoading(false);
     }
@@ -97,7 +95,7 @@ export function ForgotPasswordDrawer({
           </div>
 
           <div className="mt-6 space-y-4 rounded-3xl border border-[#ece0d2] bg-[#fffdfa]/90 p-5 shadow-[0_4px_16px_rgba(120,96,84,.06)]">
-            <label className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-white px-4 py-2">
+            <label className="flex items-center gap-3 rounded-2xl border border-[#ece0d2] bg-white px-3 py-2">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#dbe7f4] text-[#5b83ab]">
                 <Mail size={16} />
               </span>
@@ -125,7 +123,7 @@ export function ForgotPasswordDrawer({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="mt-5 w-full rounded-2xl bg-[#caa06f] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
+            className="mt-5 w-full rounded-2xl bg-[#caa06f] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,159,109,.35)] transition hover:bg-[#bd9260] disabled:opacity-60"
           >
             {loading ? t("forgotPassword.sending") : t("forgotPassword.submit")}
           </button>

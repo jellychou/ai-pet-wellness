@@ -90,7 +90,7 @@ export function FoodHistoryItemsDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center gap-2 border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={() => setOpen(false)}
@@ -102,7 +102,7 @@ export function FoodHistoryItemsDrawer() {
         <h1 className="text-sm font-semibold text-ink">從歷史選擇食材</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-2.5">
           {loading ? (
             <p className="py-10 text-center text-sm text-ink/40">載入中…</p>
@@ -140,8 +140,8 @@ export function FoodHistoryItemsDrawer() {
                       {item.food_name}
                     </div>
                     <div className="mt-0.5 text-[11px] text-ink/45">
-                      上次約 {item.portion_grams}g / {item.calories} kcal ·
-                      吃過 {item.times_used} 次
+                      上次約 {item.portion_grams}g / {item.calories} kcal · 吃過{" "}
+                      {item.times_used} 次
                     </div>
                   </div>
                   <span
@@ -160,13 +160,13 @@ export function FoodHistoryItemsDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md">
           <button
             type="button"
             onClick={handleAddSelected}
             disabled={selected.size === 0}
-            className="w-full rounded-2xl bg-[#688696] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(104,134,150,.3)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="w-full rounded-2xl bg-[#688696] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(104,134,150,.3)] transition hover:bg-[#5a7684] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {selected.size > 0 ? `加入 ${selected.size} 項` : "請先選擇食材"}
           </button>

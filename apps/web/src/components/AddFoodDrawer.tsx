@@ -901,7 +901,7 @@ export function AddFoodDrawer() {
     >
       {detailItem && detailItem.scanDetail && (
         <div className="absolute inset-0 z-10 flex flex-col bg-[#fbf8f4]">
-          <div className="flex items-center gap-2 border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+          <div className="flex items-center gap-2 border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
             <button
               type="button"
               onClick={() => setDetailItem(null)}
@@ -914,7 +914,7 @@ export function AddFoodDrawer() {
               {t("food.aiDetailTitle")}
             </h1>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 py-5">
+          <div className="flex-1 overflow-y-auto px-3 py-5">
             <div className="mx-auto max-w-md">
               <ResultCard result={detailItem.scanDetail} />
             </div>
@@ -922,7 +922,7 @@ export function AddFoodDrawer() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex items-center justify-between">
             <button
@@ -1380,7 +1380,7 @@ export function AddFoodDrawer() {
         </div>
       </div>
 
-      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+      <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <div className="mx-auto max-w-md">
           {step === "collect" &&
             (analyzing ? (
@@ -1437,7 +1437,7 @@ export function AddFoodDrawer() {
               type="button"
               onClick={handleGoToConfirm}
               disabled={draftItems.length === 0}
-              className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
               {t("food.calcTotalCalories")}
             </button>
@@ -1448,7 +1448,7 @@ export function AddFoodDrawer() {
               type="button"
               onClick={handleSave}
               disabled={isSaving || draftItems.length === 0}
-              className="w-full rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? t("common.saving") : t("food.saveRecord")}
             </button>

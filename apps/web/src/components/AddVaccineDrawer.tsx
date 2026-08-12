@@ -74,7 +74,7 @@ export function AddVaccineDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex items-center justify-between">
             <button

@@ -81,7 +81,7 @@ export function FoodScanHistoryDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex items-center gap-2">
             <button
@@ -154,9 +154,7 @@ export function FoodScanHistoryDrawer() {
                         <div className="mt-1 flex items-center gap-2">
                           <span
                             className={`flex ${
-                              item.is_safe
-                                ? "text-[#3fa88f]"
-                                : "text-[#c9503f]"
+                              item.is_safe ? "text-[#3fa88f]" : "text-[#c9503f]"
                             }`}
                           >
                             {Array.from({ length: 5 }).map((_, i) => (
@@ -164,7 +162,9 @@ export function FoodScanHistoryDrawer() {
                                 key={i}
                                 size={11}
                                 fill={
-                                  i < item.safety_level ? "currentColor" : "none"
+                                  i < item.safety_level
+                                    ? "currentColor"
+                                    : "none"
                                 }
                                 strokeWidth={i < item.safety_level ? 0 : 1.5}
                               />
@@ -177,10 +177,7 @@ export function FoodScanHistoryDrawer() {
                                   key={s}
                                   className="flex items-center gap-0.5 text-[10px] text-ink/50"
                                 >
-                                  <Check
-                                    size={10}
-                                    className="text-[#3fa88f]"
-                                  />
+                                  <Check size={10} className="text-[#3fa88f]" />
                                   {speciesLabel[s] ?? s}
                                 </span>
                               ))}

@@ -439,7 +439,7 @@ export function HealthJournalDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4">
           <div className="flex items-center justify-between">
             <button
@@ -916,7 +916,7 @@ export function HealthJournalDrawer() {
               <button
                 type="button"
                 onClick={handleSaveOnly}
-                className="rounded-2xl border border-mist py-3.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10"
+                className="rounded-2xl border border-mist py-2.5 text-sm font-semibold text-[#688696] transition hover:bg-mist/10"
               >
                 {t("healthJournal.saveOnly")}
               </button>
@@ -924,7 +924,7 @@ export function HealthJournalDrawer() {
                 type="button"
                 onClick={handleAddToTimeline}
                 disabled={addingToTimeline || addedToTimeline}
-                className="rounded-2xl bg-[#b98a5c] py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl bg-[#b98a5c] py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,138,92,.35)] transition hover:bg-[#a97a4d] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {addingToTimeline
                   ? t("healthJournal.processing")

@@ -157,7 +157,7 @@ export function TimelineDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
         <button
           type="button"
           onClick={() => setOpen(false)}
@@ -170,7 +170,7 @@ export function TimelineDrawer() {
         <span className="w-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-4 pb-24">
           {/* 跟 AddVaccineFormDrawer.tsx 的 petHeader 同一套切換邏輯：只有
               名字＋箭頭是觸發區，下拉列出全部寵物（含目前這隻，用橘字標示），

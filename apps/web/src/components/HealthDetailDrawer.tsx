@@ -150,7 +150,7 @@ export function HealthDetailDrawer() {
       aria-modal="true"
       aria-hidden={!open}
     >
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-5">
         <div className="mx-auto max-w-md space-y-5">
           <div className="flex items-center justify-between">
             <button
@@ -176,7 +176,7 @@ export function HealthDetailDrawer() {
                 </div>
               </div>
 
-              <div className="divide-y divide-[#eee5da] rounded-2xl border border-[#ece0d2] bg-[#fffdfa] px-4">
+              <div className="divide-y divide-[#eee5da] rounded-2xl border border-[#ece0d2] bg-[#fffdfa] px-3">
                 {rows.map(([label, value]) => (
                   <div
                     key={label}
@@ -242,7 +242,7 @@ export function HealthDetailDrawer() {
       </div>
 
       {record && (
-        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-4 py-4">
+        <div className="border-t border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
           <div className="mx-auto max-w-md">
             <button
               type="button"
@@ -251,7 +251,9 @@ export function HealthDetailDrawer() {
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fbe4de] py-2.5 text-sm font-semibold text-[#c9503f] transition hover:bg-[#f6d5cd] disabled:opacity-60"
             >
               <Trash2 size={16} />
-              {isDeleting ? t("common.deleting") : t("health.deleteRecordButton")}
+              {isDeleting
+                ? t("common.deleting")
+                : t("health.deleteRecordButton")}
             </button>
           </div>
         </div>

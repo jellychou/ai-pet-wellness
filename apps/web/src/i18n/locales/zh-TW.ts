@@ -54,6 +54,7 @@ export const zhTW = {
     yes: "是",
     no: "否",
     weekdays: ["日", "一", "二", "三", "四", "五", "六"],
+    datePlaceholder: "年 / 月 / 日",
     backAria: "返回",
     noteOptional: "備註（選填）",
     apiErrorFallback: "API 錯誤（{{status}}）",

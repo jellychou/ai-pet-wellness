@@ -18,3 +18,42 @@ button, input { font: inherit; }
 .pill { @apply rounded-full px-2.5 py-1 text-[10px] font-medium; }
 .section-title { @apply text-[13px] font-semibold text-ink; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* react-day-picker（DatePickerField 用）：套件本身的 style.css 只負責版面
+   （dropdown 疊加定位、nav 絕對定位這些佈局邏輯），色彩/尺寸走它自己的
+   CSS variable 系統，這裡覆寫成跟畫面其他地方一致的米色系配色，不用整份
+   重寫版面 CSS。變數要寫在 .rdp-pw.rdp-root（兩個 class 疊加）而不是單獨
+   .rdp-pw，才能確保 specificity 一定贏過套件自己 style.css 裡的
+   .rdp-root{...}，不用依賴兩份 CSS 誰先被載入 */
+.rdp-pw.rdp-root {
+  --rdp-accent-color: #c9784a;
+  --rdp-accent-background-color: #fdf1e6;
+  --rdp-today-color: #c9784a;
+  --rdp-day-width: 34px;
+  --rdp-day-height: 34px;
+  --rdp-day_button-width: 30px;
+  --rdp-day_button-height: 30px;
+  --rdp-day_button-border: 2px solid transparent;
+  --rdp-day_button-border-radius: 9999px;
+  --rdp-nav_button-width: 26px;
+  --rdp-nav_button-height: 26px;
+  --rdp-nav-height: 32px;
+  --rdp-dropdown-gap: 0.375rem;
+  --rdp-months-gap: 0.5rem;
+  --rdp-disabled-opacity: 0.35;
+  --rdp-outside-opacity: 0.4;
+  font-family: inherit;
+  color: #574a45;
+}
+.rdp-pw .rdp-month_caption { font-size: 13px; font-weight: 600; height: 32px; }
+.rdp-pw .rdp-weekday { color: rgba(87, 74, 69, 0.4); font-size: 10px; }
+.rdp-pw .rdp-day_button { font-size: 12px; }
+.rdp-pw .rdp-day_button:hover:not(:disabled) { background-color: #fbf7f1; }
+.rdp-pw .rdp-selected .rdp-day_button { background-color: #c9784a; color: #fff; }
+.rdp-pw .rdp-today:not(.rdp-selected) .rdp-day_button { font-weight: 700; }
+.rdp-pw .rdp-button_previous,
+.rdp-pw .rdp-button_next { border-radius: 9999px; color: rgba(87, 74, 69, 0.6); }
+.rdp-pw .rdp-button_previous:hover:not(:disabled),
+.rdp-pw .rdp-button_next:hover:not(:disabled) { background-color: #f6eee6; }
+.rdp-pw .rdp-caption_label { font-size: 12px; font-weight: 600; }
+.rdp-pw .rdp-dropdown_root select.rdp-dropdown { font-size: 12px; }

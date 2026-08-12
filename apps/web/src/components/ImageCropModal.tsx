@@ -105,7 +105,7 @@ export function ImageCropModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-3 py-3">
         <button
           type="button"
           onClick={onCancel}
@@ -127,7 +127,7 @@ export function ImageCropModal({
         </button>
       </div>
 
-      <div className="flex flex-1 items-center justify-center overflow-hidden px-4">
+      <div className="flex flex-1 items-center justify-center overflow-hidden px-3">
         <ReactCrop
           crop={crop}
           onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -145,7 +145,7 @@ export function ImageCropModal({
         </ReactCrop>
       </div>
 
-      <div className="space-y-3 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
+      <div className="space-y-3 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
         <p className="text-center text-xs text-white/50">
           {t("imageCrop.hint")}
         </p>

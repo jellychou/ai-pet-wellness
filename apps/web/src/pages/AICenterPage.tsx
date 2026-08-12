@@ -278,7 +278,7 @@ export function AICenterPage() {
           所以 lg 用比較小的 top），left 在桌機要讓開 Sidebar 的 250px，
           裡面再包一層 mx-auto max-w-md，水平位置才會跟下面捲動內容的
           欄寬對齊 */}
-      <div className="fixed inset-x-0 top-14 z-20 px-3 sm:px-4 lg:left-[250px] lg:top-4 xl:px-5">
+      <div className="fixed inset-x-0 top-14 z-20 px-3 sm:px-3 lg:left-[250px] lg:top-4 xl:px-5">
         {usage && (
           <div className="mb-2 w-fit rounded-full bg-[#eef4f6] px-3 py-1 text-[11px] font-medium text-[#688696]">
             {usage.unlimited
@@ -365,7 +365,7 @@ export function AICenterPage() {
                       className="max-h-56 w-full rounded-2xl rounded-br-sm object-cover"
                     />
                   ) : (
-                    <div className="whitespace-pre-line rounded-2xl rounded-br-sm bg-[#dde6fb] px-4 py-3 text-sm leading-6 text-ink">
+                    <div className="whitespace-pre-line rounded-2xl rounded-br-sm bg-[#dde6fb] px-3 py-3 text-sm leading-6 text-ink">
                       {m.text}
                     </div>
                   )}
@@ -387,7 +387,7 @@ export function AICenterPage() {
                   className="h-8 w-8 shrink-0 rounded-full object-cover"
                 />
                 <div className="max-w-[85%]">
-                  <div className="whitespace-pre-line rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-4 py-3 text-sm leading-6 text-ink">
+                  <div className="whitespace-pre-line rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-3 py-3 text-sm leading-6 text-ink">
                     {m.text}
                   </div>
                   <div className="mt-1 text-[10px] text-ink/35">{m.time}</div>
@@ -403,7 +403,7 @@ export function AICenterPage() {
                 alt={t("mentor.petAvatarAlt")}
                 className="h-8 w-8 shrink-0 rounded-full object-cover"
               />
-              <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-4 py-3">
+              <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-[#ece4dc] bg-[#fffdfa] px-3 py-3">
                 {[0, 1, 2].map((i) => (
                   <span
                     key={i}
@@ -450,7 +450,7 @@ export function AICenterPage() {
                   key={option}
                   type="button"
                   onClick={() => sendMessage(option)}
-                  className="rounded-full bg-[#fbe9d9] px-4 py-2 text-xs font-medium text-[#b9803f] transition hover:brightness-95"
+                  className="rounded-full bg-[#fbe9d9] px-3 py-2 text-xs font-medium text-[#b9803f] transition hover:brightness-95"
                 >
                   {option}
                 </button>
@@ -484,7 +484,7 @@ export function AICenterPage() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="min-w-0 flex-1 rounded-full border border-[#eee5dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-ink/30"
+            className="min-w-0 flex-1 rounded-full border border-[#eee5dc] bg-white px-3 py-3 text-sm outline-none placeholder:text-ink/30"
             placeholder={t("mentor.messagePlaceholder")}
           />
           <button

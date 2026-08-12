@@ -53,6 +53,7 @@ export const en = {
     yes: "Yes",
     no: "No",
     weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    datePlaceholder: "yyyy / mm / dd",
     backAria: "Back",
     noteOptional: "Note (optional)",
     apiErrorFallback: "API error ({{status}})",
